@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>3D City Database Importer Exporter</name>
+	<name>CityGMLConverter</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -14,11 +14,4 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>base</name>
-			<type>2</type>
-			<location>C:/Users/Shahin/workspace/CityGMLConverter/build/base</location>
-		</link>
-	</linkedResources>
 </projectDescription>
