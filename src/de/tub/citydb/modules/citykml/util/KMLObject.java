@@ -2,6 +2,7 @@ package de.tub.citydb.modules.citykml.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.ClosedFileSystemException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import org.citygml4j.model.gml.geometry.primitives.AbstractRing;
 import org.citygml4j.model.gml.geometry.primitives.AbstractSurface;
 import org.citygml4j.model.gml.geometry.primitives.SurfaceArrayProperty;
 import org.citygml4j.model.gml.geometry.primitives.SurfaceProperty;
+import org.geotools.filter.expression.ThisPropertyAccessorFactory;
 
 import de.micromata.opengis.kml.v_2_2_0.AltitudeMode;
 import de.micromata.opengis.kml.v_2_2_0.Coordinate;
@@ -38,25 +40,19 @@ public class KMLObject {
 	
 	private static KMLObject _kmlObject;
 	private List<List<Double>> pointList = new ArrayList<List<Double>>();
+	private static File _file ;
+	private static Kml kml;
+	private static Document _doc;
+	
+	
+	public KMLObject (String _TargeFile,String _SourceSrs) {
 
-	public KMLObject () {
-
-		
+		_file = new File(_TargeFile);
+		kml = new Kml();
+		_doc = kml.createAndSetDocument();
 	}
 	
 	
-	public static void setInstance() {
-	    if (_kmlObject == null) {
-	    	_kmlObject = new KMLObject();
-	    }
-	 }
-	
-	public static synchronized KMLObject getInstance() {
-	    if (_kmlObject == null) {
-	    	_kmlObject = new KMLObject();
-	    }
-	    return _kmlObject;
-	 }
 	
 	public synchronized List<List<Double>> getKMLInstance() {
 	    if (pointList == null) {
@@ -251,24 +247,24 @@ public class KMLObject {
 		}
 		
 		
-		WriteGmlToKml(pointList,_TargeFile,_SourceSrs);
+	//	WriteGmlToKml(pointList,_TargeFile,_SourceSrs);
 	
 	}
 	
-	public static void WriteGmlToKml(List<List<Double>> pointList,String _TargeFile,String _SourceSrs)
+	public  void WriteGmlToKml(List<List<Double>> pointList,String _SourceSrs)
 	{
 		//LOG.info("Shahin Sharifi");
 
-		File f = new File(_TargeFile);
+		
 
-		if(!f.exists()){
+		if(!_file.exists()){
 
-			final Kml kml = new Kml();
+		//	final Kml kml = new Kml();
 
-			Document _doc = kml.createAndSetDocument();
+	//		Document _doc = kml.createAndSetDocument();
 
 			int _index=0;
-			System.out.println("KML generating, Please wait...");
+			System.out.println("KML generating, Please wait ...");
 			for (List<Double> coordinate : pointList) {
 
 				List<Double> Target_Coordinates;
@@ -327,21 +323,30 @@ public class KMLObject {
 			_Roofstyle.createAndSetBalloonStyle().setText("$[description]");
 
 
-			try {
-
-				kml.marshal(new File(_TargeFile));
-
-			} catch (FileNotFoundException e) {
-
-				System.out.println("Error");
-			}
-
+			
 		}else{
 
 
 
 		}
 
+	}
+	
+	
+	public static void CloseFile()
+	{	
+	
+		try {
+
+			kml.marshal(_file);
+
+		} catch (FileNotFoundException e) {
+
+			System.out.println("Error");
+		}
+
+		
+		
 	}
 	
 	public static String DetectType(List<Double> _pointList){
