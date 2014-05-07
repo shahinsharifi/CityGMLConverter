@@ -99,6 +99,7 @@ import org.citygml4j.model.gml.geometry.primitives.TriangulatedSurface;
 import org.citygml4j.util.gmlid.DefaultGMLIdManager;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
+import org.omg.CORBA.PUBLIC_MEMBER;
 import org.opengis.geometry.Boundary;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
@@ -1234,7 +1235,10 @@ public class DbBuilding implements Importer {
 
 	}
 
-
+	 public void GetNew(){
+		 
+		 
+	 }
 	
 	
 	@Override
