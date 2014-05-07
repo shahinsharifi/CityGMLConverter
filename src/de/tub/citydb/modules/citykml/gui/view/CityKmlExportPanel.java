@@ -650,9 +650,19 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			
 			
 			
+			String TargetFile = "";			
 			
+			if(browseText.getText().equals("")){				
 			
-			boolean success = importer.doProcess();
+				TargetFile = saveFile();
+				
+			}else {
+				
+				TargetFile = browseText.getText();			
+			}
+			
+			KMLObject KmlObject = new KMLObject(TargetFile, (!srsField.getText().equals("")) ? srsField.getText() : "4326");
+			boolean success = importer.doProcess(KmlObject);
 			
 			
 			
@@ -674,9 +684,9 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			if (success) {
 				
 				LOG.info("CityGML import successfully finished.");
-				
+				KmlObject.CloseFile();
 				//*******************Shahin Sharifi****************************
-				doExport(importer);
+				//doExport(importer);
 				
 				
 			} else {
@@ -840,7 +850,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			
 			CityKmlExporter.SetTargetSrs((!srsField.getText().equals("")) ? srsField.getText() : "4326");
 			CityKmlExporter.SetTargetFile(TargetFile);
-			CityKmlExporter.SetPointList(((CityKmlImportWorker)_CityKmlImportWorker.createWorker()).GetCityGmlObject());
+	//		CityKmlExporter.SetPointList(((CityKmlImportWorker)_CityKmlImportWorker.createWorker()).GetCityGmlObject());
 		//	CityKmlExporter.SetBuilding(((CityKmlImportWorker)_CityKmlImportWorker.createWorker()).GetBuilding());
 
 					

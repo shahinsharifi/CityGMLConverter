@@ -43,16 +43,25 @@ public class KMLObject {
 	private static File _file ;
 	private static Kml kml;
 	private static Document _doc;
-	
+	private static String SourceSrs;
+	private int counter=0;
+	private int counter1=0;
 	
 	public KMLObject (String _TargeFile,String _SourceSrs) {
 
 		_file = new File(_TargeFile);
 		kml = new Kml();
 		_doc = kml.createAndSetDocument();
+		SourceSrs = _SourceSrs;
 	}
 	
 	
+	
+	public void SetGeom(List<List<Double>> _pointList)
+	{	
+		pointList.addAll(_pointList);
+		
+	}
 	
 	public synchronized List<List<Double>> getKMLInstance() {
 	    if (pointList == null) {
@@ -333,10 +342,94 @@ public class KMLObject {
 	}
 	
 	
-	public static void CloseFile()
+	public  void WriteGmlToKml2(List<Double> _Geometry,String _SurfaceType)
+	{
+
+
+		if(!_file.exists()){
+
+
+
+			List<Double> Target_Coordinates;
+			try {
+
+				Placemark _Placemark = _doc.createAndAddPlacemark();
+				
+				
+				_Placemark.setStyleUrl(_SurfaceType);
+
+				Polygon _polygon = _Placemark
+						.withName("SampleBuilding").withOpen(Boolean.FALSE)
+						.createAndSetMultiGeometry().createAndAddPolygon();
+
+
+				_polygon.setAltitudeMode(AltitudeMode.ABSOLUTE);
+
+				LinearRing _Ring = _polygon.createAndSetOuterBoundaryIs().createAndSetLinearRing();
+
+				List<Coordinate> _coordinates = _Ring.createAndSetCoordinates();
+
+				for (int i = 1; i < _Geometry.size(); i = i+3) {				
+
+					Target_Coordinates = ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), SourceSrs, "4326");
+
+					_coordinates.add(new Coordinate(Target_Coordinates.get(1),Target_Coordinates.get(0),Target_Coordinates.get(2)));
+
+				}
+
+			} catch (Exception e) {
+
+				System.out.println(e.toString());
+			}
+
+			
+		}else{
+
+
+
+		}
+		counter++;
+	}
+	
+	
+	public void SetBuilding()
+	{	
+		counter++;
+		
+	}
+	
+	
+
+	public void SetSurface()
+	{	
+		counter1++;
+		
+	}
+	
+	
+	public  void CloseFile()
 	{	
 	
 		try {
+			 
+			 Style _Wallstyle = _doc.createAndAddStyle();
+			_Wallstyle.setId("WallSurface");
+			_Wallstyle.createAndSetLineStyle().setColor("C8666666");
+			_Wallstyle.createAndSetPolyStyle().setColor("C8CCCCCC");
+			_Wallstyle.createAndSetBalloonStyle().setText("$[description]");
+			
+
+			Style _Roofstyle = _doc.createAndAddStyle();
+			_Roofstyle.setId("RoofSurface");
+			_Roofstyle.createAndSetLineStyle().setColor("C8000099");
+			_Roofstyle.createAndSetPolyStyle().setColor("C83333FF");
+			_Roofstyle.createAndSetBalloonStyle().setText("$[description]");
+			
+			Style _Groundstyle = _doc.createAndAddStyle();
+			_Groundstyle.setId("GroundSurface");
+			_Groundstyle.createAndSetLineStyle().setColor("C8000099");
+			_Groundstyle.createAndSetPolyStyle().setColor("C83333FF");
+			_Groundstyle.createAndSetBalloonStyle().setText("$[description]");
 
 			kml.marshal(_file);
 
@@ -344,8 +437,11 @@ public class KMLObject {
 
 			System.out.println("Error");
 		}
-
 		
+		WriteGmlToKml(pointList,SourceSrs);
+
+		System.out.println(counter);
+		System.out.println(counter1);
 		
 	}
 	

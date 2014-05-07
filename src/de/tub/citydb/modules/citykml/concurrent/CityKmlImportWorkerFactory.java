@@ -42,6 +42,7 @@ import de.tub.citydb.config.Config;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.modules.citygml.common.database.gmlid.DBGmlIdLookupServerManager;
 import de.tub.citydb.modules.citygml.common.database.xlink.DBXlink;
+import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.common.filter.ImportFilter;
 
 public class CityKmlImportWorkerFactory implements WorkerFactory<CityGML> {
@@ -52,6 +53,7 @@ public class CityKmlImportWorkerFactory implements WorkerFactory<CityGML> {
 	private final ImportFilter importFilter;
 	private final Config config;
 	private final EventDispatcher eventDispatcher;
+	private final KMLObject KmlObject;
 
 	public CityKmlImportWorkerFactory(DatabaseConnectionPool dbConnectionPool,
 			JAXBBuilder jaxbBuilder,
@@ -59,7 +61,8 @@ public class CityKmlImportWorkerFactory implements WorkerFactory<CityGML> {
 			DBGmlIdLookupServerManager lookupServerManager,
 			ImportFilter importFilter,
 			Config config,
-			EventDispatcher eventDispatcher) {
+			EventDispatcher eventDispatcher,
+			KMLObject _KmlObject) {
 		this.dbConnectionPool = dbConnectionPool;
 		this.jaxbBuilder = jaxbBuilder;
 		this.xlinkWorkerPool = xlinkWorkerPool;
@@ -67,6 +70,7 @@ public class CityKmlImportWorkerFactory implements WorkerFactory<CityGML> {
 		this.importFilter = importFilter;
 		this.config = config;
 		this.eventDispatcher = eventDispatcher;
+		this.KmlObject = _KmlObject;
 	}
 
 	@Override
@@ -80,7 +84,8 @@ public class CityKmlImportWorkerFactory implements WorkerFactory<CityGML> {
 					lookupServerManager,
 					importFilter,
 					config, 
-					eventDispatcher);
+					eventDispatcher,
+					KmlObject);
 		} catch (SQLException sqlEx) {
 			// could not instantiate DBWorker
 		}

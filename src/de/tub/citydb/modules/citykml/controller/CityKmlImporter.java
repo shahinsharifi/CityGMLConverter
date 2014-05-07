@@ -172,7 +172,7 @@ public class CityKmlImporter implements EventHandler {
 		eventDispatcher.removeEventHandler(this);
 	}
 
-	public boolean doProcess() {
+	public boolean doProcess(KMLObject _kmlObj) {
 		runState = PREPARING;
 
 		// adding listeners
@@ -267,6 +267,7 @@ public class CityKmlImporter implements EventHandler {
 						!importFilter.getFeatureClassFilter().filter(type) : importer.getAppearances().isSetImportAppearance();
 			}
 		};
+		
 
 		runState = PARSING;
 
@@ -294,7 +295,8 @@ public class CityKmlImporter implements EventHandler {
 						lookupServerManager, 
 						importFilter,
 						config, 
-						eventDispatcher);
+						eventDispatcher,
+						_kmlObj);
 				
 				dbWorkerPool = new WorkerPool<CityGML>(
 						minThreads,
@@ -400,7 +402,7 @@ public class CityKmlImporter implements EventHandler {
 
 				xmlValidationErrorCounter = 0;
 				
-				pointList = ((CityKmlImportWorker)_CityKmlImportWorker.createWorker()).GetCityGmlObject();
+				//pointList = ((CityKmlImportWorker)_CityKmlImportWorker.createWorker()).GetCityGmlObject();
 							
 				
 			} finally {
