@@ -721,12 +721,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				return;
 			}
 
-			// workspace timestamp
-//			if (!Util.checkWorkspaceTimestamp(db.getWorkspaces().getExportWorkspace())) {
-//				mainView.errorMessage(Internal.I18N.getString("export.dialog.error.incorrectData"), 
-//						Internal.I18N.getString("export.dialog.error.incorrectData.date"));
-//				return;
-//			}
+			
 
 			// gmlId
 			if (filter.isSetSimpleFilter() &&

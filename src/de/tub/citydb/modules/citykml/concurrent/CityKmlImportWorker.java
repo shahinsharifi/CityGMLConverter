@@ -655,7 +655,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 			}	
 
 		}
-		// a simple polygon
+		// A simple polygon
 		else if (surfaceGeometryType == GMLClass.POLYGON) {
 			
 			Polygon polygon = (Polygon)surfaceGeometry;

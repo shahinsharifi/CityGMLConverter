@@ -136,7 +136,8 @@ public class KMLObject {
 	{	
 	
 		try {
-			LOG.info("Writing into the KML file ..."); 
+			
+			LOG.info("Writing into the KML file..."); 
 			
 			 Style _Wallstyle = _doc.createAndAddStyle();
 			_Wallstyle.setId("WallSurface");
