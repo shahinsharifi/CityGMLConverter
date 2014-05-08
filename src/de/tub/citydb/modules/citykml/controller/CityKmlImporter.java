@@ -363,12 +363,10 @@ public class CityKmlImporter implements EventHandler {
 
 				try {
 					dbWorkerPool.shutdownAndWait();
-				//	tmpXlinkPool.join();
-					
-			
+
 					
 				} catch (InterruptedException ie) {
-					//
+					
 				}
 				
 				
