@@ -661,6 +661,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				TargetFile = browseText.getText();			
 			}
 			
+			
 			KMLObject KmlObject = new KMLObject(TargetFile, (!srsField.getText().equals("")) ? srsField.getText() : "4326");
 			boolean success = importer.doProcess(KmlObject);
 			
@@ -683,10 +684,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 			if (success) {
 				
-				LOG.info("CityGML import successfully finished.");
+				
 				KmlObject.CloseFile();
 				//*******************Shahin Sharifi****************************
-				//doExport(importer);
+				LOG.info("CityGML has been exported to KML successfully.");
 				
 				
 			} else {

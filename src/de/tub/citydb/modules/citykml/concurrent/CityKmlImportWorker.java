@@ -494,8 +494,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 	
 	public void insertIntoKML(AbstractBuilding _building, KMLObject _kml) throws SQLException
 	{
-		_kml.SetBuilding();
-		List<Double> _Geometry;
+	
 		String _SurfaceType = "undefined";
 		
 		for (int lod = 1; lod < 5; lod++) {
@@ -519,9 +518,17 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 
 			if (solidProperty != null) {
 				if (solidProperty.isSetSolid()) {
-					//_Geometry = InsertGeomToKML(solidProperty.getSolid(), false);
 					
-				//	_kml.WriteGmlToKml2(_Geometry, _SurfaceType);
+					_pointList.clear();
+    				
+    				InsertGeomToKML(solidProperty.getSolid(), false);
+    				
+    				for(List<Double> _Geometry : _pointList){
+    					
+    					_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+    				
+    				}
+				
 				} else {
 					
 				}
@@ -533,7 +540,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 		// BoundarySurfaces
 		if (_building.isSetBoundedBySurface()) {
 			
-			System.out.println(_building.getBoundedBySurface().size());
+			
 			for (BoundarySurfaceProperty boundarySurfaceProperty : _building.getBoundedBySurface()) {
 				AbstractBoundarySurface boundarySurface = boundarySurfaceProperty.getBoundarySurface();
 				
@@ -560,11 +567,18 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 			    			
 			    			
 			    			if (multiSurfaceProperty.isSetMultiSurface()) {
-			    			//	_pointList.clear();
-			    			//	InsertGeomToKML(multiSurfaceProperty.getMultiSurface(), false);
-			    			//	_Geometry = _pointList.get(0);
-			    			//	_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();
-			    			//	_kml.WriteGmlToKml2(_Geometry, _SurfaceType);
+			    				
+			    				_pointList.clear();
+			    				
+			    				_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();
+			    				
+			    				InsertGeomToKML(multiSurfaceProperty.getMultiSurface(), false);
+			    				
+			    				for(List<Double> _Geometry : _pointList){
+			    					
+			    					_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+			    				
+			    				}
 			    			} 
 			    		}
 
@@ -643,8 +657,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 		}
 		// a simple polygon
 		else if (surfaceGeometryType == GMLClass.POLYGON) {
-			System.out.println("PolygonGenerating");
-
+			
 			Polygon polygon = (Polygon)surfaceGeometry;
 			if (polygon.isSetExterior()) {
 				List<List<Double>> pointList = new ArrayList<List<Double>>();
@@ -686,7 +699,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 							return;
 						}
 
-
+						
 						pointList.add(points);
 						int ringNo = 0;
 
@@ -736,7 +749,6 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 										}
 
 										pointList.add(interiorPoints);
-
 										ringNo++;
 
 
@@ -757,13 +769,9 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 
 
 						}
-						_kml.SetGeom(pointList);
+						
 						_pointList.addAll(pointList);
 
-						for (List<Double> coordsList : pointList) {
-
-
-						}
 
 					}
 				} else {

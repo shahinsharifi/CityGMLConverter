@@ -241,11 +241,6 @@ public class CityKmlExporter implements EventHandler {
 
 	public boolean doProcess() throws Exception {
 		
-		System.out.println(PointList.size());
-
-		KMLObject _kmlKmlObject = new KMLObject(TargetFile, TargetSrs);
-		_kmlKmlObject.WriteGmlToKml(PointList, TargetSrs);	
-		_kmlKmlObject.CloseFile();
 		return true;
 	}
 	

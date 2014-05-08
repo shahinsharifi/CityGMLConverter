@@ -318,6 +318,8 @@ public class CityKmlImporter implements EventHandler {
 				featureWorkerPool.prestartCoreWorkers();
 			
 				// ok, preparation done. inform user and start parsing the input file
+				LOG.info("Reading the imported file...");
+				
 				JAXBChunkReader reader = null;
 				
 				try {
