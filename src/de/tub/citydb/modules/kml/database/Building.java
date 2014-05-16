@@ -271,6 +271,7 @@ public class Building extends KmlGenericObject{
 			if (rs != null) { // result not empty
 
 				switch (work.getDisplayForm().getForm()) {
+				
 				case DisplayForm.FOOTPRINT:
 					return createPlacemarksForFootprint(rs, work);
 

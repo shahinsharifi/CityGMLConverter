@@ -55,22 +55,22 @@ import de.tub.citydb.config.project.kmlExporter.BalloonContentMode;
 import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.kmlExporter.DisplayForm;
 import de.tub.citydb.database.DatabaseConnectionPool;
-import de.tub.citydb.modules.kml.database.BalloonTemplateHandlerImpl;
-import de.tub.citydb.modules.kml.database.Building;
-import de.tub.citydb.modules.kml.database.CityFurniture;
-import de.tub.citydb.modules.kml.database.CityObjectGroup;
-import de.tub.citydb.modules.kml.database.ColladaBundle;
-import de.tub.citydb.modules.kml.database.ElevationServiceHandler;
-import de.tub.citydb.modules.kml.database.GenericCityObject;
-import de.tub.citydb.modules.kml.database.KmlExporterManager;
-import de.tub.citydb.modules.kml.database.KmlGenericObject;
-import de.tub.citydb.modules.kml.database.KmlSplittingResult;
-import de.tub.citydb.modules.kml.database.LandUse;
-import de.tub.citydb.modules.kml.database.PlantCover;
-import de.tub.citydb.modules.kml.database.Relief;
-import de.tub.citydb.modules.kml.database.SolitaryVegetationObject;
-import de.tub.citydb.modules.kml.database.Transportation;
-import de.tub.citydb.modules.kml.database.WaterBody;
+import de.tub.citydb.modules.citykml.content2.BalloonTemplateHandlerImpl;
+import de.tub.citydb.modules.citykml.content2.Building;
+import de.tub.citydb.modules.citykml.content2.CityFurniture;
+import de.tub.citydb.modules.citykml.content2.CityObjectGroup;
+import de.tub.citydb.modules.citykml.content2.ColladaBundle;
+import de.tub.citydb.modules.citykml.content2.ElevationServiceHandler;
+import de.tub.citydb.modules.citykml.content2.GenericCityObject;
+import de.tub.citydb.modules.citykml.content2.KmlExporterManager;
+import de.tub.citydb.modules.citykml.content2.KmlGenericObject;
+import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
+import de.tub.citydb.modules.citykml.content2.LandUse;
+import de.tub.citydb.modules.citykml.content2.PlantCover;
+import de.tub.citydb.modules.citykml.content2.Relief;
+import de.tub.citydb.modules.citykml.content2.SolitaryVegetationObject;
+import de.tub.citydb.modules.citykml.content2.Transportation;
+import de.tub.citydb.modules.citykml.content2.WaterBody;
 
 public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 
@@ -102,7 +102,6 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 
 	public CityKmlExportWorker(JAXBContext jaxbKmlContext,
 			JAXBContext jaxbColladaContext,
-			DatabaseConnectionPool dbConnectionPool,
 			WorkerPool<SAXEventBuffer> ioWriterPool,
 			ObjectFactory kmlFactory,
 			CityGMLFactory cityGMLFactory,
@@ -113,8 +112,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		this.config = config;
 		this.eventDispatcher = eventDispatcher;
 
-		connection = dbConnectionPool.getConnection();
-		connection.setAutoCommit(false);
+
 		// try and change workspace if needed
 /*
 		Database database = config.getProject().getDatabase();
@@ -307,6 +305,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		try {
 			switch (featureClass) {
 				case BUILDING:
+					
 					singleObject = new Building(connection,
 												kmlExporterManager,
 												cityGMLFactory,

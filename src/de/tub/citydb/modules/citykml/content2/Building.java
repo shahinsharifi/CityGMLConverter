@@ -47,6 +47,41 @@ import net.opengis.kml._2.PlacemarkType;
 import net.opengis.kml._2.PolygonType;
 
 import org.citygml4j.factory.CityGMLFactory;
+import org.citygml4j.model.citygml.CityGML;
+import org.citygml4j.model.citygml.building.AbstractBoundarySurface;
+import org.citygml4j.model.citygml.building.AbstractBuilding;
+import org.citygml4j.model.citygml.building.BoundarySurfaceProperty;
+import org.citygml4j.model.citygml.texturedsurface._TexturedSurface;
+import org.citygml4j.model.gml.GMLClass;
+import org.citygml4j.model.gml.geometry.AbstractGeometry;
+import org.citygml4j.model.gml.geometry.aggregates.MultiPolygon;
+import org.citygml4j.model.gml.geometry.aggregates.MultiSolid;
+import org.citygml4j.model.gml.geometry.aggregates.MultiSurface;
+import org.citygml4j.model.gml.geometry.aggregates.MultiSurfaceProperty;
+import org.citygml4j.model.gml.geometry.complexes.CompositeSolid;
+import org.citygml4j.model.gml.geometry.complexes.CompositeSurface;
+import org.citygml4j.model.gml.geometry.complexes.GeometricComplex;
+import org.citygml4j.model.gml.geometry.primitives.AbstractRing;
+import org.citygml4j.model.gml.geometry.primitives.AbstractRingProperty;
+import org.citygml4j.model.gml.geometry.primitives.AbstractSolid;
+import org.citygml4j.model.gml.geometry.primitives.AbstractSurface;
+import org.citygml4j.model.gml.geometry.primitives.AbstractSurfacePatch;
+import org.citygml4j.model.gml.geometry.primitives.GeometricPrimitiveProperty;
+import org.citygml4j.model.gml.geometry.primitives.LinearRing;
+import org.citygml4j.model.gml.geometry.primitives.OrientableSurface;
+import org.citygml4j.model.gml.geometry.primitives.PolygonProperty;
+import org.citygml4j.model.gml.geometry.primitives.Rectangle;
+import org.citygml4j.model.gml.geometry.primitives.Solid;
+import org.citygml4j.model.gml.geometry.primitives.SolidArrayProperty;
+import org.citygml4j.model.gml.geometry.primitives.SolidProperty;
+import org.citygml4j.model.gml.geometry.primitives.Surface;
+import org.citygml4j.model.gml.geometry.primitives.SurfaceArrayProperty;
+import org.citygml4j.model.gml.geometry.primitives.SurfacePatchArrayProperty;
+import org.citygml4j.model.gml.geometry.primitives.SurfaceProperty;
+import org.citygml4j.model.gml.geometry.primitives.Triangle;
+import org.citygml4j.model.gml.geometry.primitives.TrianglePatchArrayProperty;
+import org.citygml4j.model.gml.geometry.primitives.TriangulatedSurface;
+import org.citygml4j.util.gmlid.DefaultGMLIdManager;
 import org.postgis.PGgeometry;
 import org.postgis.Polygon;
 
@@ -55,9 +90,12 @@ import de.tub.citydb.config.Config;
 import de.tub.citydb.config.project.kmlExporter.Balloon;
 import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.kmlExporter.DisplayForm;
+import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
+import de.tub.citydb.util.Util;
 
 public class Building extends KmlGenericObject{
 
@@ -105,7 +143,13 @@ public class Building extends KmlGenericObject{
 	public void read(KmlSplittingResult work) {
 
 		List<PlacemarkType> placemarks = new ArrayList<PlacemarkType>();
-		PreparedStatement psQuery = null;
+		
+		CityGML _factory = work.getCityGmlClass();
+		
+		AbstractBuilding _building = (AbstractBuilding)_factory;
+		
+		System.out.println(_building.getId());
+	/*	PreparedStatement psQuery = null;
 		ResultSet rs = null;
 
 		try {
@@ -128,11 +172,9 @@ public class Building extends KmlGenericObject{
 		}
 		finally {
 			
-			try { rs.close(); /* release cursor on DB */ } catch (SQLException sqle) {}
-			rs = null; // workaround for jdbc library: rs.isClosed() throws SQLException!
-			try { psQuery.close(); /* release cursor on DB */ } catch (SQLException sqle) {}
+			
 
-			if (placemarks.size() == 0) {
+		/*	if (placemarks.size() == 0) {
 				int lodToExportFrom = config.getProject().getKmlExporter().getLodToExportFrom();
 				String fromMessage = " from LoD" + lodToExportFrom;
 				if (lodToExportFrom == 5) {
@@ -169,7 +211,7 @@ public class Building extends KmlGenericObject{
 				}
 				catch (JAXBException jaxbEx) {}
 			}
-		}
+		}*/
 	}
 
 	private List<PlacemarkType> readBuildingPart(long buildingPartId, KmlSplittingResult work) {
@@ -490,4 +532,7 @@ public class Building extends KmlGenericObject{
 
 		return placemarkList;
 	}
+	
+	
+	
 }

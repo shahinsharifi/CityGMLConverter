@@ -79,15 +79,10 @@ import net.opengis.kml._2.ViewRefreshModeEnumType;
 
 
 
-
-
-
-
-
-
-
-
+import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
+import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
 import org.citygml4j.factory.CityGMLFactory;
+import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
 import org.citygml4j.util.xml.SAXEventBuffer;
 import org.citygml4j.util.xml.SAXWriter;
@@ -129,19 +124,19 @@ import de.tub.citydb.modules.common.event.StatusDialogMessage;
 import de.tub.citydb.modules.common.event.StatusDialogTitle;
 import de.tub.citydb.modules.common.filter.ExportFilter;
 import de.tub.citydb.modules.common.filter.FilterMode;
-import de.tub.citydb.modules.kml.concurrent.KmlExportWorkerFactory;
-import de.tub.citydb.modules.kml.database.Building;
-import de.tub.citydb.modules.kml.database.CityFurniture;
-import de.tub.citydb.modules.kml.database.CityObjectGroup;
-import de.tub.citydb.modules.kml.database.GenericCityObject;
-import de.tub.citydb.modules.kml.database.KmlSplitter;
-import de.tub.citydb.modules.kml.database.KmlSplittingResult;
-import de.tub.citydb.modules.kml.database.LandUse;
-import de.tub.citydb.modules.kml.database.PlantCover;
-import de.tub.citydb.modules.kml.database.Relief;
-import de.tub.citydb.modules.kml.database.SolitaryVegetationObject;
-import de.tub.citydb.modules.kml.database.Transportation;
-import de.tub.citydb.modules.kml.database.WaterBody;
+import de.tub.citydb.modules.citykml.concurrent.CityKmlExportWorkerFactory;
+import de.tub.citydb.modules.citykml.content2.Building;
+import de.tub.citydb.modules.citykml.content2.CityFurniture;
+import de.tub.citydb.modules.citykml.content2.CityObjectGroup;
+import de.tub.citydb.modules.citykml.content2.GenericCityObject;
+import de.tub.citydb.modules.citykml.content2.KmlSplitter;
+import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
+import de.tub.citydb.modules.citykml.content2.LandUse;
+import de.tub.citydb.modules.citykml.content2.PlantCover;
+import de.tub.citydb.modules.citykml.content2.Relief;
+import de.tub.citydb.modules.citykml.content2.SolitaryVegetationObject;
+import de.tub.citydb.modules.citykml.content2.Transportation;
+import de.tub.citydb.modules.citykml.content2.WaterBody;
 import de.tub.citydb.modules.kml.util.CityObject4JSON;
 import de.tub.citydb.modules.kml.util.KMLHeaderWriter;
 import de.tub.citydb.util.database.DBUtil;
@@ -239,33 +234,38 @@ public class CityKmlExporter implements EventHandler {
 	}
 	
 
-	public boolean doProcess() throws Exception {
+/*
+	public boolean doProcess(List<CityGML> work) throws Exception {
 		
+		for(CityGML _GML:	work)
+		{
+			System.out.println(_GML.getCityGMLClass().name());
+		}		
 		return true;
 	}
 	
-	/*
-	public boolean doProcess(){
+	*/
+	public boolean doProcess(JAXBChunkReader reader){
 		
 		geometryCounter = 0;
 		
 		// get config shortcuts
 		de.tub.citydb.config.project.system.System system = config.getProject().getKmlExporter().getSystem();
-	
+
 		// worker pool settings
 		int minThreads = system.getThreadPool().getDefaultPool().getMinThreads();
 		int maxThreads = system.getThreadPool().getDefaultPool().getMaxThreads();
-	
+
 		// adding listener
 		eventDispatcher.addEventHandler(EventType.COUNTER, this);
 		eventDispatcher.addEventHandler(EventType.GEOMETRY_COUNTER, this);
 		eventDispatcher.addEventHandler(EventType.INTERRUPT, this);
-	
+/*
 		// checking workspace...
 		Workspace workspace = config.getProject().getDatabase().getWorkspaces().getKmlExportWorkspace();
 		if (!workspace.getName().toUpperCase().equals("LIVE")) {
 			boolean workspaceExists = dbPool.existsWorkspace(workspace);
-	
+
 			String name = "'" + workspace.getName().trim() + "'";
 			String timestamp = workspace.getTimestamp().trim();
 			if (timestamp.trim().length() > 0)
@@ -277,12 +277,12 @@ public class CityKmlExporter implements EventHandler {
 			} else 
 				Logger.getInstance().info("Switching to database workspace " + name + '.');
 		}
-	
+*/
 		// check whether spatial indexes are enabled
 		
 		Logger.getInstance().info("Checking for spatial indexes on geometry columns of involved tables...");
 		
-		try {
+		/*try {
 			if (!DBUtil.isIndexed("CITYOBJECT", "ENVELOPE") || 
 					!DBUtil.isIndexed("SURFACE_GEOMETRY", "GEOMETRY")) {
 				Logger.getInstance().error("Spatial indexes are not activated.");
@@ -293,8 +293,8 @@ public class CityKmlExporter implements EventHandler {
 		catch (SQLException e) {
 			Logger.getInstance().error("Failed to retrieve status of spatial indexes: " + e.getMessage());
 			return false;
-		}
-	
+		}*/
+
 		String selectedTheme = config.getProject().getKmlExporter().getAppearanceTheme();
 		if (!selectedTheme.equals(de.tub.citydb.config.project.kmlExporter.KmlExporter.THEME_NONE)) {
 			try {
@@ -312,7 +312,8 @@ public class CityKmlExporter implements EventHandler {
 				return false;
 			}
 		}
-	
+
+
 		boolean balloonCheck = checkBalloonSettings(CityGMLClass.BUILDING);
 		balloonCheck = checkBalloonSettings(CityGMLClass.WATER_BODY) && balloonCheck;
 		balloonCheck = checkBalloonSettings(CityGMLClass.LAND_USE) && balloonCheck;
@@ -324,13 +325,15 @@ public class CityKmlExporter implements EventHandler {
 		balloonCheck = checkBalloonSettings(CityGMLClass.CITY_OBJECT_GROUP) && balloonCheck;
 		if (!balloonCheck) 
 			return false;
-	
+		
 		// getting export filter
-		ExportFilter exportFilter = new ExportFilter(config, FilterMode.KML_EXPORT);
-		boolean isBBoxActive = config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue();
+	//	ExportFilter exportFilter = new ExportFilter(config, FilterMode.KML_EXPORT);
+		boolean isBBoxActive = false;//config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue();
 		// bounding box config
-		Tiling tiling = config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getTiling();
-	
+		//Tiling tiling = config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getTiling();
+
+		
+		
 		// create a saxWriter instance 
 		// define indent for xml output and namespace mappings
 		SAXWriter saxWriter = new SAXWriter();
@@ -342,12 +345,11 @@ public class CityKmlExporter implements EventHandler {
 		saxWriter.setPrefix("gx", "http://www.google.com/kml/ext/2.2");
 		saxWriter.setPrefix("atom", "http://www.w3.org/2005/Atom");
 		saxWriter.setPrefix("xal", "urn:oasis:names:tc:ciq:xsdschema:xAL:2.0");
-	
+		
 		Properties props = new Properties();
 		props.put(Marshaller.JAXB_FRAGMENT, new Boolean(true));
-	
+
 		path = config.getInternal().getExportFileName().trim();
-	
 		if (path.lastIndexOf(File.separator) == -1) {
 			if (path.lastIndexOf(".") == -1) {
 				filename = path;
@@ -359,15 +361,17 @@ public class CityKmlExporter implements EventHandler {
 		}
 		else {
 			if (path.lastIndexOf(".") == -1) {
+				
 				filename = path.substring(path.lastIndexOf(File.separator) + 1);
 			}
 			else {
+			
 				filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
 			}
 			path = path.substring(0, path.lastIndexOf(File.separator));
 		}
-	
-		if (isBBoxActive && tiling.getMode() != TilingMode.NO_TILING) {
+
+		/*if (isBBoxActive && tiling.getMode() != TilingMode.NO_TILING) {
 			try {
 				
 				int activeDisplayFormsAmount = 
@@ -385,40 +389,51 @@ public class CityKmlExporter implements EventHandler {
 		else {
 			rows = 1;
 			columns = 1;
-		}
-	
-		for (DisplayForm displayForm : config.getProject().getKmlExporter().getBuildingDisplayForms()) {
-			if (!displayForm.isActive()) 
+		}*/
+		
+		rows = 1;
+		columns = 1;
+		
+		List<DisplayForm> _Dispaly = new ArrayList<DisplayForm>();
+		_Dispaly.add(new DisplayForm(3, 1, 4));
+		
+		for (DisplayForm displayForm : _Dispaly) {
+		/*	if (!displayForm.isActive()) 
 				continue;
-	
+*/
+
 			alreadyExported = new HashMap<Long, CityObject4JSON>();
-	
+
 			for (int i = 0; shouldRun && i < rows; i++) {
 				
 				for (int j = 0; shouldRun && j < columns; j++) {
-	
-					if (lastTempFolder != null && lastTempFolder.exists()) deleteFolder(lastTempFolder); // just in case
-	
+
+					if (lastTempFolder != null && lastTempFolder.exists()) 
+						deleteFolder(lastTempFolder); // just in case
+
 					File file = null;
 					OutputStreamWriter fileWriter = null;
 					ZipOutputStream zipOut = null;
-	
+
 					try {
 						String fileExtension = config.getProject().getKmlExporter().isExportAsKmz() ? ".kmz" : ".kml";
-						if (isBBoxActive && tiling.getMode() != TilingMode.NO_TILING) {
+						/*if (isBBoxActive && tiling.getMode() != TilingMode.NO_TILING) {
 							exportFilter.getBoundingBoxFilter().setActiveTile(i, j);
 							file = new File(path + File.separator + filename + "_Tile_"
 									 	 	+ i + "_" + j + "_" + displayForm.getName() + fileExtension);
 						}
 						else {
 							file = new File(path + File.separator + filename + "_" + displayForm.getName() + fileExtension);
-						}
-	
+						}*/
+
+						file = new File(path + File.separator + filename + "_" + displayForm.getName() + fileExtension);
+						
 						eventDispatcher.triggerEvent(new StatusDialogTitle(file.getName(), this));
-	
+						
 						// open file for writing
 						try {
 							if (config.getProject().getKmlExporter().isExportAsKmz()) { 
+								
 								zipOut = new ZipOutputStream(new FileOutputStream(file));
 								ZipEntry zipEntry = new ZipEntry("doc.kml");
 								zipOut.putNextEntry(zipEntry);
@@ -430,25 +445,25 @@ public class CityKmlExporter implements EventHandler {
 								
 							// set output for SAXWriter
 							saxWriter.setOutput(new StreamResult(fileWriter), ENCODING);	
+							
 						} catch (IOException ioE) {
 							Logger.getInstance().error("Failed to open file '" + file.getName() + "' for writing: " + ioE.getMessage());
 							return false;
 						}
-	
+
 						// create worker pools
 						// here we have an open issue: queue sizes are fix...
 						ioWriterPool = new SingleWorkerPool<SAXEventBuffer>(
 								new IOWriterWorkerFactory(saxWriter),
 								100,
 								true);
-	
+
 						kmlWorkerPool = new WorkerPool<KmlSplittingResult>(
 								minThreads,
 								maxThreads,
-								new KmlExportWorkerFactory(
+								new CityKmlExportWorkerFactory(
 										jaxbKmlContext,
 										jaxbColladaContext,
-										dbPool,
 										ioWriterPool,
 										kmlFactory,
 										cityGMLFactory,
@@ -456,40 +471,42 @@ public class CityKmlExporter implements EventHandler {
 										eventDispatcher),
 										300,
 										false);
-	
+
 						// prestart pool workers
 						ioWriterPool.prestartCoreWorkers();
 						kmlWorkerPool.prestartCoreWorkers();
-						
+
 						// create file header
 						KMLHeaderWriter kmlHeader = new KMLHeaderWriter(saxWriter);
-	
+
 						// ok, preparations done. inform user...
 						Logger.getInstance().info("Exporting to file: " + file.getAbsolutePath());
-						
+
 						// create kml root element
 						KmlType kmlType = kmlFactory.createKmlType();
 						JAXBElement<KmlType> kml = kmlFactory.createKml(kmlType);
-						
+
 						DocumentType document = kmlFactory.createDocumentType();
-						
-						document.setName(filename + "_" + "Geometry");
-						
+						/*if (isBBoxActive &&	tiling.getMode() != TilingMode.NO_TILING) {
+							document.setName(filename + "_Tile_" + i + "_" + j + "_" + displayForm.getName());
+						}
+						else {
+							document.setName(filename + "_" + displayForm.getName());
+						}*/
 						document.setOpen(false);
 						kmlType.setAbstractFeatureGroup(kmlFactory.createDocument(document));
-						
+
 						try {
 							
 							kmlHeader.setRootElement(kml, jaxbKmlContext, props);
 							kmlHeader.startRootElement();
-	
+
 							// make sure header has been written
 							saxWriter.flush();
-	
-							if (isBBoxActive &&	tiling.getMode() != TilingMode.NO_TILING) {
+
+							/*if (isBBoxActive &&	tiling.getMode() != TilingMode.NO_TILING) {
 								addBorder(i, j);
-							}
-							
+							}*/
 							
 						} catch (JAXBException jaxBE) {
 							Logger.getInstance().error("I/O error: " + jaxBE.getMessage());
@@ -498,40 +515,40 @@ public class CityKmlExporter implements EventHandler {
 							Logger.getInstance().error("I/O error: " + saxE.getMessage());
 							return false;
 						}
-						
+
+					
 						// get database splitter and start query
-						
-						//kmlSplitter = null;
+						kmlSplitter = null;
 						try {
+							
 							kmlSplitter = new KmlSplitter(
-									dbPool,
 									kmlWorkerPool,
-									exportFilter,
+								//	exportFilter,
 									displayForm,
 									config);
-	
+
 							if (shouldRun)
-								kmlSplitter.startQuery();
+								kmlSplitter.startQuery(reader);
+							
 						} catch (SQLException sqlE) {
 							Logger.getInstance().error("SQL error: " + sqlE.getMessage());
 							return false;
 						}
-	
+
 						try {
 							
 							if (shouldRun)
 								kmlWorkerPool.shutdownAndWait();
-	
+
 							if (!featureCounterMap.isEmpty() &&
 									(!config.getProject().getKmlExporter().isOneFilePerObject() ||
 									  config.getProject().getKmlExporter().getFilter().isSetSimpleFilter())) {
-								
 								for (CityGMLClass type : featureCounterMap.keySet()) {
 									if (featureCounterMap.get(type) > 0)
 										addStyle(displayForm, type);
 								}
 							}
-	
+
 							ioWriterPool.shutdownAndWait();
 						} catch (InterruptedException e) {
 							System.out.println(e.getMessage());
@@ -539,7 +556,7 @@ public class CityKmlExporter implements EventHandler {
 							Logger.getInstance().error("I/O error: " + jaxBE.getMessage());
 							return false;
 						}
-	
+
 						// write footer element
 						try {
 							kmlHeader.endRootElement();
@@ -547,20 +564,20 @@ public class CityKmlExporter implements EventHandler {
 							Logger.getInstance().error("XML error: " + saxE.getMessage());
 							return false;
 						}
-	
+
 						eventDispatcher.triggerEvent(new StatusDialogMessage(Internal.I18N.getString("kmlExport.dialog.writingToFile"), this));
-	
+
 						// flush sax writer and close file
 						try {
 							saxWriter.flush();
 							if (config.getProject().getKmlExporter().isExportAsKmz()) { 
 								zipOut.closeEntry();
-	
+
 								List<File> filesToZip = new ArrayList<File>();
 								File tempFolder = new File(path, TEMP_FOLDER);
 								lastTempFolder = tempFolder;
 								int indexOfZipFilePath = tempFolder.getCanonicalPath().length() + 1;
-	
+
 								if (tempFolder.exists()) { // !config.getProject().getKmlExporter().isOneFilePerObject()
 									Logger.getInstance().info("Zipping to kmz archive from temporary folder...");
 									getAllFiles(tempFolder, filesToZip);
@@ -596,9 +613,9 @@ public class CityKmlExporter implements EventHandler {
 							catch (Exception e) {}
 							return false;
 						}
-	
+
 						eventDispatcher.triggerEvent(new StatusDialogMessage(" ", this));
-	
+
 						// finally join eventDispatcher
 						try {
 							eventDispatcher.flushEvents();
@@ -606,36 +623,36 @@ public class CityKmlExporter implements EventHandler {
 							Logger.getInstance().error("Internal error: " + iE.getMessage());
 							return false;
 						}
-	
+
 						// set null
 						ioWriterPool = null;
 						kmlWorkerPool = null;
 						kmlSplitter = null;
-	
+
 					}
-	
+/*
 					catch (FileNotFoundException fnfe) {
 						Logger.getInstance().error("Path \"" + path + "\" not found.");
 						return false;
 					}
-	
+*/
 					finally {}
 				}
 			}
 		}
-	
+
 		if (isBBoxActive) {
 			try {
 				eventDispatcher.triggerEvent(new StatusDialogTitle(filename + ".kml", this));
 				eventDispatcher.triggerEvent(new StatusDialogMessage(Internal.I18N.getString("kmlExport.dialog.writingMainFile"), this));
-				//generateMasterFile();
+				generateMasterFile();
 			}
 			catch (Exception ex) {
 				ex.printStackTrace();
 				return false;
 			}
 		}
-	
+
 		if (config.getProject().getKmlExporter().isWriteJSONFile()) {
 			try {
 				Logger.getInstance().info("Writing file: " + filename + ".json");
@@ -645,17 +662,17 @@ public class CityKmlExporter implements EventHandler {
 					outputStream.write((config.getProject().getKmlExporter().getCallbackNameJSONP() + "({\n").getBytes(CHARSET));
 				else
 					outputStream.write("{\n".getBytes(CHARSET));
-	
+
 				Iterator<Long> iterator = alreadyExported.keySet().iterator();
 				while (iterator.hasNext()) {
 					Long id = iterator.next();
-	//				outputStream.write(("\t\"" + id + "\": {").toString().getBytes(CHARSET));
+//					outputStream.write(("\t\"" + id + "\": {").toString().getBytes(CHARSET));
 					outputStream.write(alreadyExported.get(id).toString().getBytes(CHARSET));
 					if (iterator.hasNext()) {
 						outputStream.write(",\n".getBytes(CHARSET));
 					}
 				}
-	
+
 				if (config.getProject().getKmlExporter().isWriteJSONPFile())
 					outputStream.write("\n});\n".getBytes(CHARSET));
 				else
@@ -664,12 +681,12 @@ public class CityKmlExporter implements EventHandler {
 			}
 			catch (IOException ioe) {
 				Logger.getInstance().error("I/O error: " + ioe.getMessage());
-	//			ioe.printStackTrace();
+//				ioe.printStackTrace();
 			}
 		}
 		
 		eventDispatcher.triggerEvent(new StatusDialogMessage(Internal.I18N.getString("export.dialog.finish.msg"), this));
-	
+
 		// show exported features
 		if (!featureCounterMap.isEmpty()) {
 			Logger.getInstance().info("Exported CityGML features:");
@@ -677,13 +694,12 @@ public class CityKmlExporter implements EventHandler {
 				Logger.getInstance().info(type + ": " + featureCounterMap.get(type));
 		}
 		Logger.getInstance().info("Processed geometry objects: " + geometryCounter);
-	
+
 		if (lastTempFolder != null && lastTempFolder.exists()) deleteFolder(lastTempFolder); // just in case
-	
+
 		return shouldRun;
-		
 	}
-*/	
+
 	
 	
 
@@ -957,6 +973,9 @@ public class CityKmlExporter implements EventHandler {
 	}
 
 	private void addStyle(DisplayForm currentDisplayForm, CityGMLClass featureClass) throws JAXBException {
+		
+		
+		
 		if (!currentDisplayForm.isActive()) return;
 		switch (featureClass) {
 			case SOLITARY_VEGETATION_OBJECT:

@@ -34,7 +34,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.List;
 
+import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
+import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
+import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
 import org.postgis.Geometry;
 import org.postgis.PGgeometry;
@@ -48,7 +52,7 @@ import de.tub.citydb.config.project.kmlExporter.DisplayForm;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.filter.ExportFilter;
-import de.tub.citydb.modules.kml.controller.KmlExporter;
+import de.tub.citydb.modules.citykml.controller.CityKmlExporter;
 import de.tub.citydb.modules.kml.util.CityObject4JSON;
 import de.tub.citydb.util.Util;
 
@@ -58,7 +62,7 @@ public class KmlSplitter {
 	
 	private final WorkerPool<KmlSplittingResult> dbWorkerPool;
 	private final DisplayForm displayForm;
-	private final ExportFilter exportFilter;
+//	private final ExportFilter exportFilter;
 //	private final Config config;
 	private ExportFilterConfig filterConfig;
 	private volatile boolean shouldRun = true;
@@ -66,14 +70,14 @@ public class KmlSplitter {
 	private Connection connection;
 	private DatabaseSrs dbSrs;
 	
-	public KmlSplitter(DatabaseConnectionPool dbConnectionPool, 
+	public KmlSplitter( 
 					   WorkerPool<KmlSplittingResult> dbWorkerPool, 
-					   ExportFilter exportFilter, 
+					//   ExportFilter exportFilter, 
 					   DisplayForm displayForm,
 					   Config config) throws SQLException {
 
 		this.dbWorkerPool = dbWorkerPool;
-		this.exportFilter = exportFilter;
+	//	this.exportFilter = exportFilter;
 		this.displayForm = displayForm;
 //		this.config = config;
 
@@ -132,8 +136,7 @@ public class KmlSplitter {
 			CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.add(CityGMLClass.CITY_OBJECT_GROUP);
 		}
 			
-		connection = dbConnectionPool.getConnection();
-		dbSrs = dbConnectionPool.getActiveConnectionMetaData().getReferenceSystem();
+
 
 		// try and change workspace for connection if needed
 		/*Database database = config.getProject().getDatabase();
@@ -142,127 +145,58 @@ public class KmlSplitter {
 
 	}
 
-	private void queryObjects() throws SQLException {
+	private void queryObjects(JAXBChunkReader reader) throws SQLException {
 
-//		long startTime = System.currentTimeMillis();
-
+		
 		if (filterConfig.isSetSimpleFilter()) {
 			for (String gmlId: filterConfig.getSimpleFilter().getGmlIdFilter().getGmlIds()) {
 				if (!shouldRun) break;
 
-				ResultSet rs = null;
-				PreparedStatement query = null;
-				try {
-					query = connection.prepareStatement(Queries.GET_ID_AND_OBJECTCLASS_FROM_GMLID);
-					query.setString(1, gmlId);
-					rs = query.executeQuery();
-					
-					if (rs.next()) {
-						long id = rs.getLong("id");
-						if (KmlExporter.getAlreadyExported().containsKey(id)) continue;
-						CityGMLClass cityObjectType = Util.classId2cityObject(rs.getInt("class_id"));
-						addWorkToQueue(id, gmlId, cityObjectType, 0, 0);
-					}
-				}
-				catch (SQLException sqlEx) {
-					throw sqlEx;
-				}
-				finally {
-					if (rs != null) {
-						try { rs.close(); }	catch (SQLException sqlEx) { throw sqlEx; }
-						rs = null;
-					}
-
-					if (query != null) {
-						try { query.close(); } catch (SQLException sqlEx) { throw sqlEx; }
-						query = null;
-					}
-				}
+				
 			}
 		}
 		else if (filterConfig.isSetComplexFilter() &&
 				 filterConfig.getComplexFilter().getTiledBoundingBox().isSet()) {
 			
-			BoundingBox tile = exportFilter.getBoundingBoxFilter().getFilterState();
-			ResultSet rs = null;
-			PreparedStatement spatialQuery = null;
-			String lineGeom = null;
-			String polyGeom = null;
-						
+			
 			try {
-				spatialQuery = connection.prepareStatement(Queries.GET_IDS);
-
-				int srid = dbSrs.getSrid();
-
-				lineGeom = "SRID=" + srid + ";LINESTRING(" +
-						tile.getLowerLeftCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-						tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-						tile.getUpperRightCorner().getX() + " " + tile.getLowerLeftCorner().getY() + ")";
+			
+				while (reader.hasNextChunk()) {
+					
+					
+					CityGMLChunk chunk = reader.nextChunk();
+					
+					CityGML _CityGML = chunk.unmarshal();
+					
+					CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
+					
+					KmlSplittingResult splitter = new KmlSplittingResult(_CityGML , cityObjectType, displayForm);
+					
+					
+					dbWorkerPool.addWork(splitter);		
 				
-				polyGeom = "SRID=" + srid + ";POLYGON((" +
-						tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-						tile.getLowerLeftCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-						tile.getUpperRightCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-						tile.getUpperRightCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-						tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "))";
-				
-				spatialQuery.setString(1, lineGeom);
-				spatialQuery.setString(2, polyGeom);
-				
-				rs = spatialQuery.executeQuery();
-				
-/*
-				String absolutePath = config.getInternal().getExportFileName().trim();
-				String filename = absolutePath.substring(absolutePath.lastIndexOf(File.separator) + 1,
-														 absolutePath.lastIndexOf("."));
-				String tileName = filename + "_Tile_" 
-										   + exportFilter.getBoundingBoxFilter().getTileColumn()
-										   + "_" 
-										   + exportFilter.getBoundingBoxFilter().getTileRow();
-
-				Logger.getInstance().info("Spatial query for " + tileName + " resolved in " +
-										  (System.currentTimeMillis() - startTime) + " millis.");
-*/
-				int objectCount = 0;
-
-				while (rs.next() && shouldRun) {
-					long id = rs.getLong("id");
-					String gmlId = rs.getString("gmlId");
-					CityGMLClass cityObjectType = Util.classId2cityObject(rs.getInt("class_id"));
-					addWorkToQueue(id, gmlId, cityObjectType, 
-								   exportFilter.getBoundingBoxFilter().getTileRow(),
-								   exportFilter.getBoundingBoxFilter().getTileColumn());
-
-					objectCount++;
 				}
-
-				Logger.getInstance().debug("Tile_" + exportFilter.getBoundingBoxFilter().getTileRow()
-						   					 + "_" + exportFilter.getBoundingBoxFilter().getTileColumn()
-						   					 + " contained " + objectCount + " objects.");
+				
+				
+			} catch (Exception e) {
+				
+				System.out.println(e.toString());
+			
 			}
-			catch (SQLException sqlEx) {
-				throw sqlEx;
-			}
-			finally {
-				if (rs != null) {
-					try { rs.close(); }	catch (SQLException sqlEx) { throw sqlEx; }
-					rs = null;
-				}
-
-				if (spatialQuery != null) {
-					try { spatialQuery.close(); } catch (SQLException sqlEx) { throw sqlEx; }
-					spatialQuery = null;
-				}
-			}
+			
+			
 		}
 	}
 
-	public void startQuery() throws SQLException {
+	public void startQuery(JAXBChunkReader reader) throws SQLException {
 		try {
-			queryObjects();
+			
+			queryObjects(reader);
 
 			if (shouldRun) {
+				
 				try {
+					
 					dbWorkerPool.join();
 				}
 				catch (InterruptedException e) {}
@@ -287,8 +221,8 @@ public class KmlSplitter {
 
 	private void addWorkToQueue(long id, String gmlId, CityGMLClass cityObjectType, int row, int column) throws SQLException {
 
-		if ((filterConfig.isSetSimpleFilter() || CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.contains(cityObjectType)) &&
-			!KmlExporter.getAlreadyExported().containsKey(id)) {
+		/*if ((filterConfig.isSetSimpleFilter() || CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.contains(cityObjectType))){
+//			 && !KmlExporter.getAlreadyExported().containsKey(id)) {
 
 			CityObject4JSON cityObject4Json = new CityObject4JSON(gmlId);
 			cityObject4Json.setTileRow(row);
@@ -298,47 +232,23 @@ public class KmlSplitter {
 
 			KmlSplittingResult splitter = new KmlSplittingResult(id, gmlId, cityObjectType, displayForm);
 			dbWorkerPool.addWork(splitter);
-			KmlExporter.getAlreadyExported().put(id, cityObject4Json);
+		//	KmlExporter.getAlreadyExported().put(id, cityObject4Json);
 
 			if (splitter.isCityObjectGroup() && 
 					(filterConfig.isSetSimpleFilter() || CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.size() > 1)) {
-				ResultSet rs = null;
-				PreparedStatement query = null;
-				String lineGeom = null;
-				String polyGeom = null;
+
 				
 				try {
+					
 					if (filterConfig.isSetComplexFilter() &&
 						filterConfig.getComplexFilter().getTiledBoundingBox().isSet()) {
 
-						query = connection.prepareStatement(Queries.CITYOBJECTGROUP_MEMBERS_IN_BBOX);
-						BoundingBox tile = exportFilter.getBoundingBoxFilter().getFilterState();
-						int srid = dbSrs.getSrid();
 						
-						lineGeom = "SRID=" + srid + ";LINESTRING(" +
-								tile.getLowerLeftCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-								tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-								tile.getUpperRightCorner().getX() + " " + tile.getLowerLeftCorner().getY() + ")'";
-						
-						polyGeom = "SRID=" + srid + ";POLYGON((" +
-								tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-								tile.getLowerLeftCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-								tile.getUpperRightCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-								tile.getUpperRightCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-								tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "))";
-						
-						query.setLong(1, id);
-						query.setString(2, lineGeom);
-						query.setLong(3, id);
-						query.setString(4, polyGeom);
-						
-						rs = query.executeQuery();
 					}
 					else {
-						query = connection.prepareStatement(Queries.CITYOBJECTGROUP_MEMBERS);
-						query.setLong(1, id);
+						
 					}
-					rs = query.executeQuery();
+					
 					
 					while (rs.next() && shouldRun) {
 						addWorkToQueue(rs.getLong("id"), // recursion for recursive groups
@@ -348,22 +258,14 @@ public class KmlSplitter {
 									   column);
 					}
 				}
-				catch (SQLException sqlEx) {
-					throw sqlEx;
+				catch (Exception Ex) {
+					throw Ex;
 				}
 				finally {
-					if (rs != null) {
-						try { rs.close(); }	catch (SQLException sqlEx) { throw sqlEx; }
-						rs = null;
-					}
-
-					if (query != null) {
-						try { query.close(); } catch (SQLException sqlEx) { throw sqlEx; }
-						query = null;
-					}
+					
 				}
 			}
-		}
+		}*/
 	}
 	
 	private double[] getEnvelopeInWGS84(long id) {

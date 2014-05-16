@@ -466,6 +466,7 @@ public class KmlExporter implements EventHandler {
 						}
 
 						try {
+							
 							if (shouldRun)
 								kmlWorkerPool.shutdownAndWait();
 

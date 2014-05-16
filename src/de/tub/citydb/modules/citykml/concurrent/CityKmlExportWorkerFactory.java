@@ -45,13 +45,12 @@ import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.database.DatabaseConnectionPool;
-import de.tub.citydb.modules.kml.database.ColladaBundle;
-import de.tub.citydb.modules.kml.database.KmlSplittingResult;
+import de.tub.citydb.modules.citykml.content2.ColladaBundle;
+import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
 
 public class CityKmlExportWorkerFactory implements WorkerFactory<KmlSplittingResult> {
 	private final JAXBContext jaxbKmlContext;
 	private final JAXBContext jaxbColladaContext;
-	private final DatabaseConnectionPool dbConnectionPool;
 	private final WorkerPool<SAXEventBuffer> ioWriterPool;
 	private final ObjectFactory kmlFactory;
 	private final CityGMLFactory cityGMLFactory;
@@ -61,7 +60,6 @@ public class CityKmlExportWorkerFactory implements WorkerFactory<KmlSplittingRes
 	public CityKmlExportWorkerFactory(
 			JAXBContext jaxbKmlContext,
 			JAXBContext jaxbColladaContext,
-			DatabaseConnectionPool dbConnectionPool,
 			WorkerPool<SAXEventBuffer> ioWriterPool,
 			ObjectFactory kmlFactory,
 			CityGMLFactory cityGMLFactory,
@@ -69,7 +67,6 @@ public class CityKmlExportWorkerFactory implements WorkerFactory<KmlSplittingRes
 			EventDispatcher eventDispatcher) {
 		this.jaxbKmlContext = jaxbKmlContext;
 		this.jaxbColladaContext = jaxbColladaContext;
-		this.dbConnectionPool = dbConnectionPool;
 		this.ioWriterPool = ioWriterPool;
 		this.kmlFactory = kmlFactory;
 		this.cityGMLFactory = cityGMLFactory;
@@ -85,7 +82,6 @@ public class CityKmlExportWorkerFactory implements WorkerFactory<KmlSplittingRes
 			kmlWorker = new CityKmlExportWorker(
 					jaxbKmlContext,
 					jaxbColladaContext,
-					dbConnectionPool,
 					ioWriterPool,
 					kmlFactory,
 					cityGMLFactory,

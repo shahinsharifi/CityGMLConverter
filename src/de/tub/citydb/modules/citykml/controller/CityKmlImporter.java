@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 import javax.xml.namespace.QName;
@@ -53,8 +54,11 @@ import org.citygml4j.xml.io.CityGMLInputFactory;
 import org.citygml4j.xml.io.reader.CityGMLInputFilter;
 import org.citygml4j.xml.io.reader.CityGMLReadException;
 import org.citygml4j.xml.io.reader.FeatureReadMode;
+import org.citygml4j.xml.io.reader.MissingADESchemaException;
+import org.xml.sax.SAXException;
 
 import de.tub.citydb.api.concurrent.WorkerPool;
+import de.tub.citydb.api.concurrent.WorkerPool.WorkQueue;
 import de.tub.citydb.api.event.Event;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.api.event.EventHandler;
@@ -136,12 +140,17 @@ public class CityKmlImporter implements EventHandler {
 	private final int PARSING = 2;
 	private final int XLINK_RESOLVING = 3;
 	
+	private static List<CityGML> _Reader;
+	private static JAXBChunkReader _ChunkReader;
+	
+	
 	private static List<List<Double>> pointList = new ArrayList<List<Double>>();
 
 	public CityKmlImporter(JAXBBuilder jaxbBuilder, 
 			DatabaseConnectionPool dbPool, 
 			Config config, 
 			EventDispatcher eventDispatcher) {
+		
 		this.jaxbBuilder = jaxbBuilder;
 		this.dbPool = dbPool;
 		this.config = config;
@@ -161,6 +170,39 @@ public class CityKmlImporter implements EventHandler {
 		return pointList;
 		
 	}
+	
+
+	//------------------CityGML list-------------------------
+	public List<CityGML>  GetCityGMLInputFile()
+	{	
+		
+		return _Reader;
+		
+	}
+	
+	public void SetCityGMLInputFile(List<CityGML>  reader)
+	{	
+		
+		_Reader = reader; 
+		
+	}
+	
+	
+	//------------------Chunk Reader-------------------------
+	public JAXBChunkReader GetCityGMLReader()
+	{	
+		
+		return _ChunkReader;
+		
+	}
+	
+	public void SetCityGMLReader(JAXBChunkReader  _Reader)
+	{	
+		
+		_ChunkReader = _Reader; 
+		
+	}
+	
 	
 	
 	public CityKmlImportWorkerFactory GetKmlImportWorker()
@@ -320,10 +362,14 @@ public class CityKmlImporter implements EventHandler {
 				// ok, preparation done. inform user and start parsing the input file
 				LOG.info("Reading the imported file...");
 				
-				JAXBChunkReader reader = null;
+
 				
 				try {
-					reader = (JAXBChunkReader)in.createFilteredCityGMLReader(in.createCityGMLReader(file), inputFilter);	
+					
+					_ChunkReader = (JAXBChunkReader)in.createFilteredCityGMLReader(in.createCityGMLReader(file), inputFilter);	
+				
+					
+					/*
 					
 					while (shouldRun && reader.hasNextChunk()) {
 						
@@ -338,9 +384,10 @@ public class CityKmlImporter implements EventHandler {
 							if (counterLastElement != null && elementCounter > counterLastElement)				
 								break;
 						}
-
-						featureWorkerPool.addWork(chunk);
+						
+					//	featureWorkerPool.addWork(chunk);
 					}	
+					*/
 					
 				} catch (CityGMLReadException e) {
 					LOG.error("Fatal CityGML parser error: " + e.getCause().getMessage());
@@ -356,8 +403,8 @@ public class CityKmlImporter implements EventHandler {
 				}
 
 				try {
-					reader.close();
-				} catch (CityGMLReadException e) {
+				//	_ChunkReader.close();
+				} catch (Exception e) {
 					//
 				}
 

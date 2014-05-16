@@ -29,19 +29,23 @@
  */
 package de.tub.citydb.modules.citykml.content2;
 
+import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
+
 import de.tub.citydb.config.project.kmlExporter.DisplayForm;
 
 public class KmlSplittingResult {
 
 	private long id;
 	private String gmlId;
+	private CityGML work;
 	private DisplayForm displayForm;
 	private CityGMLClass cityObjectType;
 
-	public KmlSplittingResult(long id, String gmlId, CityGMLClass cityObjectType, DisplayForm displayForm) {
+	public KmlSplittingResult(CityGML _work , CityGMLClass cityObjectType, DisplayForm displayForm) {
 		this.setId(id);
 		this.setGmlId(gmlId);
+		this.setCityGmlClass(_work);
 		this.setCityObjectType(cityObjectType);
 		this.setDisplayForm(displayForm);
 	}
@@ -62,6 +66,15 @@ public class KmlSplittingResult {
 		return gmlId;
 	}
 
+	public CityGML getCityGmlClass() {
+		return work;
+	}
+
+	public void setCityGmlClass(CityGML _work) {
+		this.work = _work;
+	}
+	
+	
 	public void setDisplayForm(DisplayForm displayForm) {
 		this.displayForm = displayForm;
 	}

@@ -97,7 +97,7 @@ public class KmlExporterManager {
 		this.kmlFactory = kmlFactory;
 		this.config = config;
 
-		isBBoxActive = config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue();
+		isBBoxActive = false;//config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue();
 		mainFilename = config.getInternal().getExportFileName().trim();
 		if (mainFilename.lastIndexOf(File.separator) != -1) {
 			if (mainFilename.lastIndexOf(".") == -1) {
@@ -119,10 +119,7 @@ public class KmlExporterManager {
 	public void print(List<PlacemarkType> placemarkList,
 					  KmlSplittingResult work,
 					  boolean balloonInSeparateFile) throws JAXBException {
-		
-		System.out.println("Hi3");
-		
-		
+				
 		SAXEventBuffer buffer = new SAXEventBuffer();
 		Marshaller kmlMarshaller = jaxbKmlContext.createMarshaller();
 		if (isBBoxActive && config.getProject().getKmlExporter().isOneFilePerObject()) {
@@ -132,8 +129,7 @@ public class KmlExporterManager {
 			kmlMarshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
 		}
 			
-		
-		System.out.println("Manager");
+
 		// all placemarks in this list belong together (same gmlid),
 		// so the balloon must be extracted only once.
 		boolean balloonExtracted = false;

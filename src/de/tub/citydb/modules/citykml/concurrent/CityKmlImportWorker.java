@@ -400,9 +400,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 							// if the cityobject did pass all filters, let us further work on it
 							switch (work.getCityGMLClass()) {
 
-								case BUILDING:
-										//pointList.addAll(insertIntoKML((Building)work));
-									
+								case BUILDING:									
 									insertIntoKML((Building)work, _kml);								
 									break;
 	

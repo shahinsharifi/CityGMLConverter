@@ -94,8 +94,15 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 
 import org.citygml4j.builder.jaxb.JAXBBuilder;
+import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
+import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
+import org.citygml4j.model.citygml.CityGML;
+import org.citygml4j.xml.io.reader.CityGMLReadException;
+import org.citygml4j.xml.io.reader.MissingADESchemaException;
+import org.xml.sax.SAXException;
 
 import de.tub.citydb.api.event.Event;
 import de.tub.citydb.api.event.EventDispatcher;
@@ -128,6 +135,7 @@ import de.tub.citydb.gui.factory.PopupMenuDecorator;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorker;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorkerFactory;
+import de.tub.citydb.modules.citykml.controller.CityKmlExporter;
 import de.tub.citydb.modules.citykml.controller.CityKmlImporter;
 import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.common.event.InterruptEnum;
@@ -588,21 +596,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				return;
 			}
 
-			// BoundingBox
-			if (filter.isSetComplexFilter() &&
-					filter.getComplexFilter().getBoundingBox().isSet()) {
-				Double xMin = filter.getComplexFilter().getBoundingBox().getLowerLeftCorner().getX();
-				Double yMin = filter.getComplexFilter().getBoundingBox().getLowerLeftCorner().getY();
-				Double xMax = filter.getComplexFilter().getBoundingBox().getUpperRightCorner().getX();
-				Double yMax = filter.getComplexFilter().getBoundingBox().getUpperRightCorner().getY();
-
-				if (xMin == null || yMin == null || xMax == null || yMax == null) {
-					mainView.errorMessage(Internal.I18N.getString("import.dialog.error.incorrectData"),
-							Internal.I18N.getString("common.dialog.error.incorrectData.bbox"));
-					return;
-				}
-			}
-
+		
 			// affine transformation
 			if (config.getProject().getImporter().getAffineTransformation().isSetUseAffineTransformation()) {
 				if (JOptionPane.showConfirmDialog(
@@ -633,25 +627,9 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 			CityKmlImporter importer = new CityKmlImporter(jaxbBuilder, dbPool, config, eventDispatcher);
 
-			/*importDialog.getCancelButton().addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							eventDispatcher.triggerEvent(new InterruptEvent(
-									InterruptEnum.USER_ABORT, 
-									"User abort of database import.", 
-									LogLevel.INFO, 
-									this));
-						}
-					});
-				}
-			});*/
-
-			
 			
 			
 			String TargetFile = "";			
-			
 			if(browseText.getText().equals("")){				
 			
 				TargetFile = saveFile();
@@ -664,7 +642,6 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			
 			KMLObject KmlObject = new KMLObject(TargetFile, (!srsField.getText().equals("")) ? srsField.getText() : "4326");
 			boolean success = importer.doProcess(KmlObject);
-			
 			
 			
 			try {
@@ -684,7 +661,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 			if (success) {
 				
-				
+					
+				doExport(importer);
 				KmlObject.CloseFile();
 				//*******************Shahin Sharifi****************************
 				LOG.info("CityGML has been exported to KML successfully.");
@@ -708,7 +686,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		lock.lock();
 
 		try {
-			mainView.clearConsole();
+			//mainView.clearConsole();
 			setSettings();
 
 			ExportFilterConfig filter = config.getProject().getKmlExporter().getFilter();
@@ -775,12 +753,12 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				return;
 			}
 			
-			if (!dbPool.isConnected()) {
+			/*if (!dbPool.isConnected()) {
 				mainView.connectToDatabase();
 
 				if (!dbPool.isConnected())
 					return;
-			}
+			}*/
 
 			// tile amount calculation
 			int tileAmount = 1;
@@ -830,29 +808,12 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			
 			*/
 
-			String TargetFile = "";			
-			
-			if(browseText.getText().equals("")){				
-			
-				TargetFile = saveFile();
-				
-			}else {
-				
-				TargetFile = browseText.getText();			
-			}
-			
-
-			CityKmlImportWorkerFactory _CityKmlImportWorker = _importer.GetKmlImportWorker();			
-			
-			CityKmlExporter.SetTargetSrs((!srsField.getText().equals("")) ? srsField.getText() : "4326");
-			CityKmlExporter.SetTargetFile(TargetFile);
-	//		CityKmlExporter.SetPointList(((CityKmlImportWorker)_CityKmlImportWorker.createWorker()).GetCityGmlObject());
-		//	CityKmlExporter.SetBuilding(((CityKmlImportWorker)_CityKmlImportWorker.createWorker()).GetBuilding());
-
 					
 			boolean success=false;
 			try {
-				success = CityKmlExporter.doProcess();
+
+				success = CityKmlExporter.doProcess(_importer.GetCityGMLReader());
+
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
