@@ -118,10 +118,7 @@ public class KmlSplitter {
 				&& config.getProject().getKmlExporter().getLodToExportFrom() > 0) {
 			CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.add(CityGMLClass.RELIEF_FEATURE);
 /*
-			CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.add(CityGMLClass.RASTER_RELIEF);
-			CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.add(CityGMLClass.MASSPOINT_RELIEF);
-			CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.add(CityGMLClass.BREAKLINE_RELIEF);
-			CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.add(CityGMLClass.TIN_RELIEF);
+
 */
 		}
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetGenericCityObject()) {

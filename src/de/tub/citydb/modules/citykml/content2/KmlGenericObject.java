@@ -1581,7 +1581,8 @@ public abstract class KmlGenericObject {
 				}
 			}
 		}
-		if (polygon != null) { // if there is at least some content
+		// if there is at least some content
+		if (polygon != null) { 
 			placemarkList.add(placemark);
 		}
 		return placemarkList;

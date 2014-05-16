@@ -66,6 +66,8 @@ public class KmlSplittingResult {
 		return gmlId;
 	}
 
+	
+	//------------New property------------------
 	public CityGML getCityGmlClass() {
 		return work;
 	}

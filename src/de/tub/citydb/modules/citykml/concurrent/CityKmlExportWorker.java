@@ -285,15 +285,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 			}
 		}
 		finally {
-			if (connection != null) {
-				try {
-					connection.commit(); // for all possible GE_LoDn_zOffset values
-					connection.close();
-				}
-				catch (SQLException e) {}
-
-				connection = null;
-			}
+			
 		}
 	}
 

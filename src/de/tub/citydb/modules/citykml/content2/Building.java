@@ -149,9 +149,7 @@ public class Building extends KmlGenericObject{
 		AbstractBuilding _building = (AbstractBuilding)_factory;
 		
 		System.out.println(_building.getId());
-	/*	PreparedStatement psQuery = null;
-		ResultSet rs = null;
-
+	/*
 		try {
 			psQuery = connection.prepareStatement(Queries.BUILDING_PARTS_FROM_BUILDING);
 

@@ -631,10 +631,7 @@ public class CityKmlExporter implements EventHandler {
 
 					}
 /*
-					catch (FileNotFoundException fnfe) {
-						Logger.getInstance().error("Path \"" + path + "\" not found.");
-						return false;
-					}
+
 */
 					finally {}
 				}

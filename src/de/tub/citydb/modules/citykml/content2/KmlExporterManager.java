@@ -59,7 +59,7 @@ import net.opengis.kml._2.ObjectFactory;
 import net.opengis.kml._2.PlacemarkType;
 import net.opengis.kml._2.RegionType;
 import net.opengis.kml._2.ViewRefreshModeEnumType;
-//import oracle.ord.im.OrdImage;
+
 
 
 import org.citygml4j.util.xml.SAXEventBuffer;

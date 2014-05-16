@@ -201,13 +201,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 	}
 
 	private void init() throws SQLException {
-	//	batchConn = dbConnectionPool.getConnection();
-	//	batchConn.setAutoCommit(false);
-		// try and change workspace for both connections if needed
-	//	Database database = config.getProject().getDatabase();
-		//		Workspace workspace = database.getWorkspaces().getImportWorkspace();
-		//		dbConnectionPool.gotoWorkspace(batchConn, workspace);
-		//		dbConnectionPool.gotoWorkspace(commitConn, workspace);
+
 
 		// init filter 
 		featureBoundingBoxFilter = importFilter.getBoundingBoxFilter();
