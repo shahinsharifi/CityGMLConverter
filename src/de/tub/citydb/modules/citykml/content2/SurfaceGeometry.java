@@ -45,6 +45,7 @@ import org.citygml4j.util.gmlid.DefaultGMLIdManager;
 
 
 
+
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.util.KMLObject;
@@ -155,12 +156,15 @@ public class SurfaceGeometry {
 			    				
 			    				for(List<Double> _Geometry : _pointList){
 			    					
-			    					_BuildingSurfaces.clear();
+			    					System.out.println( _building.getId() + "(" + _SurfaceType + "):" + _Geometry);
 			    					
-			    					_BuildingSurfaces.put("type", _SurfaceType);
+			    					
+			    				//	_BuildingSurfaces.clear();
+			    					
+			    					/*_BuildingSurfaces.put("type", _SurfaceType);
 			    					_BuildingSurfaces.put("Geometry", _Geometry);
 			    					_SurfaceList.add(_BuildingSurfaces);
-			    					//_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+			    					*///_kml.WriteGmlToKml(_Geometry, _SurfaceType);
 			    				
 			    				}
 			    			} 
