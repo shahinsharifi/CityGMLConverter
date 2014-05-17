@@ -35,7 +35,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.vecmath.Point3d;
 import javax.xml.bind.JAXBException;
@@ -96,6 +99,7 @@ import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
+import de.tub.citydb.modules.kml.database.Queries;
 import de.tub.citydb.util.Util;
 
 public class Building extends KmlGenericObject{
@@ -144,34 +148,19 @@ public class Building extends KmlGenericObject{
 	public void read(KmlSplittingResult work) {
 		
 		List<PlacemarkType> placemarks = new ArrayList<PlacemarkType>();
-			
-		readBuildingPart(1, work);
-		
-		
-	/*
+	
 		try {
-			psQuery = connection.prepareStatement(Queries.BUILDING_PARTS_FROM_BUILDING);
-
-			for (int i = 1; i <= psQuery.getParameterMetaData().getParameterCount(); i++) {
-				psQuery.setLong(i, work.getId());
-			}
-
-			rs = psQuery.executeQuery();
-			while (rs.next()) {
-				long buildingPartId = rs.getLong(1);
-				List<PlacemarkType> placemarkBPart = readBuildingPart(buildingPartId, work);
+			
+				List<PlacemarkType> placemarkBPart = readBuildingPart(work);
 				if (placemarkBPart != null) 
-					placemarks.addAll(placemarkBPart);
-			}
+					placemarks.addAll(placemarkBPart);			
 		}
-		catch (SQLException sqlEx) {
-			Logger.getInstance().error("SQL error while getting building parts for building " + work.getGmlId() + ": " + sqlEx.getMessage());
+		catch (Exception Ex) {
+			Logger.getInstance().error("SQL error while getting building parts for building " + work.getGmlId() + ": " + Ex.getMessage());
 		}
 		finally {
-			
-			
 
-		/*	if (placemarks.size() == 0) {
+			if (placemarks.size() == 0) {
 				int lodToExportFrom = config.getProject().getKmlExporter().getLodToExportFrom();
 				String fromMessage = " from LoD" + lodToExportFrom;
 				if (lodToExportFrom == 5) {
@@ -208,34 +197,114 @@ public class Building extends KmlGenericObject{
 				}
 				catch (JAXBException jaxbEx) {}
 			}
-		}*/
+		}
 	}
 
-	private List<PlacemarkType> readBuildingPart(long buildingPartId, KmlSplittingResult work) {
+	
+	@SuppressWarnings("unchecked")
+	private List<PlacemarkType> readBuildingPart(KmlSplittingResult work) throws Exception {
 
-		try {
+		int buildingPartId = 1;
+		boolean reversePointOrder = false;
+		List<Map<String, Object>> _surfaceList = new ArrayList<Map<String,Object>>();
 		
+		try {
+			
 			SurfaceGeometry _SurfaceGeometry = new SurfaceGeometry();
+			
 			AbstractBuilding _building = (AbstractBuilding)work.getCityGmlClass();
-			List<HashMap<String, Object>> _surfaceList = _SurfaceGeometry.GetAbstractGeometry(_building);
+					
+			_surfaceList.addAll(_SurfaceGeometry.GetAbstractGeometry(_building));
+						
 			
-			for(HashMap<String, Object> _Row : _surfaceList)
-			{
-				
+			if (_surfaceList.size()!=0) { // result not empty
 
-				System.out.println( _building.getId() + "(" + (String)_Row.get("type") + "):" + (List<Double>)_Row.get("Geometry"));
+				switch (work.getDisplayForm().getForm()) {
 				
+				case DisplayForm.FOOTPRINT:
+					return createPlacemarksForFootprint(_surfaceList, work);
+
+				case DisplayForm.EXTRUDED:
+					PreparedStatement psQuery2 = connection.prepareStatement(Queries.GET_EXTRUDED_HEIGHT);
+					for (int i = 1; i <= psQuery2.getParameterMetaData().getParameterCount(); i++) {
+						psQuery2.setLong(i, buildingPartId);
+					}
+					ResultSet rs2 = psQuery2.executeQuery();
+					rs2.next();
+					double measuredHeight = rs2.getDouble("envelope_measured_height");
+					try { rs2.close(); /* release cursor on DB */ } catch (SQLException e) {}
+					try { psQuery2.close(); /* release cursor on DB */ } catch (SQLException e) {}
+					
+					return createPlacemarksForExtruded(_surfaceList, work, measuredHeight, reversePointOrder);
+
+				case DisplayForm.GEOMETRY:
+	
+					
+					if (work.getDisplayForm().isHighlightingEnabled()) {
+						if (config.getProject().getKmlExporter().getFilter().isSetComplexFilter()) { // region
+							
+							List<PlacemarkType> hlPlacemarks = createPlacemarksForHighlighting(_surfaceList, work);
+							
+							hlPlacemarks.addAll(createPlacemarksForGeometry(_surfaceList, work));
+							
+							return hlPlacemarks;
+						}
+						else { // reverse order for single buildings
+							
+							List<PlacemarkType> placemarks = createPlacemarksForGeometry(_surfaceList, work);
+							placemarks.addAll(createPlacemarksForHighlighting(_surfaceList, work));
+							return placemarks;
+						}
+					}
+
+					return createPlacemarksForGeometry(_surfaceList, work);
+
+				case DisplayForm.COLLADA:
+					/*fillGenericObjectForCollada(rs);
+					setGmlId(work.getGmlId());
+					setId(work.getId());
+					
+					if (getGeometryAmount() > GEOMETRY_AMOUNT_WARNING) {
+						Logger.getInstance().info("Object " + work.getGmlId() + " has more than " + GEOMETRY_AMOUNT_WARNING + " geometries. This may take a while to process...");
+					}
 				
+					List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
+					double zOffset = getZOffsetFromConfigOrDB(work.getId());
+					if (zOffset == Double.MAX_VALUE) {
+						zOffset = getZOffsetFromGEService(work.getId(), anchorCandidates);
+					}
+					setZOffset(zOffset);
+
+					ColladaOptions colladaOptions = getColladaOptions();
+					setIgnoreSurfaceOrientation(colladaOptions.isIgnoreSurfaceOrientation());
+					try {
+						if (work.getDisplayForm().isHighlightingEnabled()) {
+							return createPlacemarksForHighlighting(buildingPartId, work);
+						}
+						// just COLLADA, no KML
+						List<PlacemarkType> dummy = new ArrayList<PlacemarkType>();
+						dummy.add(null);
+						return dummy;
+					}
+					catch (Exception ioe) {
+						ioe.printStackTrace();
+					}*/
+				}
 			}
+		}
+		catch (SQLException sqlEx) {
+			Logger.getInstance().error("SQL error while querying city object " + work.getGmlId() + ": " + sqlEx.getMessage());
+			return null;
+		}
+		finally {
 			
-		} catch (Exception e) {
-			// TODO: handle exception
 		}
 		
-	
-
-		return null; // nothing found 
+		return null; 
+		// nothing found 
 	}
+	
+	
 
 	public PlacemarkType createPlacemarkForColladaModel() throws SQLException {
 		// undo trick for very close coordinates
@@ -248,8 +317,10 @@ public class Building extends KmlGenericObject{
 	}
 
 	// overloaded for just one line, but this is safest
-	protected List<PlacemarkType> createPlacemarksForHighlighting(long buildingPartId, KmlSplittingResult work) throws SQLException {
+	protected List<PlacemarkType> createPlacemarksForHighlighting(List<Map<String, Object>> result, KmlSplittingResult work) throws SQLException {
 
+		int buildingPartId = 1;
+		
 		List<PlacemarkType> placemarkList= new ArrayList<PlacemarkType>();
 
 		PlacemarkType placemark = kmlFactory.createPlacemarkType();
@@ -283,7 +354,7 @@ public class Building extends KmlGenericObject{
 
 			double zOffset = getZOffsetFromConfigOrDB(work.getId());
 			if (zOffset == Double.MAX_VALUE) {
-				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(rs, (zOffset == Double.MAX_VALUE));
+				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result, (zOffset == Double.MAX_VALUE));
 				rs.beforeFirst(); // return cursor to beginning
 				zOffset = getZOffsetFromGEService(work.getId(), lowestPointCandidates);
 			}

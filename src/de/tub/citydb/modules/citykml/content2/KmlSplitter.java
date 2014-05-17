@@ -67,6 +67,8 @@ public class KmlSplitter {
 	private ExportFilterConfig filterConfig;
 	private volatile boolean shouldRun = true;
 
+	private final Logger LOG = Logger.getInstance();
+
 	private Connection connection;
 	private DatabaseSrs dbSrs;
 	
@@ -158,6 +160,8 @@ public class KmlSplitter {
 			
 			try {
 			
+				LOG.info("Writing placemarks into target file, Please wait ...");
+				
 				while (reader.hasNextChunk()) {
 					
 					

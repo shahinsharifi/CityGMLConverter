@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.citygml4j.model.citygml.building.AbstractBoundarySurface;
 import org.citygml4j.model.citygml.building.AbstractBuilding;
@@ -46,6 +47,11 @@ import org.citygml4j.util.gmlid.DefaultGMLIdManager;
 
 
 
+
+
+
+
+
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.util.KMLObject;
@@ -55,8 +61,7 @@ public class SurfaceGeometry {
 	
 	private List<List<Double>> _pointList = new ArrayList<List<Double>>();
 	private final Logger LOG = Logger.getInstance();
-	List<HashMap<String, Object>> _SurfaceList = new ArrayList<HashMap<String,Object>>();
-	
+	private List<Map<String, Object>> _SurfaceList = new ArrayList<Map<String,Object>>();
 	
 	public SurfaceGeometry() {
 			
@@ -64,10 +69,9 @@ public class SurfaceGeometry {
 	}
 	
 	
-	public List<HashMap<String, Object>> GetAbstractGeometry(AbstractBuilding _building) throws SQLException
+	public List<Map<String, Object>> GetAbstractGeometry(AbstractBuilding _building) throws SQLException
 	{
-	
-		HashMap<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
+		
 		
 		String _SurfaceType = "undefined";
 		
@@ -94,18 +98,20 @@ public class SurfaceGeometry {
 				if (solidProperty.isSetSolid()) {
 					
 					_pointList.clear();
-    				_SurfaceList.clear();
-    				_BuildingSurfaces.clear();
 					
     				GetSurfaceGeometry(solidProperty.getSolid(), false);
     				
     				for(List<Double> _Geometry : _pointList){
     					
-    					_BuildingSurfaces.put("type", _SurfaceType);
-    					_BuildingSurfaces.put("Geometry", _Geometry);
-    					_SurfaceList.add(_BuildingSurfaces);
+    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
     					
-    				//	_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+    					_SurfaceType = DetectSurfaceType(_Geometry);
+    					
+    					_BuildingSurfaces.put("type", _SurfaceType);
+    				
+    					_BuildingSurfaces.put("Geometry", _Geometry);    					
+    					
+    					_SurfaceList.add(_BuildingSurfaces);
     				
     				}
 				
@@ -149,22 +155,20 @@ public class SurfaceGeometry {
 			    				
 			    				_pointList.clear();
 			    				
-			    				
 			    				_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();
 			    				
 			    				GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 			    				
 			    				for(List<Double> _Geometry : _pointList){
 			    					
-			    					System.out.println( _building.getId() + "(" + _SurfaceType + "):" + _Geometry);
+			    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
 			    					
+			    					_BuildingSurfaces.put("type", _SurfaceType);
+			    				
+			    					_BuildingSurfaces.put("Geometry", _Geometry);    					
 			    					
-			    				//	_BuildingSurfaces.clear();
-			    					
-			    					/*_BuildingSurfaces.put("type", _SurfaceType);
-			    					_BuildingSurfaces.put("Geometry", _Geometry);
 			    					_SurfaceList.add(_BuildingSurfaces);
-			    					*///_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+			    					
 			    				
 			    				}
 			    			} 
@@ -182,6 +186,8 @@ public class SurfaceGeometry {
 			}
 			
 		}
+		
+
 		return _SurfaceList;
 		
 	}
@@ -891,6 +897,21 @@ public class SurfaceGeometry {
 	}
 	
 	
+	
+	public static String DetectSurfaceType(List<Double> _pointList){
+		
+		
+		List<Double> _TestList = new ArrayList<Double>();
+		for (int i=0; i<_pointList.size()-1;i=i+3) {
+			
+			_TestList.add(_pointList.get(i+2));
+		}
+		if(_TestList.get(1).intValue() == _TestList.get(2).intValue() && _TestList.get(1).intValue()== _TestList.get(3).intValue())
+			return "RoofSurface";//roof
+		else {
+			return "WallSurface";//wall
+		}
+	}	
 	
 
 }

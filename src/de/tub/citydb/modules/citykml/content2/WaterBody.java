@@ -159,9 +159,9 @@ public class WaterBody extends KmlGenericObject{
 
 				switch (work.getDisplayForm().getForm()) {
 				case DisplayForm.FOOTPRINT:
-					kmlExporterManager.print(createPlacemarksForFootprint(rs, work),
-											 work,
-											 getBalloonSettings().isBalloonContentInSeparateFile());
+			//		kmlExporterManager.print(createPlacemarksForFootprint(rs, work),
+			//								 work,
+			//								 getBalloonSettings().isBalloonContentInSeparateFile());
 					break;
 				case DisplayForm.EXTRUDED:
 
@@ -175,35 +175,35 @@ public class WaterBody extends KmlGenericObject{
 					try { rs2.close(); /* release cursor on DB */ } catch (SQLException e) {}
 					try { psQuery2.close(); /* release cursor on DB */ } catch (SQLException e) {}
 					
-					kmlExporterManager.print(createPlacemarksForExtruded(rs, work, measuredHeight, reversePointOrder),
+				/*	kmlExporterManager.print(createPlacemarksForExtruded(rs, work, measuredHeight, reversePointOrder),
 											 work,
-											 getBalloonSettings().isBalloonContentInSeparateFile());
+											 getBalloonSettings().isBalloonContentInSeparateFile());*/
 					break;
 				case DisplayForm.GEOMETRY:
 					setGmlId(work.getGmlId());
 					setId(work.getId());
 					if (config.getProject().getKmlExporter().getFilter().isSetComplexFilter()) { // region
 						if (work.getDisplayForm().isHighlightingEnabled()) {
-							kmlExporterManager.print(createPlacemarksForHighlighting(work),
-													 work,
-													 getBalloonSettings().isBalloonContentInSeparateFile());
+						//	kmlExporterManager.print(createPlacemarksForHighlighting(work),
+						//							 work,
+						//							 getBalloonSettings().isBalloonContentInSeparateFile());
 						}
-						kmlExporterManager.print(createPlacemarksForGeometry(rs, work),
-												 work,
-												 getBalloonSettings().isBalloonContentInSeparateFile());
+					//	kmlExporterManager.print(createPlacemarksForGeometry(rs, work),
+						//						 work,
+						//						 getBalloonSettings().isBalloonContentInSeparateFile());
 					}
 					else { // reverse order for single buildings
-						kmlExporterManager.print(createPlacemarksForGeometry(rs, work),
-												 work,
-												 getBalloonSettings().isBalloonContentInSeparateFile());
+						//kmlExporterManager.print(createPlacemarksForGeometry(rs, work),
+						//						 work,
+							//					 getBalloonSettings().isBalloonContentInSeparateFile());
 //							kmlExporterManager.print(createPlacemarkForEachSurfaceGeometry(rs, work.getGmlId(), false));
 						if (work.getDisplayForm().isHighlightingEnabled()) {
 //							kmlExporterManager.print(createPlacemarkForEachHighlingtingGeometry(work),
 //							 						 work,
 //							 						 getBalloonSetings().isBalloonContentInSeparateFile());
-							kmlExporterManager.print(createPlacemarksForHighlighting(work),
-													 work,
-													 getBalloonSettings().isBalloonContentInSeparateFile());
+						//	kmlExporterManager.print(createPlacemarksForHighlighting(work),
+							//						 work,
+								//					 getBalloonSettings().isBalloonContentInSeparateFile());
 						}
 					}
 					break;
@@ -230,9 +230,9 @@ public class WaterBody extends KmlGenericObject{
 //							kmlExporterManager.print(createPlacemarkForEachHighlingtingGeometry(work),
 //													 work,
 //													 getBalloonSetings().isBalloonContentInSeparateFile());
-							kmlExporterManager.print(createPlacemarksForHighlighting(work),
-													 work,
-													 getBalloonSettings().isBalloonContentInSeparateFile());
+						//	kmlExporterManager.print(createPlacemarksForHighlighting(work),
+							//						 work,
+							//						 getBalloonSettings().isBalloonContentInSeparateFile());
 						}
 					}
 					catch (Exception ioe) {
@@ -247,9 +247,7 @@ public class WaterBody extends KmlGenericObject{
 			Logger.getInstance().error("SQL error while querying city object " + work.getGmlId() + ": " + sqlEx.getMessage());
 			return;
 		}
-		catch (JAXBException jaxbEx) {
-			return;
-		}
+		
 		finally {
 			if (rs != null)
 				try { rs.close(); } catch (SQLException e) {}

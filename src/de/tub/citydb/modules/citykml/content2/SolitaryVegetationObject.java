@@ -231,9 +231,9 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 
 				switch (work.getDisplayForm().getForm()) {
 				case DisplayForm.FOOTPRINT:
-					kmlExporterManager.print(createPlacemarksForFootprint(rs, work),
-											 work,
-											 getBalloonSettings().isBalloonContentInSeparateFile());
+					//kmlExporterManager.print(createPlacemarksForFootprint(rs, work),
+					//						 work,
+					//						 getBalloonSettings().isBalloonContentInSeparateFile());
 					break;
 				case DisplayForm.EXTRUDED:
 
@@ -249,9 +249,9 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 					try { psQuery2.close(); // release cursor on DB
 					} catch (SQLException e) {}
 
-					kmlExporterManager.print(createPlacemarksForExtruded(rs, work, measuredHeight, false),
-											 work,
-											 getBalloonSettings().isBalloonContentInSeparateFile());
+				//	kmlExporterManager.print(createPlacemarksForExtruded(rs, work, measuredHeight, false),
+				//							 work,
+					//						 getBalloonSettings().isBalloonContentInSeparateFile());
 					break;
 				case DisplayForm.GEOMETRY:
 					setGmlId(work.getGmlId());
@@ -262,14 +262,14 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 													 work,
 													 getBalloonSettings().isBalloonContentInSeparateFile());
 						}
-						kmlExporterManager.print(createPlacemarksForGeometry(rs, work),
-												 work,
-												 getBalloonSettings().isBalloonContentInSeparateFile());
+					//	kmlExporterManager.print(createPlacemarksForGeometry(rs, work),
+					//							 work,
+					//							 getBalloonSettings().isBalloonContentInSeparateFile());
 					}
 					else { // reverse order for single objects
-						kmlExporterManager.print(createPlacemarksForGeometry(rs, work),
-												 work,
-												 getBalloonSettings().isBalloonContentInSeparateFile());
+					//	kmlExporterManager.print(createPlacemarksForGeometry(rs, work),
+					//							 work,
+						//						 getBalloonSettings().isBalloonContentInSeparateFile());
 //						kmlExporterManager.print(createPlacemarkForEachSurfaceGeometry(rs, work.getGmlId(), false));
 						if (work.getDisplayForm().isHighlightingEnabled()) {
 //							kmlExporterManager.print(createPlacemarkForEachHighlingtingGeometry(work),
@@ -686,7 +686,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 
 	protected List<PlacemarkType> createPlacemarksForHighlighting(KmlSplittingResult work) throws SQLException {
 		if (transformation == null) { // no implicit geometry
-			return super.createPlacemarksForHighlighting(work);
+			//return super.createPlacemarksForHighlighting(work);
 		}
 
 		List<PlacemarkType> placemarkList= new ArrayList<PlacemarkType>();

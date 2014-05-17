@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -124,6 +125,7 @@ import org.postgis.Geometry;											// collides with Collada-Geometry
 import org.postgis.MultiPolygon;
 import org.postgis.PGgeometry;
 import org.postgis.Polygon;
+
 // import org.postgresql.largeobject.LargeObject;
 // import org.postgresql.largeobject.LargeObjectManager;
 import org.w3c.dom.Document;
@@ -131,6 +133,7 @@ import org.w3c.dom.Element;
 
 import com.sun.j3d.utils.geometry.GeometryInfo;
 
+import de.micromata.opengis.kml.v_2_2_0.Coordinate;
 import de.tub.citydb.api.database.DatabaseSrs;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.api.log.LogLevel;
@@ -142,6 +145,7 @@ import de.tub.citydb.config.project.kmlExporter.KmlExporter;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.modules.common.event.GeometryCounterEvent;
@@ -1452,8 +1456,9 @@ public abstract class KmlGenericObject {
 		return newValue;
 	}
 	
-	protected List<PlacemarkType> createPlacemarksForFootprint(ResultSet rs, KmlSplittingResult work) throws SQLException {
+	protected List<PlacemarkType> createPlacemarksForFootprint(List<Map<String, Object>> result, KmlSplittingResult work) throws SQLException {
 
+		ResultSet rs = null;
 		List<PlacemarkType> placemarkList = new ArrayList<PlacemarkType>();
 		PlacemarkType placemark = kmlFactory.createPlacemarkType();
 		placemark.setName(work.getGmlId());
@@ -1588,11 +1593,12 @@ public abstract class KmlGenericObject {
 		return placemarkList;
 	}
 
-	protected List<PlacemarkType> createPlacemarksForExtruded(ResultSet rs,
+	protected List<PlacemarkType> createPlacemarksForExtruded(List<Map<String, Object>> result,
 															KmlSplittingResult work,
 															double measuredHeight,
-															boolean reversePointOrder) throws SQLException {
+															boolean reversePointOrder) throws Exception {
 
+		ResultSet rs = null;
 		List<PlacemarkType> placemarkList = new ArrayList<PlacemarkType>();
 		PlacemarkType placemark = kmlFactory.createPlacemarkType();
 		placemark.setName(work.getGmlId());
@@ -1732,35 +1738,38 @@ public abstract class KmlGenericObject {
 		return placemarkList;
 	}
 	
-	protected List<PlacemarkType> createPlacemarksForGeometry(ResultSet rs,
-			KmlSplittingResult work) throws SQLException{
+	protected List<PlacemarkType> createPlacemarksForGeometry(List<Map<String, Object>> rs,
+			KmlSplittingResult work) throws Exception{
 		return createPlacemarksForGeometry(rs, work, false, false);
 	}
 
-	protected List<PlacemarkType> createPlacemarksForGeometry(ResultSet rs,
+	protected List<PlacemarkType> createPlacemarksForGeometry(List<Map<String, Object>> result,
 			KmlSplittingResult work,
 			boolean includeGroundSurface,
-			boolean includeClosureSurface) throws SQLException {
+			boolean includeClosureSurface) throws Exception {
 
+		
 		HashMap<String, MultiGeometryType> multiGeometries = new HashMap<String, MultiGeometryType>();
 		MultiGeometryType multiGeometry = null;
 		PolygonType polygon = null;
 
-		double zOffset = getZOffsetFromConfigOrDB(work.getId());
-		List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(rs, (zOffset == Double.MAX_VALUE));
-		rs.beforeFirst(); // return cursor to beginning
-		if (zOffset == Double.MAX_VALUE) {
+		double zOffset = 0;//getZOffsetFromConfigOrDB(work.getId());
+	//	List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result , true);
+		
+	/*	if (zOffset == Double.MAX_VALUE) {
 			zOffset = getZOffsetFromGEService(work.getId(), lowestPointCandidates);
-		}
-		double lowestZCoordinate = convertPointCoordinatesToWGS84(new double[] {
+		}*/
+		
+		
+		/*double lowestZCoordinate = convertPointCoordinatesToWGS84(new double[] {
 				lowestPointCandidates.get(0).x/100, // undo trick for very close coordinates
 				lowestPointCandidates.get(0).y/100,	
-				lowestPointCandidates.get(0).z/100}) [2];
+				lowestPointCandidates.get(0).z/100}) [2];*/
 
-		while (rs.next()) {
+		for (Map<String, Object> Row: result) {
 //			Long surfaceId = rs.getLong("id");
 
-			String surfaceType = rs.getString("type");
+			String surfaceType = (String)Row.get("type");
 			if (surfaceType != null && !surfaceType.endsWith("Surface")) {
 				surfaceType = surfaceType + "Surface";
 			}
@@ -1770,8 +1779,38 @@ public abstract class KmlGenericObject {
 				continue;
 			}
 
-			PGgeometry pgBuildingGeometry = (PGgeometry)rs.getObject(1); 
-			Polygon surface = (Polygon)convertToWGS84(pgBuildingGeometry.getGeometry());
+			
+			@SuppressWarnings("unchecked")
+			List<Double> _Geometry = (List<Double>)Row.get("Geometry");
+			
+			org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];
+			
+		
+			for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
+
+				List<Double> Target_Coordinates = ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), "3068", "4326");
+				
+				
+				tmpPoint[j] = new org.postgis.Point(
+						Target_Coordinates.get(1),
+						Target_Coordinates.get(0),
+						Target_Coordinates.get(2)
+						);
+				
+			}
+			
+			
+			
+			Polygon surface = new Polygon(
+                    new org.postgis.LinearRing[] {
+                        new org.postgis.LinearRing(
+                            tmpPoint
+                        )
+                    }
+                );
+		
+			
+			
 					
 			double[] ordinatesArray = new double[surface.numPoints()*3];
 			
@@ -1781,16 +1820,20 @@ public abstract class KmlGenericObject {
 				ordinatesArray[j+2] = surface.getPoint(i).z;
 			}
 			
+			
+			
 			eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
 
 			polygon = kmlFactory.createPolygonType();
+			
 			switch (config.getProject().getKmlExporter().getAltitudeMode()) {
-			case ABSOLUTE:
-				polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.ABSOLUTE));
-				break;
-			case RELATIVE:
-				polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.RELATIVE_TO_GROUND));
-				break;
+				
+				case ABSOLUTE:
+					polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.ABSOLUTE));
+					break;
+				case RELATIVE:
+					polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.RELATIVE_TO_GROUND));
+					break;
 			}
 
 			// just in case surfaceType == null
@@ -1822,7 +1865,7 @@ public abstract class KmlGenericObject {
 									+ reducePrecisionForZ(ordinatesArray[j+2] + zOffset)));
 						
 
-							probablyRoof = probablyRoof && (reducePrecisionForZ(ordinatesArray[j+2] - lowestZCoordinate) > 0);
+					//		probablyRoof = probablyRoof && (reducePrecisionForZ(ordinatesArray[j+2] - lowestZCoordinate) > 0);
 							// not touching the ground
 	
 							if (currentLod == 1) { // calculate normal
@@ -2192,7 +2235,8 @@ public abstract class KmlGenericObject {
 	}
 
 
-	protected List<PlacemarkType> createPlacemarksForHighlighting(KmlSplittingResult work) throws SQLException {
+	protected List<PlacemarkType> createPlacemarksForHighlighting(List<Map<String, Object>> result, 
+			KmlSplittingResult work) throws SQLException {
 
 		List<PlacemarkType> placemarkList= new ArrayList<PlacemarkType>();
 
@@ -2226,7 +2270,7 @@ public abstract class KmlGenericObject {
 
 			double zOffset = getZOffsetFromConfigOrDB(work.getId());
 			if (zOffset == Double.MAX_VALUE) {
-				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(rs, (zOffset == Double.MAX_VALUE));
+				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result, (zOffset == Double.MAX_VALUE));
 				rs.beforeFirst(); // return cursor to beginning
 				zOffset = getZOffsetFromGEService(work.getId(), lowestPointCandidates);
 			}
@@ -2576,14 +2620,41 @@ public abstract class KmlGenericObject {
 
 		return zOffset;
 	}
+	
+	@SuppressWarnings("unchecked")
+	protected List<Point3d> getLowestPointsCoordinates(List<Map<String, Object>> result,
+			boolean willCallGEService) throws Exception {
+		
+		
+		List<Double> _Geometry = (List<Double>)result.get(0).get("Geometry");
+		
+		List<Double> Target_Coordinates = new ArrayList<Double>();
+		
+		org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()];
+		
+		for (int i = 1; i < _Geometry.size(); i = i+3) {				
 
-	protected List<Point3d> getLowestPointsCoordinates(ResultSet rs, boolean willCallGEService) throws SQLException {
+			Target_Coordinates.addAll(ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), "3068", "4326"));
+			
+			tmpPoint[i] = new org.postgis.Point(Target_Coordinates.get(i),
+					Target_Coordinates.get(i+1),
+					Target_Coordinates.get(i+2));
+		}
+		
+		Polygon _poly = new Polygon(
+                new org.postgis.LinearRing[] {
+                    new org.postgis.LinearRing(
+                        tmpPoint
+                    )
+                }
+            );
+		
+		
 		double currentlyLowestZCoordinate = Double.MAX_VALUE;
 		List<Point3d> coords = new ArrayList<Point3d>();
 
-		rs.next();
-		PGgeometry pgBuildingGeometry = (PGgeometry)rs.getObject(1); 
-		Geometry surface = pgBuildingGeometry.getGeometry();
+		
+		Geometry surface = _poly;
 		List<Double> ordinates = new ArrayList<Double>();
 		
 		for (int i = 0; i < surface.numPoints(); i++){
@@ -2608,10 +2679,31 @@ public abstract class KmlGenericObject {
 					}
 				}
 			}
-			if (!rs.next())	break;
+			if (result.size()==1)	break;
 
-			PGgeometry unconverted = (PGgeometry)rs.getObject(1); 
-			surface = unconverted.getGeometry();
+			List<Double> _Geometry1 = (List<Double>)result.get(1).get("Geometry");
+			
+			List<Double> Target_Coordinates1 = new ArrayList<Double>();
+			
+			org.postgis.Point[] tmpPoint1 = new org.postgis.Point[_Geometry.size()];
+			
+			for (int i = 1; i < _Geometry.size(); i = i+3) {				
+
+				Target_Coordinates.addAll(ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), "3068", "4326"));
+				
+				tmpPoint[i] = new org.postgis.Point(Target_Coordinates.get(i),
+						Target_Coordinates.get(i+1),
+						Target_Coordinates.get(i+2));
+			}
+			
+			Polygon _poly1 = new Polygon(
+	                new org.postgis.LinearRing[] {
+	                    new org.postgis.LinearRing(
+	                        tmpPoint
+	                    )
+	                }
+	            );
+			surface = _poly1;
 			ordinates = new ArrayList<Double>();
 			
 			for (int i = 0; i < surface.numPoints(); i++){

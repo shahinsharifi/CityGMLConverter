@@ -164,6 +164,10 @@ public class CityKmlExporter implements EventHandler {
 	private static final String TEMP_FOLDER = "__temp";
 
 	private final DatabaseSrs WGS84_2D = Database.PREDEFINED_SRS.get(PredefinedSrsName.WGS84_2D);
+	
+
+	private final Logger LOG = Logger.getInstance();
+
 
 	private BoundingBox tileMatrix;
 	private BoundingBox wgs84TileMatrix;
@@ -516,7 +520,8 @@ public class CityKmlExporter implements EventHandler {
 							return false;
 						}
 
-					
+						LOG.info("Start reading the input file...");
+						
 						// get database splitter and start query
 						kmlSplitter = null;
 						try {
@@ -753,7 +758,7 @@ public class CityKmlExporter implements EventHandler {
 											 SQLException,
 											 JAXBException,
 											 DatatypeConfigurationException { 
-
+		System.out.println("Master");
 		// create a saxWriter instance 
 		// define indent for xml output and namespace mappings
 		SAXWriter saxWriter = new SAXWriter();
@@ -973,7 +978,7 @@ public class CityKmlExporter implements EventHandler {
 		
 		
 		
-		if (!currentDisplayForm.isActive()) return;
+	//	if (!currentDisplayForm.isActive()) return;
 		switch (featureClass) {
 			case SOLITARY_VEGETATION_OBJECT:
 			case PLANT_COVER:
@@ -1051,6 +1056,8 @@ public class CityKmlExporter implements EventHandler {
 						  List<DisplayForm> displayFormsForObjectType,
 						  String styleBasisName) throws JAXBException {
 
+		
+		
 		SAXEventBuffer saxBuffer = new SAXEventBuffer();
 		Marshaller marshaller = jaxbKmlContext.createMarshaller();
 		marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
