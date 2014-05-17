@@ -2,6 +2,7 @@ package de.tub.citydb.modules.citykml.content2;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.citygml4j.model.citygml.building.AbstractBoundarySurface;
@@ -43,6 +44,7 @@ import org.citygml4j.util.gmlid.DefaultGMLIdManager;
 
 
 
+
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.util.KMLObject;
@@ -52,16 +54,20 @@ public class SurfaceGeometry {
 	
 	private List<List<Double>> _pointList = new ArrayList<List<Double>>();
 	private final Logger LOG = Logger.getInstance();
+	List<HashMap<String, Object>> _SurfaceList = new ArrayList<HashMap<String,Object>>();
 	
 	
 	public SurfaceGeometry() {
-		// TODO Auto-generated constructor stub
+			
+	
 	}
 	
 	
-	public void GetAbstractGeometry(AbstractBuilding _building, KMLObject _kml) throws SQLException
+	public List<HashMap<String, Object>> GetAbstractGeometry(AbstractBuilding _building) throws SQLException
 	{
 	
+		HashMap<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
+		
 		String _SurfaceType = "undefined";
 		
 		for (int lod = 1; lod < 5; lod++) {
@@ -87,12 +93,18 @@ public class SurfaceGeometry {
 				if (solidProperty.isSetSolid()) {
 					
 					_pointList.clear();
-    				
+    				_SurfaceList.clear();
+    				_BuildingSurfaces.clear();
+					
     				GetSurfaceGeometry(solidProperty.getSolid(), false);
     				
     				for(List<Double> _Geometry : _pointList){
     					
-    					_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+    					_BuildingSurfaces.put("type", _SurfaceType);
+    					_BuildingSurfaces.put("Geometry", _Geometry);
+    					_SurfaceList.add(_BuildingSurfaces);
+    					
+    				//	_kml.WriteGmlToKml(_Geometry, _SurfaceType);
     				
     				}
 				
@@ -132,10 +144,10 @@ public class SurfaceGeometry {
 
 			    		if (multiSurfaceProperty != null) {
 			    			
-			    			
 			    			if (multiSurfaceProperty.isSetMultiSurface()) {
 			    				
 			    				_pointList.clear();
+			    				
 			    				
 			    				_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();
 			    				
@@ -143,7 +155,12 @@ public class SurfaceGeometry {
 			    				
 			    				for(List<Double> _Geometry : _pointList){
 			    					
-			    					_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+			    					_BuildingSurfaces.clear();
+			    					
+			    					_BuildingSurfaces.put("type", _SurfaceType);
+			    					_BuildingSurfaces.put("Geometry", _Geometry);
+			    					_SurfaceList.add(_BuildingSurfaces);
+			    					//_kml.WriteGmlToKml(_Geometry, _SurfaceType);
 			    				
 			    				}
 			    			} 
@@ -161,7 +178,7 @@ public class SurfaceGeometry {
 			}
 			
 		}
-		
+		return _SurfaceList;
 		
 	}
 	

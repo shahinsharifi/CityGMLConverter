@@ -34,6 +34,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.vecmath.Point3d;
@@ -141,14 +142,12 @@ public class Building extends KmlGenericObject{
 	}
 
 	public void read(KmlSplittingResult work) {
-
+		
 		List<PlacemarkType> placemarks = new ArrayList<PlacemarkType>();
+			
+		readBuildingPart(1, work);
 		
-		CityGML _factory = work.getCityGmlClass();
 		
-		AbstractBuilding _building = (AbstractBuilding)_factory;
-		
-		System.out.println(_building.getId());
 	/*
 		try {
 			psQuery = connection.prepareStatement(Queries.BUILDING_PARTS_FROM_BUILDING);
@@ -214,164 +213,26 @@ public class Building extends KmlGenericObject{
 
 	private List<PlacemarkType> readBuildingPart(long buildingPartId, KmlSplittingResult work) {
 
-		PreparedStatement psQuery = null;
-		ResultSet rs = null;
-
-		boolean reversePointOrder = false;
-
 		try {
-			int lodToExportFrom = config.getProject().getKmlExporter().getLodToExportFrom();
-			currentLod = lodToExportFrom == 5 ? 4: lodToExportFrom;
-			int minLod = lodToExportFrom == 5 ? 1: lodToExportFrom;
-
-			while (currentLod >= minLod) {
-				if(!work.getDisplayForm().isAchievableFromLoD(currentLod)) break;
-
-				try {
-					psQuery = connection.prepareStatement(Queries.getBuildingPartQuery(currentLod, work.getDisplayForm()),
-							   							  ResultSet.TYPE_SCROLL_INSENSITIVE,
-							   							  ResultSet.CONCUR_READ_ONLY);
-
-					for (int i = 1; i <= psQuery.getParameterMetaData().getParameterCount(); i++) {
-						psQuery.setLong(i, buildingPartId);
-					}
+		
+			SurfaceGeometry _SurfaceGeometry = new SurfaceGeometry();
+			AbstractBuilding _building = (AbstractBuilding)work.getCityGmlClass();
+			List<HashMap<String, Object>> _surfaceList = _SurfaceGeometry.GetAbstractGeometry(_building);
+			
+			for(HashMap<String, Object> _Row : _surfaceList)
+			{
 				
-					rs = psQuery.executeQuery();
-					if (rs.isBeforeFirst()) {
-						break; // result set not empty
-					}
-					else {
-						try { rs.close(); /* release cursor on DB */ } catch (SQLException sqle) {}
-						rs = null; // workaround for jdbc library: rs.isClosed() throws SQLException!
-						try { psQuery.close(); /* release cursor on DB */ } catch (SQLException sqle) {}
-					}
-				}
-				catch (Exception e2) {
-					try { if (rs != null) rs.close(); } catch (SQLException sqle) {}
-					rs = null; // workaround for jdbc library: rs.isClosed() throws SQLException!
-					try { if (psQuery != null) psQuery.close(); } catch (SQLException sqle) {}
-					try { connection.rollback(); } catch (SQLException sqle) {}
-				}
 
-				// when for EXTRUDED or FOOTPRINT there is no ground surface modelled, try to find it out indirectly
-				if (rs == null && (work.getDisplayForm().getForm() <= DisplayForm.EXTRUDED)) {
-
-					reversePointOrder = true;
-
-//					int groupBasis = 4;
-					try {
-						psQuery = connection.prepareStatement(Queries.getBuildingPartAggregateGeometries(0.001, currentLod),
-								  							  ResultSet.TYPE_SCROLL_INSENSITIVE,
-								  							  ResultSet.CONCUR_READ_ONLY);
-
-						for (int i = 1; i <= psQuery.getParameterMetaData().getParameterCount(); i++) {
-							psQuery.setLong(i, buildingPartId);
-						}
-						rs = psQuery.executeQuery();
-						if (rs.isBeforeFirst()) {
-							rs.next();
-							if(rs.getObject(1) != null) {
-								rs.beforeFirst();
-								break; // result set not empty
-							}
-						}
-
-						try { rs.close(); /* release cursor on DB */ } catch (SQLException sqle) {}
-						rs = null; // workaround for jdbc library: rs.isClosed() throws SQLException!
-						try { psQuery.close(); /* release cursor on DB */ } catch (SQLException sqle) {}
-
-					}
-					catch (Exception e2) {
-						try { if (rs != null) rs.close(); } catch (SQLException sqle) {}
-						rs = null; // workaround for jdbc library: rs.isClosed() throws SQLException!
-						try { if (psQuery != null) psQuery.close(); } catch (SQLException sqle) {}
-						try { connection.rollback(); } catch (SQLException sqle) {}
-					}
-				}
-
-				currentLod--;
-				reversePointOrder = false;
-			}
-
-			if (rs != null) { // result not empty
-
-				switch (work.getDisplayForm().getForm()) {
-				case DisplayForm.FOOTPRINT:
-					return createPlacemarksForFootprint(rs, work);
-
-				case DisplayForm.EXTRUDED:
-					PreparedStatement psQuery2 = connection.prepareStatement(Queries.GET_EXTRUDED_HEIGHT);
-					for (int i = 1; i <= psQuery2.getParameterMetaData().getParameterCount(); i++) {
-						psQuery2.setLong(i, buildingPartId);
-					}
-					ResultSet rs2 = psQuery2.executeQuery();
-					rs2.next();
-					double measuredHeight = rs2.getDouble("envelope_measured_height");
-					try { rs2.close(); /* release cursor on DB */ } catch (SQLException e) {}
-					try { psQuery2.close(); /* release cursor on DB */ } catch (SQLException e) {}
-					
-					return createPlacemarksForExtruded(rs, work, measuredHeight, reversePointOrder);
-
-				case DisplayForm.GEOMETRY:
-					setGmlId(work.getGmlId());
-					setId(work.getId());
-					if (work.getDisplayForm().isHighlightingEnabled()) {
-						if (config.getProject().getKmlExporter().getFilter().isSetComplexFilter()) { // region
-							List<PlacemarkType> hlPlacemarks = createPlacemarksForHighlighting(buildingPartId, work);
-							hlPlacemarks.addAll(createPlacemarksForGeometry(rs, work));
-							return hlPlacemarks;
-						}
-						else { // reverse order for single buildings
-							List<PlacemarkType> placemarks = createPlacemarksForGeometry(rs, work);
-							placemarks.addAll(createPlacemarksForHighlighting(buildingPartId, work));
-							return placemarks;
-						}
-					}
-					return createPlacemarksForGeometry(rs, work);
-
-				case DisplayForm.COLLADA:
-					fillGenericObjectForCollada(rs);
-					setGmlId(work.getGmlId());
-					setId(work.getId());
-					
-					if (getGeometryAmount() > GEOMETRY_AMOUNT_WARNING) {
-						Logger.getInstance().info("Object " + work.getGmlId() + " has more than " + GEOMETRY_AMOUNT_WARNING + " geometries. This may take a while to process...");
-					}
+				System.out.println( _building.getId() + "(" + (String)_Row.get("type") + "):" + (List<Double>)_Row.get("Geometry"));
 				
-					List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
-					double zOffset = getZOffsetFromConfigOrDB(work.getId());
-					if (zOffset == Double.MAX_VALUE) {
-						zOffset = getZOffsetFromGEService(work.getId(), anchorCandidates);
-					}
-					setZOffset(zOffset);
-
-					ColladaOptions colladaOptions = getColladaOptions();
-					setIgnoreSurfaceOrientation(colladaOptions.isIgnoreSurfaceOrientation());
-					try {
-						if (work.getDisplayForm().isHighlightingEnabled()) {
-							return createPlacemarksForHighlighting(buildingPartId, work);
-						}
-						// just COLLADA, no KML
-						List<PlacemarkType> dummy = new ArrayList<PlacemarkType>();
-						dummy.add(null);
-						return dummy;
-					}
-					catch (Exception ioe) {
-						ioe.printStackTrace();
-					}
-				}
+				
 			}
+			
+		} catch (Exception e) {
+			// TODO: handle exception
 		}
-		catch (SQLException sqlEx) {
-			Logger.getInstance().error("SQL error while querying city object " + work.getGmlId() + ": " + sqlEx.getMessage());
-			return null;
-		}
-		finally {
-			if (rs != null)
-				try { rs.close(); } catch (SQLException e) {}
-			if (psQuery != null)
-				try { psQuery.close(); } catch (SQLException e) {}
-		}
+		
+	
 
 		return null; // nothing found 
 	}
