@@ -71,15 +71,18 @@ public class KmlSplitter {
 
 	private Connection connection;
 	private DatabaseSrs dbSrs;
+	private String TargetSrs = "";
 	
 	public KmlSplitter( 
 					   WorkerPool<KmlSplittingResult> dbWorkerPool, 
-					//   ExportFilter exportFilter, 
+					//   ExportFilter exportFilter,
+					   String _TargetSrs,
 					   DisplayForm displayForm,
 					   Config config) throws SQLException {
 
 		this.dbWorkerPool = dbWorkerPool;
 	//	this.exportFilter = exportFilter;
+		this.TargetSrs = _TargetSrs;
 		this.displayForm = displayForm;
 //		this.config = config;
 
@@ -171,7 +174,7 @@ public class KmlSplitter {
 					
 					CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
 					
-					KmlSplittingResult splitter = new KmlSplittingResult(_CityGML , cityObjectType, displayForm);
+					KmlSplittingResult splitter = new KmlSplittingResult(_CityGML , cityObjectType, displayForm, TargetSrs);
 					
 					
 					dbWorkerPool.addWork(splitter);		

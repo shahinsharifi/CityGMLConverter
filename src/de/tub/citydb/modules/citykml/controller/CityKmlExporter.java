@@ -184,10 +184,9 @@ public class CityKmlExporter implements EventHandler {
 	private EnumMap<CityGMLClass, Long>featureCounterMap = new EnumMap<CityGMLClass, Long>(CityGMLClass.class);
 	private long geometryCounter;
 	
-	private String TargetFile = "";
+
 	private String TargetSrs = "";
-	private List<List<Double>> PointList;
-	private static List<de.tub.citydb.modules.citykml.content1.Building> _building;
+
 	
 
 	private File lastTempFolder;
@@ -197,14 +196,14 @@ public class CityKmlExporter implements EventHandler {
 						JAXBContext jaxbColladaContext,
 						DatabaseConnectionPool dbPool,
 						Config config,
+						String _TargetSrs,
 						EventDispatcher eventDispatcher) throws SQLException {
 		this.jaxbKmlContext = jaxbKmlContext;
 		this.jaxbColladaContext = jaxbColladaContext;
 		this.dbPool = dbPool;
 		this.config = config;
 		this.eventDispatcher = eventDispatcher;
-		this._building = new ArrayList<de.tub.citydb.modules.citykml.content1.Building>();
-
+		this.TargetSrs = _TargetSrs;
 
 		kmlFactory = new ObjectFactory();		
 		cityGMLFactory = new CityGMLFactory();		
@@ -219,36 +218,8 @@ public class CityKmlExporter implements EventHandler {
 	{
 		this.TargetSrs = _TargetSrs;		
 	}
-	
-
-	public void SetTargetFile(String _TargetFile)
-	{
-		this.TargetFile = _TargetFile;		
-	}
-	
-	
-	public void SetPointList(List<List<Double>> _PointList)
-	{
-		this.PointList = _PointList;		
-	}
-	
-	public void SetBuilding(List<de.tub.citydb.modules.citykml.content1.Building> _MyBuilding)
-	{
-		this._building = _MyBuilding;		
-	}
-	
-
-/*
-	public boolean doProcess(List<CityGML> work) throws Exception {
 		
-		for(CityGML _GML:	work)
-		{
-			System.out.println(_GML.getCityGMLClass().name());
-		}		
-		return true;
-	}
-	
-	*/
+
 	public boolean doProcess(JAXBChunkReader reader){
 		
 		geometryCounter = 0;
@@ -264,40 +235,11 @@ public class CityKmlExporter implements EventHandler {
 		eventDispatcher.addEventHandler(EventType.COUNTER, this);
 		eventDispatcher.addEventHandler(EventType.GEOMETRY_COUNTER, this);
 		eventDispatcher.addEventHandler(EventType.INTERRUPT, this);
-/*
-		// checking workspace...
-		Workspace workspace = config.getProject().getDatabase().getWorkspaces().getKmlExportWorkspace();
-		if (!workspace.getName().toUpperCase().equals("LIVE")) {
-			boolean workspaceExists = dbPool.existsWorkspace(workspace);
 
-			String name = "'" + workspace.getName().trim() + "'";
-			String timestamp = workspace.getTimestamp().trim();
-			if (timestamp.trim().length() > 0)
-				name += " at timestamp " + timestamp;
-			
-			if (!workspaceExists) {
-				Logger.getInstance().error("Database workspace " + name + " is not available.");
-				return false;
-			} else 
-				Logger.getInstance().info("Switching to database workspace " + name + '.');
-		}
-*/
 		// check whether spatial indexes are enabled
 		
 		Logger.getInstance().info("Checking for spatial indexes on geometry columns of involved tables...");
 		
-		/*try {
-			if (!DBUtil.isIndexed("CITYOBJECT", "ENVELOPE") || 
-					!DBUtil.isIndexed("SURFACE_GEOMETRY", "GEOMETRY")) {
-				Logger.getInstance().error("Spatial indexes are not activated.");
-				Logger.getInstance().error("Please use the database tab to activate the spatial indexes.");
-				return false;
-			}
-		}
-		catch (SQLException e) {
-			Logger.getInstance().error("Failed to retrieve status of spatial indexes: " + e.getMessage());
-			return false;
-		}*/
 
 		String selectedTheme = config.getProject().getKmlExporter().getAppearanceTheme();
 		if (!selectedTheme.equals(de.tub.citydb.config.project.kmlExporter.KmlExporter.THEME_NONE)) {
@@ -420,7 +362,7 @@ public class CityKmlExporter implements EventHandler {
 					ZipOutputStream zipOut = null;
 
 					try {
-						String fileExtension = config.getProject().getKmlExporter().isExportAsKmz() ? ".kmz" : ".kml";
+						String fileExtension = ".kml";//config.getProject().getKmlExporter().isExportAsKmz() ? ".kmz" : ".kml";
 						/*if (isBBoxActive && tiling.getMode() != TilingMode.NO_TILING) {
 							exportFilter.getBoundingBoxFilter().setActiveTile(i, j);
 							file = new File(path + File.separator + filename + "_Tile_"
@@ -529,6 +471,7 @@ public class CityKmlExporter implements EventHandler {
 							kmlSplitter = new KmlSplitter(
 									kmlWorkerPool,
 								//	exportFilter,
+									TargetSrs,
 									displayForm,
 									config);
 

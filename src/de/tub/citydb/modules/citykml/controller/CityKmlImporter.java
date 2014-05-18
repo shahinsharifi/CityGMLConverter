@@ -214,7 +214,7 @@ public class CityKmlImporter implements EventHandler {
 		eventDispatcher.removeEventHandler(this);
 	}
 
-	public boolean doProcess(KMLObject _kmlObj) {
+	public boolean doProcess() {
 		runState = PREPARING;
 
 		// adding listeners
@@ -337,8 +337,7 @@ public class CityKmlImporter implements EventHandler {
 						lookupServerManager, 
 						importFilter,
 						config, 
-						eventDispatcher,
-						_kmlObj);
+						eventDispatcher);
 				
 				dbWorkerPool = new WorkerPool<CityGML>(
 						minThreads,

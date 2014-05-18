@@ -629,6 +629,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 			
 			
+			/*
+			
 			String TargetFile = "";			
 			if(browseText.getText().equals("")){				
 			
@@ -639,9 +641,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				TargetFile = browseText.getText();			
 			}
 			
+			*/
 			
-			KMLObject KmlObject = new KMLObject(TargetFile, (!srsField.getText().equals("")) ? srsField.getText() : "4326");
-			boolean success = importer.doProcess(KmlObject);
+			
+			boolean success = importer.doProcess();
 			
 			
 			try {
@@ -663,7 +666,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				
 					
 				doExport(importer);
-				KmlObject.CloseFile();
+				
 				//*******************Shahin Sharifi****************************
 				LOG.info("CityGML has been exported to KML successfully.");
 				
@@ -720,7 +723,14 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 			// initialize event dispatcher
 			final EventDispatcher eventDispatcher = ObjectRegistry.getInstance().getEventDispatcher();
-			de.tub.citydb.modules.citykml.controller.CityKmlExporter CityKmlExporter = new de.tub.citydb.modules.citykml.controller.CityKmlExporter(jaxbKmlContext, jaxbColladaContext, dbPool, config, eventDispatcher);
+			de.tub.citydb.modules.citykml.controller.CityKmlExporter CityKmlExporter = 
+					new de.tub.citydb.modules.citykml.controller.CityKmlExporter(
+							jaxbKmlContext,
+							jaxbColladaContext,
+							dbPool,
+							config,
+							(!srsField.getText().equals("")) ? srsField.getText() : "4326",
+							eventDispatcher);
 
 			// BoundingBox check
 			if (filter.isSetComplexFilter() &&
@@ -822,7 +832,9 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			
 			
 			try {
+				
 				eventDispatcher.flushEvents();
+			
 			} catch (InterruptedException e1) {
 				//
 			}

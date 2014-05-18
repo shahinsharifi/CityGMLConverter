@@ -185,8 +185,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 			DBGmlIdLookupServerManager lookupServerManager,
 			ImportFilter importFilter,
 			Config config,
-			EventDispatcher eventDispatcher,
-			KMLObject _KmlObject) throws SQLException {
+			EventDispatcher eventDispatcher) throws SQLException {
 		this.dbConnectionPool = dbConnectionPool;
 		this.jaxbBuilder = jaxbBuilder;
 		this.tmpXlinkPool = tmpXlinkPool;
@@ -194,8 +193,6 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 		this.importFilter = importFilter;
 		this.config = config;
 		this.eventDispatcher = eventDispatcher;
-		this._kml = _KmlObject;
-
 
 		init();
 	}

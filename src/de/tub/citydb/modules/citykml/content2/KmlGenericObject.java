@@ -1788,7 +1788,7 @@ public abstract class KmlGenericObject {
 		
 			for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
 
-				List<Double> Target_Coordinates = ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), "3068", "4326");
+				List<Double> Target_Coordinates = ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");
 				
 				
 				tmpPoint[j] = new org.postgis.Point(
