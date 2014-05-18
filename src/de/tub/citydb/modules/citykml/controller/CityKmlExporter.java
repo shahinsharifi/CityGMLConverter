@@ -633,14 +633,15 @@ public class CityKmlExporter implements EventHandler {
 		eventDispatcher.triggerEvent(new StatusDialogMessage(Internal.I18N.getString("export.dialog.finish.msg"), this));
 
 		// show exported features
-		if (!featureCounterMap.isEmpty()) {
+		/*if (!featureCounterMap.isEmpty()) {
 			Logger.getInstance().info("Exported CityGML features:");
 			for (CityGMLClass type : featureCounterMap.keySet())
 				Logger.getInstance().info(type + ": " + featureCounterMap.get(type));
-		}
+		}*/
 		Logger.getInstance().info("Processed geometry objects: " + geometryCounter);
 
-		if (lastTempFolder != null && lastTempFolder.exists()) deleteFolder(lastTempFolder); // just in case
+		if (lastTempFolder != null && lastTempFolder.exists()) 
+			deleteFolder(lastTempFolder); // just in case
 
 		return shouldRun;
 	}

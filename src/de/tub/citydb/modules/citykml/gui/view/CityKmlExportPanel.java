@@ -104,6 +104,7 @@ import org.citygml4j.xml.io.reader.CityGMLReadException;
 import org.citygml4j.xml.io.reader.MissingADESchemaException;
 import org.xml.sax.SAXException;
 
+import de.tub.citydb.api.database.DatabaseSrs;
 import de.tub.citydb.api.event.Event;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.api.event.EventHandler;
@@ -486,11 +487,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			importFiles[i] = new File(fileListModel.get(i).toString());
 
 		config.getInternal().setImportFiles(importFiles);		
-
-
 		
 		config.getInternal().setExportFileName(browseText.getText().trim());
 
+	//	config.getInternal().setExportTargetSRS();
 	}
 	
 
@@ -627,23 +627,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 			CityKmlImporter importer = new CityKmlImporter(jaxbBuilder, dbPool, config, eventDispatcher);
 
-			
-			
-			/*
-			
-			String TargetFile = "";			
-			if(browseText.getText().equals("")){				
-			
-				TargetFile = saveFile();
-				
-			}else {
-				
-				TargetFile = browseText.getText();			
-			}
-			
-			*/
-			
-			
+
 			boolean success = importer.doProcess();
 			
 			
@@ -662,15 +646,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			// cleanup
 			importer.cleanup();
 
-			if (success) {
-				
+			if (success) {				
 					
 				doExport(importer);
-				
-				//*******************Shahin Sharifi****************************
-				LOG.info("CityGML has been exported to KML successfully.");
-				
-				
+
 			} else {
 				LOG.warn("CityGML import aborted.");
 			}
@@ -762,16 +741,9 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 						Internal.I18N.getString("kmlExport.dialog.error.incorrectData.featureClass"));
 				return;
 			}
-			
-			/*if (!dbPool.isConnected()) {
-				mainView.connectToDatabase();
-
-				if (!dbPool.isConnected())
-					return;
-			}*/
 
 			// tile amount calculation
-			int tileAmount = 1;
+		//	int tileAmount = 1;
 			/*if (filter.isSetComplexFilter() &&
 				filter.getComplexFilter().getTiledBoundingBox().isSet()) {
 				try {
@@ -787,12 +759,12 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 */
 			
 		/*	mainView.setStatusText(Internal.I18N.getString("main.status.kmlExport.label"));
-			Logger.getInstance().info("Initializing database export...");
+			Logger.getInstance().info("Initializing database export...");*/
 
 			final ExportStatusDialog exportDialog = new ExportStatusDialog(mainView, 
 					Internal.I18N.getString("kmlExport.dialog.window"),
 					Internal.I18N.getString("export.dialog.msg"),
-					tileAmount);
+					1);
 
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -816,10 +788,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			});
 
 			
-			*/
+			
 
 					
-			boolean success=false;
+			boolean success = false;
 			try {
 
 				success = CityKmlExporter.doProcess(_importer.GetCityGMLReader());
@@ -830,21 +802,15 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			}
 
 			
-			
 			try {
-				
 				eventDispatcher.flushEvents();
-			
 			} catch (InterruptedException e1) {
 				//
 			}
 
 			SwingUtilities.invokeLater(new Runnable() {
-				
 				public void run() {
-					
-					//exportDialog.dispose();
-				
+					exportDialog.dispose();
 				}
 			});
 			
@@ -852,27 +818,18 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			CityKmlExporter.cleanup();
 
 			if (success) {
-				Logger.getInstance().info("KML export successfully finished.");
-
+				Logger.getInstance().info("Database export successfully finished.");
 			} else {
-				Logger.getInstance().warn("KML export aborted.");
+				Logger.getInstance().warn("Database export aborted.");
 			}
 
 			mainView.setStatusText(Internal.I18N.getString("main.status.ready.label"));
+		
 		} finally {
 			lock.unlock();
 		}
 	}
 	
-	
-
-	private void setFilterEnabledValues() {
-		
-	}
-
-	private void setVisibilityEnabledValues() {
-
-	}
 
 	public static void centerOnScreen(Component component) {
 		
