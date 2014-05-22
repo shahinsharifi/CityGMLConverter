@@ -238,8 +238,6 @@ public class CityKmlExporter implements EventHandler {
 
 		// check whether spatial indexes are enabled
 		
-		Logger.getInstance().info("Checking for spatial indexes on geometry columns of involved tables...");
-		
 
 		String selectedTheme = config.getProject().getKmlExporter().getAppearanceTheme();
 		if (!selectedTheme.equals(de.tub.citydb.config.project.kmlExporter.KmlExporter.THEME_NONE)) {

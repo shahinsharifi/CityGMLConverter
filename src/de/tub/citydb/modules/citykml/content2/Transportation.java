@@ -232,7 +232,7 @@ public class Transportation extends KmlGenericObject{
 						List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
 						double zOffset = getZOffsetFromConfigOrDB(work.getId());
 						if (zOffset == Double.MAX_VALUE) {
-							zOffset = getZOffsetFromGEService(work.getId(), anchorCandidates);
+							zOffset = getZOffsetFromGEService(anchorCandidates);
 						}
 						setZOffset(zOffset);
 	

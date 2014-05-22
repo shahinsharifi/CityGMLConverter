@@ -1751,6 +1751,9 @@ public abstract class KmlGenericObject {
 		if (zOffset == Double.MAX_VALUE) {
 			zOffset = getZOffsetFromGEService(work.getId(), lowestPointCandidates);
 		}
+		
+		Logger.getInstance().info(String.valueOf(zOffset));
+		
 		double lowestZCoordinate = convertPointCoordinatesToWGS84(new double[] {
 				lowestPointCandidates.get(0).x/100, // undo trick for very close coordinates
 				lowestPointCandidates.get(0).y/100,	
@@ -2627,6 +2630,7 @@ public abstract class KmlGenericObject {
 			point3d.y = point3d.y * 100;
 			point3d.z = point3d.z * 100;
 		}
+		Logger.getInstance().info(String.valueOf(coords.get(0).z));
 		return coords;
 	}
 

@@ -352,7 +352,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		DecimalFormat bboxFormat = new DecimalFormat("#######", DecimalFormatSymbols.getInstance(Locale.ENGLISH));	
 		srsField = new JFormattedTextField(bboxFormat);	
 		srsField.setFocusLostBehavior(JFormattedTextField.COMMIT);
-		srsLabel = new JLabel("Reference System");				
+		srsLabel = new JLabel("Reference System (EPSG):");				
 		JPanel inputFieldsPanel = new JPanel();
 		inputFieldsPanel.setLayout(new GridBagLayout());
 		inputFieldsPanel.add(srsLabel, GuiUtil.setConstraints(0,0,0.0,0.0,GridBagConstraints.NONE,0,0,0,5));

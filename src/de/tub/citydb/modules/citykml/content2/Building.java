@@ -206,16 +206,16 @@ public class Building extends KmlGenericObject{
 
 		int buildingPartId = 1;
 		boolean reversePointOrder = false;
-		List<Map<String, Object>> _surfaceList = new ArrayList<Map<String,Object>>();
 		
 		try {
 			
 			SurfaceGeometry _SurfaceGeometry = new SurfaceGeometry();
 			
 			AbstractBuilding _building = (AbstractBuilding)work.getCityGmlClass();
+			
+			
+			List<Map<String, Object>> _surfaceList = _SurfaceGeometry.GetAbstractGeometry(_building);
 					
-			_surfaceList.addAll(_SurfaceGeometry.GetAbstractGeometry(_building));
-						
 			
 			if (_surfaceList.size()!=0) { // result not empty
 
@@ -354,9 +354,9 @@ public class Building extends KmlGenericObject{
 
 			double zOffset = getZOffsetFromConfigOrDB(work.getId());
 			if (zOffset == Double.MAX_VALUE) {
-				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result, (zOffset == Double.MAX_VALUE));
+				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result, work);
 				rs.beforeFirst(); // return cursor to beginning
-				zOffset = getZOffsetFromGEService(work.getId(), lowestPointCandidates);
+				zOffset = getZOffsetFromGEService(lowestPointCandidates);
 			}
 
 			while (rs.next()) {	

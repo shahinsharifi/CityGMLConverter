@@ -1740,7 +1740,9 @@ public abstract class KmlGenericObject {
 	
 	protected List<PlacemarkType> createPlacemarksForGeometry(List<Map<String, Object>> rs,
 			KmlSplittingResult work) throws Exception{
+		
 		return createPlacemarksForGeometry(rs, work, false, false);
+	
 	}
 
 	protected List<PlacemarkType> createPlacemarksForGeometry(List<Map<String, Object>> result,
@@ -1754,20 +1756,22 @@ public abstract class KmlGenericObject {
 		PolygonType polygon = null;
 
 		double zOffset = 0;//getZOffsetFromConfigOrDB(work.getId());
-	//	List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result , true);
 		
-	/*	if (zOffset == Double.MAX_VALUE) {
-			zOffset = getZOffsetFromGEService(work.getId(), lowestPointCandidates);
-		}*/
+		List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result , work);
 		
+		zOffset = getZOffsetFromGEService(lowestPointCandidates);
 		
-		/*double lowestZCoordinate = convertPointCoordinatesToWGS84(new double[] {
+		/*
+		 double lowestZCoordinate =  ProjConvertor.TransformProjection(
 				lowestPointCandidates.get(0).x/100, // undo trick for very close coordinates
 				lowestPointCandidates.get(0).y/100,	
-				lowestPointCandidates.get(0).z/100}) [2];*/
+				lowestPointCandidates.get(0).z/100,
+				 work.getTargetSrs(),
+				 "4326").get(2);
+		*/
 
 		for (Map<String, Object> Row: result) {
-//			Long surfaceId = rs.getLong("id");
+
 
 			String surfaceType = (String)Row.get("type");
 			if (surfaceType != null && !surfaceType.endsWith("Surface")) {
@@ -1836,6 +1840,9 @@ public abstract class KmlGenericObject {
 					break;
 			}
 
+		
+			
+			
 			// just in case surfaceType == null
 			boolean probablyRoof = true;
 			double nx = 0;
@@ -2270,9 +2277,9 @@ public abstract class KmlGenericObject {
 
 			double zOffset = getZOffsetFromConfigOrDB(work.getId());
 			if (zOffset == Double.MAX_VALUE) {
-				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result, (zOffset == Double.MAX_VALUE));
+				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result,  work);
 				rs.beforeFirst(); // return cursor to beginning
-				zOffset = getZOffsetFromGEService(work.getId(), lowestPointCandidates);
+				zOffset = getZOffsetFromGEService(lowestPointCandidates);
 			}
 
 			while (rs.next()) {				
@@ -2519,208 +2526,74 @@ public abstract class KmlGenericObject {
 		return zOffset;
 	}
 
-	protected double getZOffsetFromGEService (long id, List<Point3d> candidates) {
+	protected double getZOffsetFromGEService (List<Point3d> candidates) {
 
 		double zOffset = 0;
 
-		if (config.getProject().getKmlExporter().isCallGElevationService()) { // allowed to query
-//			PreparedStatement checkQuery = null;
-			PreparedStatement insertQuery = null;
-//			ResultSet rs = null;
-			ResultSet rs2 = null;
-			try{
-				// convert candidate points to WGS84
-				double[] coords = new double[candidates.size()*3];
-				int index = 0;
-				for (Point3d point3d: candidates) {
-					coords[index++] = point3d.x / 100; // undo trick for very close coordinates
-					coords[index++] = point3d.y / 100;
-					coords[index++] = point3d.z / 100;
-				}
-				
-				StringBuilder geomEWKT = new StringBuilder("");
-				String coordComma = "";
-				
-				geomEWKT.append("SRID=").append(dbSrs.getSrid()).append(";");
-				
-				if (coords.length == 3){
-					geomEWKT.append("POINT(")
-							.append(coords[0]).append(" ")
-							.append(coords[1]).append(" ")
-							.append(coords[2]);
-				}
-				else {
-					geomEWKT.append("LINESTRING(");
-					
-					for (int i = 0; i < coords.length; i += 3){
-						geomEWKT.append(coordComma)
-						.append(coords[0]).append(" ")
-						.append(coords[1]).append(" ")
-						.append(coords[2]);
-						
-						coordComma = ",";
-					}
-				}
-					
-				geomEWKT.append(")");
-								
-				Geometry geom = PGgeometry.geomFromString(geomEWKT.toString());
-				Geometry convertedGeom = convertToWGS84(geom);
-				
-				coords = new double[geom.numPoints()*3];
-				
-				for (int i = 0, j = 0; i < convertedGeom.numPoints(); i++, j+=3){
-					coords[j] = convertedGeom.getPoint(i).x;
-					coords[j+1] = convertedGeom.getPoint(i).y;
-					coords[j+2] = convertedGeom.getPoint(i).z;
-				}
-/*
-				checkQuery = connection.prepareStatement(Queries.GET_ID_FROM_GMLID);
-				checkQuery.setString(1, gmlId);
-				rs = checkQuery.executeQuery();
-				rs.next();
-				long id = rs.getLong(1);
-				
-				if (rs.next()) {
-					Logger.getInstance().warn("gml:id value " + gmlId + " is used for more than one object in the 3DCityDB; zOffset was not stored.");
-			    }
-				else {
-*/
-					Logger.getInstance().info("Getting zOffset from Google's elevation API for " + getGmlId() + " with " + candidates.size() + " points.");
-					zOffset = elevationServiceHandler.getZOffset(coords);
-					// save result in DB for next time
-					String genericAttribName = "GE_LoD" + currentLod + "_zOffset";
-					insertQuery = connection.prepareStatement(Queries.INSERT_GE_ZOFFSET);
-					insertQuery.setString(1, genericAttribName);
-					String strVal = "Auto|" + zOffset + "|" + dateFormatter.format(new Date(System.currentTimeMillis()));
-					insertQuery.setString(2, strVal);
-					insertQuery.setLong(3, id);
-					rs2 = insertQuery.executeQuery();		
-				}
-//			}
-			catch (Exception e) {}
-//				if (e.getMessage().startsWith("ORA-01427")) { // single-row subquery returns more than one row
-//				if (e.getMessage().contains("21000")) { // more than one row returned by a subquery used as an expression
-//					
-//				}
-//			}
-			finally {
-				try {
-/*
-					if (rs != null) rs.close();
-					if (checkQuery != null) checkQuery.close();
-*/
-					if (rs2 != null) rs2.close();
-					if (insertQuery != null) insertQuery.close();
-				}
-				catch (Exception e2) {}
+		try{
+			
+			double[] coords = new double[candidates.size()*3];
+			int index = 0;
+			for (Point3d point3d: candidates) {
+				coords[index+0] = point3d.x ; 
+				coords[index+1] = point3d.y ;
+				coords[index+2] = point3d.z ;
+				index++;
 			}
-		    
+
+			Logger.getInstance().info("Getting zOffset from Google's elevation API with " + candidates.size() + " points.");
+			
+			zOffset = elevationServiceHandler.getZOffset(coords);
+			Logger.getInstance().info(String.valueOf(zOffset));
 		}
+
+		catch (Exception e) {
+			
+			Logger.getInstance().error(e.toString());
+			
+		}
+
+
 
 		return zOffset;
 	}
 	
+	
 	@SuppressWarnings("unchecked")
-	protected List<Point3d> getLowestPointsCoordinates(List<Map<String, Object>> result,
-			boolean willCallGEService) throws Exception {
-		
-		
-		List<Double> _Geometry = (List<Double>)result.get(0).get("Geometry");
-		
-		List<Double> Target_Coordinates = new ArrayList<Double>();
-		
-		org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()];
-		
-		for (int i = 1; i < _Geometry.size(); i = i+3) {				
-
-			Target_Coordinates.addAll(ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), "3068", "4326"));
-			
-			tmpPoint[i] = new org.postgis.Point(Target_Coordinates.get(i),
-					Target_Coordinates.get(i+1),
-					Target_Coordinates.get(i+2));
-		}
-		
-		Polygon _poly = new Polygon(
-                new org.postgis.LinearRing[] {
-                    new org.postgis.LinearRing(
-                        tmpPoint
-                    )
-                }
-            );
-		
+	protected List<Point3d> getLowestPointsCoordinates(List<Map<String, Object>> result, KmlSplittingResult work) throws Exception {
 		
 		double currentlyLowestZCoordinate = Double.MAX_VALUE;
 		List<Point3d> coords = new ArrayList<Point3d>();
-
-		
-		Geometry surface = _poly;
 		List<Double> ordinates = new ArrayList<Double>();
 		
-		for (int i = 0; i < surface.numPoints(); i++){
-			ordinates.add(surface.getPoint(i).x);
-			ordinates.add(surface.getPoint(i).y);
-			ordinates.add(surface.getPoint(i).z);
+		
+		for(Map<String,Object> _row :result)
+		{
+			List<Double> PointList = (List<Double>)_row.get("Geometry");
+			ordinates.addAll(ProjConvertor.TransformProjection(PointList.get(0), PointList.get(1), PointList.get(2), work.getTargetSrs() , "4326"));
 		}
-
-		do {
-			// we are only interested in the z coordinate
-			for (int j = 2; j < ordinates.size(); j+=3) {
-				if (ordinates.get(j) < currentlyLowestZCoordinate) {
-					coords.clear();
-					Point3d point3d = new Point3d(ordinates.get(j-2), ordinates.get(j-1), ordinates.get(j));
+		
+		// we are only interested in the z coordinate
+		for (int j = 2; j < ordinates.size(); j+=3) {
+			if (ordinates.get(j) < currentlyLowestZCoordinate) {
+				coords.clear();
+				Point3d point3d = new Point3d(ordinates.get(j-2), ordinates.get(j-1), ordinates.get(j));
+				coords.add(point3d);
+				currentlyLowestZCoordinate = point3d.z;
+			}
+			if (ordinates.get(j) == currentlyLowestZCoordinate) {
+				Point3d point3d = new Point3d(ordinates.get(j-2), ordinates.get(j-1), ordinates.get(j));
+				if (!coords.contains(point3d)) {
 					coords.add(point3d);
-					currentlyLowestZCoordinate = point3d.z;
-				}
-				if (willCallGEService && ordinates.get(j) == currentlyLowestZCoordinate) {
-					Point3d point3d = new Point3d(ordinates.get(j-2), ordinates.get(j-1), ordinates.get(j));
-					if (!coords.contains(point3d)) {
-						coords.add(point3d);
-					}
 				}
 			}
-			if (result.size()==1)	break;
-
-			List<Double> _Geometry1 = (List<Double>)result.get(1).get("Geometry");
-			
-			List<Double> Target_Coordinates1 = new ArrayList<Double>();
-			
-			org.postgis.Point[] tmpPoint1 = new org.postgis.Point[_Geometry.size()];
-			
-			for (int i = 1; i < _Geometry.size(); i = i+3) {				
-
-				Target_Coordinates.addAll(ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), "3068", "4326"));
-				
-				tmpPoint[i] = new org.postgis.Point(Target_Coordinates.get(i),
-						Target_Coordinates.get(i+1),
-						Target_Coordinates.get(i+2));
-			}
-			
-			Polygon _poly1 = new Polygon(
-	                new org.postgis.LinearRing[] {
-	                    new org.postgis.LinearRing(
-	                        tmpPoint
-	                    )
-	                }
-	            );
-			surface = _poly1;
-			ordinates = new ArrayList<Double>();
-			
-			for (int i = 0; i < surface.numPoints(); i++){
-				ordinates.add(surface.getPoint(i).x);
-				ordinates.add(surface.getPoint(i).y);
-				ordinates.add(surface.getPoint(i).z);
-			}
-		}	
-		while (true);
-
-		for (Point3d point3d: coords) {
-			point3d.x = point3d.x * 100; // trick for very close coordinates
-			point3d.y = point3d.y * 100;
-			point3d.z = point3d.z * 100;
 		}
+		Logger.getInstance().info(String.valueOf(coords.get(0).z));
+		
 		return coords;
 	}
+	
+	
 
 	protected double[] convertPointCoordinatesToWGS84(double[] coords) throws SQLException {
 
@@ -2764,6 +2637,8 @@ public abstract class KmlGenericObject {
 		
 		return pointCoords;
 	}
+	
+	
 
 	protected Geometry convertToWGS84(Geometry geometry) throws SQLException {
 

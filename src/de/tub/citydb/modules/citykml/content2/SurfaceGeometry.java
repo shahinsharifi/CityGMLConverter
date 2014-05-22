@@ -1,6 +1,7 @@
 package de.tub.citydb.modules.citykml.content2;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,21 +13,43 @@ import org.citygml4j.model.citygml.building.BoundarySurfaceProperty;
 import org.citygml4j.model.citygml.texturedsurface._TexturedSurface;
 import org.citygml4j.model.gml.GMLClass;
 import org.citygml4j.model.gml.geometry.AbstractGeometry;
+import org.citygml4j.model.gml.geometry.aggregates.MultiCurve;
+import org.citygml4j.model.gml.geometry.aggregates.MultiCurveProperty;
+import org.citygml4j.model.gml.geometry.aggregates.MultiPoint;
+import org.citygml4j.model.gml.geometry.aggregates.MultiPointProperty;
 import org.citygml4j.model.gml.geometry.aggregates.MultiPolygon;
 import org.citygml4j.model.gml.geometry.aggregates.MultiSolid;
 import org.citygml4j.model.gml.geometry.aggregates.MultiSurface;
 import org.citygml4j.model.gml.geometry.aggregates.MultiSurfaceProperty;
+import org.citygml4j.model.gml.geometry.complexes.CompositeCurve;
 import org.citygml4j.model.gml.geometry.complexes.CompositeSolid;
 import org.citygml4j.model.gml.geometry.complexes.CompositeSurface;
 import org.citygml4j.model.gml.geometry.complexes.GeometricComplex;
+import org.citygml4j.model.gml.geometry.complexes.GeometricComplexProperty;
+import org.citygml4j.model.gml.geometry.primitives.AbstractCurve;
+import org.citygml4j.model.gml.geometry.primitives.AbstractCurveSegment;
+import org.citygml4j.model.gml.geometry.primitives.AbstractGeometricPrimitive;
 import org.citygml4j.model.gml.geometry.primitives.AbstractRing;
 import org.citygml4j.model.gml.geometry.primitives.AbstractRingProperty;
 import org.citygml4j.model.gml.geometry.primitives.AbstractSolid;
 import org.citygml4j.model.gml.geometry.primitives.AbstractSurface;
 import org.citygml4j.model.gml.geometry.primitives.AbstractSurfacePatch;
+import org.citygml4j.model.gml.geometry.primitives.ControlPoint;
+import org.citygml4j.model.gml.geometry.primitives.Curve;
+import org.citygml4j.model.gml.geometry.primitives.CurveArrayProperty;
+import org.citygml4j.model.gml.geometry.primitives.CurveProperty;
+import org.citygml4j.model.gml.geometry.primitives.CurveSegmentArrayProperty;
+import org.citygml4j.model.gml.geometry.primitives.GeometricPositionGroup;
 import org.citygml4j.model.gml.geometry.primitives.GeometricPrimitiveProperty;
+import org.citygml4j.model.gml.geometry.primitives.LineString;
+import org.citygml4j.model.gml.geometry.primitives.LineStringSegment;
+import org.citygml4j.model.gml.geometry.primitives.LineStringSegmentArrayProperty;
 import org.citygml4j.model.gml.geometry.primitives.LinearRing;
+import org.citygml4j.model.gml.geometry.primitives.OrientableCurve;
 import org.citygml4j.model.gml.geometry.primitives.OrientableSurface;
+import org.citygml4j.model.gml.geometry.primitives.Point;
+import org.citygml4j.model.gml.geometry.primitives.PointArrayProperty;
+import org.citygml4j.model.gml.geometry.primitives.PointProperty;
 import org.citygml4j.model.gml.geometry.primitives.Polygon;
 import org.citygml4j.model.gml.geometry.primitives.PolygonProperty;
 import org.citygml4j.model.gml.geometry.primitives.Rectangle;
@@ -52,8 +75,14 @@ import org.citygml4j.util.gmlid.DefaultGMLIdManager;
 
 
 
+import org.postgis.PGgeometry;
+
+import de.tub.citydb.config.internal.Internal;
+import de.tub.citydb.database.TableEnum;
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkBasic;
+import de.tub.citydb.modules.citygml.importer.database.content.DBImporterEnum;
 import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.util.Util;
 
@@ -69,15 +98,15 @@ public class SurfaceGeometry {
 	}
 	
 	
-	public List<Map<String, Object>> GetAbstractGeometry(AbstractBuilding _building) throws SQLException
+	public List<Map<String, Object>> GetAbstractGeometry(AbstractBuilding _building) throws Exception
 	{
 		
 		
 		String _SurfaceType = "undefined";
 		
 		for (int lod = 1; lod < 5; lod++) {
+			
 			SolidProperty solidProperty = null;
-
 
 			switch (lod) {
 			case 1:
@@ -97,32 +126,158 @@ public class SurfaceGeometry {
 			if (solidProperty != null) {
 				if (solidProperty.isSetSolid()) {
 					
-					_pointList.clear();
-					
-    				GetSurfaceGeometry(solidProperty.getSolid(), false);
-    				
+					_pointList.clear();					
+    				GetSurfaceGeometry(solidProperty.getSolid(), false);    				
     				for(List<Double> _Geometry : _pointList){
-    					
-    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
-    					
-    					_SurfaceType = DetectSurfaceType(_Geometry);
-    					
-    					_BuildingSurfaces.put("type", _SurfaceType);
-    				
-    					_BuildingSurfaces.put("Geometry", _Geometry);    					
-    					
+   					
+    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
+    					_SurfaceType = DetectSurfaceType(_Geometry); 					
+    					_BuildingSurfaces.put("type", _SurfaceType);    				
+    					_BuildingSurfaces.put("Geometry", _Geometry);    					   					
     					_SurfaceList.add(_BuildingSurfaces);
     				
     				}
 				
-				} else {
+				} 
+			}
+		
+		}
+		
+		
+		
+		// lodXMultiSurface
+		for (int lod = 1; lod < 5; lod++) {
+			
+			//if (lodGeometry[lod - 1])
+				//continue;
+
+			MultiSurfaceProperty multiSurfaceProperty = null;
+			
+
+			switch (lod) {
+			case 1:
+				multiSurfaceProperty = _building.getLod1MultiSurface();
+				break;
+			case 2:
+				multiSurfaceProperty = _building.getLod2MultiSurface();
+				break;
+			case 3:
+				multiSurfaceProperty = _building.getLod3MultiSurface();
+				break;
+			case 4:
+				multiSurfaceProperty = _building.getLod4MultiSurface();
+				break;
+			}
+
+			if (multiSurfaceProperty != null) {
+				
+				if (multiSurfaceProperty.isSetMultiSurface()) {
+				
+					_pointList.clear();					
+    				GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);    				
+    				for(List<Double> _Geometry : _pointList){    					
+    					
+    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();    					
+    					_SurfaceType = DetectSurfaceType(_Geometry);    					
+    					_BuildingSurfaces.put("type", _SurfaceType);    				
+    					_BuildingSurfaces.put("Geometry", _Geometry);    					    					
+    					_SurfaceList.add(_BuildingSurfaces);
+    				
+    				}
 					
 				}
 			}
 
-			
 		}
 		
+		
+
+		// lodXTerrainIntersectionCurve
+		for (int lod = 1; lod < 5; lod++) {
+			
+			MultiCurveProperty multiCurveProperty = null;
+
+			switch (lod) {
+			case 1:
+				multiCurveProperty = _building.getLod1TerrainIntersection();
+				break;
+			case 2:
+				multiCurveProperty = _building.getLod2TerrainIntersection();
+				break;
+			case 3:
+				multiCurveProperty = _building.getLod3TerrainIntersection();
+				break;
+			case 4:
+				multiCurveProperty = _building.getLod4TerrainIntersection();
+				break;
+			}
+
+			if (multiCurveProperty != null)
+			{
+				
+				_pointList.clear();
+				
+				_pointList = this.getMultiCurve(multiCurveProperty);
+				
+				for(List<Double> _Geometry : _pointList){
+					
+					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
+					
+					_BuildingSurfaces.put("type", _SurfaceType);
+				
+					_BuildingSurfaces.put("Geometry", _Geometry);    					
+					
+					_SurfaceList.add(_BuildingSurfaces);
+							
+				}
+
+			}			
+
+		}
+		
+		
+
+		// lodXMultiCurve
+		for (int lod = 2; lod < 5; lod++) {
+
+			MultiCurveProperty multiCurveProperty = null;
+			
+
+			switch (lod) {
+			case 2:
+				multiCurveProperty = _building.getLod2MultiCurve();
+				break;
+			case 3:
+				multiCurveProperty = _building.getLod3MultiCurve();
+				break;
+			case 4:
+				multiCurveProperty = _building.getLod4MultiCurve();
+				break;
+			}
+
+			if (multiCurveProperty != null)
+			{
+				_pointList.clear();
+				
+				_pointList = this.getMultiCurve(multiCurveProperty);
+				
+				for(List<Double> _Geometry : _pointList){
+					
+					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
+					
+					_BuildingSurfaces.put("type", _SurfaceType);
+				
+					_BuildingSurfaces.put("Geometry", _Geometry);    					
+					
+					_SurfaceList.add(_BuildingSurfaces);
+							
+				}
+
+			}
+		
+		}
+		
+
 		// BoundarySurfacesOfBuilding
 		if (_building.isSetBoundedBySurface()) {
 			
@@ -135,7 +290,6 @@ public class SurfaceGeometry {
 					for (int lod = 2; lod < 5; lod++) {
 			        	
 						MultiSurfaceProperty multiSurfaceProperty = null;
-			        	long multiSurfaceId = 0;
 
 			    		switch (lod) {
 				    		case 2:
@@ -154,35 +308,22 @@ public class SurfaceGeometry {
 			    			if (multiSurfaceProperty.isSetMultiSurface()) {
 			    				
 			    				_pointList.clear();
-			    				
-			    				_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();
-			    				
+			    				_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();			    				
 			    				GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 			    				
 			    				for(List<Double> _Geometry : _pointList){
 			    					
-			    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
-			    					
-			    					_BuildingSurfaces.put("type", _SurfaceType);
-			    				
-			    					_BuildingSurfaces.put("Geometry", _Geometry);    					
-			    					
-			    					_SurfaceList.add(_BuildingSurfaces);
-			    					
+			    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();		    					
+			    					_BuildingSurfaces.put("type", _SurfaceType);		    				
+			    					_BuildingSurfaces.put("Geometry", _Geometry);    							    					
+			    					_SurfaceList.add(_BuildingSurfaces);	    					
 			    				
 			    				}
 			    			} 
 			    		}
 
 			        }
-				} else {
-					// xlink
-					String href = boundarySurfaceProperty.getHref();
-
-					if (href != null && href.length() != 0) {
-						LOG.error("XLink reference '" + href + "' to BoundarySurface feature is not supported.");
-					}
-				}
+				} 
 			}
 			
 		}
@@ -191,6 +332,9 @@ public class SurfaceGeometry {
 		return _SurfaceList;
 		
 	}
+
+	
+	
 	
 	
 	public void GetSurfaceGeometry(AbstractGeometry surfaceGeometry,boolean reverse) throws SQLException {
@@ -251,6 +395,8 @@ public class SurfaceGeometry {
 		}
 		// A simple polygon
 		else if (surfaceGeometryType == GMLClass.POLYGON) {
+			
+		
 			
 			Polygon polygon = (Polygon)surfaceGeometry;
 			if (polygon.isSetExterior()) {
@@ -576,7 +722,7 @@ public class SurfaceGeometry {
 			//dbImporterManager.putGmlId(origGmlId, surfaceGeometryId, rootId, reverse, gmlId, CityGMLClass.ABSTRACT_GML_GEOMETRY);
 
 			// set root entry
-
+			
 
 			// get surfaceMember
 			if (compositeSurface.isSetSurfaceMember()) {
@@ -776,7 +922,7 @@ public class SurfaceGeometry {
 			//if (origGmlId != null && !isCopy)
 			//dbImporterManager.putGmlId(origGmlId, surfaceGeometryId, rootId, reverse, gmlId, CityGMLClass.ABSTRACT_GML_GEOMETRY);
 
-
+			
 
 			// get surfaceMember
 			if (multiSurface.isSetSurfaceMember()) {
@@ -896,6 +1042,144 @@ public class SurfaceGeometry {
 
 	}
 	
+
+
+	
+	public List<Double>  getCurve(CurveProperty curveProperty) throws Exception {
+		
+		return curveProperty != null ? getCurve(curveProperty.getCurve()): null;
+	
+	}
+
+	
+	
+	public List<List<Double>> getMultiCurve(MultiCurveProperty multiCurveProperty)throws Exception {
+	
+		return multiCurveProperty != null ? getMultiCurve(multiCurveProperty.getMultiCurve()) : null;
+	}
+
+	
+	
+	public List<Double> getCurve(AbstractCurve curve) throws Exception {
+		
+		List<Double> pointList = new ArrayList<Double>();
+
+		if (curve != null) {
+			generatePointList(curve, pointList, false);
+			
+		}
+		return pointList;
+	
+	}
+	
+	
+	
+
+	public List<List<Double>> getMultiCurve(MultiCurve multiCurve) throws Exception
+	{
+				
+		List<List<Double>> pointList = new ArrayList<List<Double>>();
+		
+		if (multiCurve != null) {
+
+			if (multiCurve.isSetCurveMember()) {
+
+				for (CurveProperty curveProperty : multiCurve.getCurveMember()) {
+					if (curveProperty.isSetCurve()) {
+						AbstractCurve curve = curveProperty.getCurve();
+						List<Double> points = new ArrayList<Double>();
+						generatePointList(curve, points, false);
+
+						if (!points.isEmpty())
+							pointList.add(points);
+					}
+				}
+			} else if (multiCurve.isSetCurveMembers()) {
+				CurveArrayProperty curveArrayProperty = multiCurve.getCurveMembers();
+				for (AbstractCurve curve : curveArrayProperty.getCurve()) {
+					List<Double> points = new ArrayList<Double>();
+					generatePointList(curve, points, false);
+
+					if (!points.isEmpty())
+						pointList.add(points);
+				}
+			}
+
+		}
+
+		return pointList;
+	}
+	
+	
+	
+	private void generatePointList(AbstractCurve abstractCurve, List<Double> pointList, boolean reverse) {
+
+		if (abstractCurve.getGMLClass() == GMLClass.LINE_STRING) {
+			LineString lineString = (LineString) abstractCurve;
+			List<Double> points = lineString.toList3d(reverse);
+
+			if (points != null && !points.isEmpty())
+				pointList.addAll(points);
+		}
+
+		else if (abstractCurve.getGMLClass() == GMLClass.CURVE) {
+			Curve curve = (Curve) abstractCurve;
+			if (curve.isSetSegments()) {
+				CurveSegmentArrayProperty arrayProperty = curve.getSegments();
+
+				if (arrayProperty.isSetCurveSegment()) {
+					List<Double> points = new ArrayList<Double>();
+
+					for (AbstractCurveSegment abstractCurveSegment : arrayProperty
+							.getCurveSegment())
+						if (abstractCurveSegment.getGMLClass() == GMLClass.LINE_STRING_SEGMENT)
+							points.addAll(((LineStringSegment) abstractCurveSegment)
+									.toList3d());
+
+					if (!points.isEmpty()) {
+						if (!reverse)
+							pointList.addAll(points);
+						else {
+							for (int i = points.size() - 3; i >= 0; i -= 3)
+								pointList.addAll(points.subList(i, i + 3));
+						}
+					}
+				}
+			}
+		}
+
+		else if (abstractCurve.getGMLClass() == GMLClass.COMPOSITE_CURVE) {
+			CompositeCurve compositeCurve = (CompositeCurve) abstractCurve;
+			if (compositeCurve.isSetCurveMember()) {
+				for (CurveProperty curveProperty : compositeCurve
+						.getCurveMember()) {
+					if (curveProperty.isSetCurve())
+						generatePointList(curveProperty.getCurve(), pointList,
+								reverse);
+					else {
+						// xlinks are not allowed here...
+					}
+				}
+			}
+		}
+
+		else if (abstractCurve.getGMLClass() == GMLClass.ORIENTABLE_CURVE) {
+			OrientableCurve orientableCurve = (OrientableCurve) abstractCurve;
+			if (orientableCurve.isSetOrientation()
+					&& orientableCurve.getOrientation().equals("-"))
+				reverse = !reverse;
+
+			if (orientableCurve.isSetBaseCurve()) {
+				CurveProperty curveProperty = orientableCurve.getBaseCurve();
+				if (curveProperty.isSetCurve())
+					generatePointList(curveProperty.getCurve(), pointList,
+							reverse);
+				else {
+					// xlinks are not allowed here
+				}
+			}
+		}
+	}
 	
 	
 	public static String DetectSurfaceType(List<Double> _pointList){
