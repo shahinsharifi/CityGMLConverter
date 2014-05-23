@@ -55,6 +55,7 @@ import de.tub.citydb.config.project.kmlExporter.BalloonContentMode;
 import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.kmlExporter.DisplayForm;
 import de.tub.citydb.database.DatabaseConnectionPool;
+import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.content2.BalloonTemplateHandlerImpl;
 import de.tub.citydb.modules.citykml.content2.Building;
 import de.tub.citydb.modules.citykml.content2.CityFurniture;
@@ -423,11 +424,11 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					break;
 			}
 
-			singleObject.read(work);
 			
-			if (!work.isCityObjectGroup() && 
-				work.getDisplayForm().getForm() == DisplayForm.COLLADA &&
-				singleObject.getGmlId() != null) { // object is filled
+			singleObject.read(work);
+
+			
+			if (!work.isCityObjectGroup() &&  work.getDisplayForm().getForm() == DisplayForm.COLLADA && singleObject.getGmlId() != null) { // object is filled
 
 				// correction for some CityGML Types exported together
 				if (featureClass == CityGMLClass.PLANT_COVER) featureClass = CityGMLClass.SOLITARY_VEGETATION_OBJECT;
@@ -459,6 +460,8 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					objectGroup.put(featureClass, currentObjectGroup);
 					objectGroupCounter.put(featureClass, 0);
 				}
+				Logger.getInstance().info("HI2");
+				
 			}
 		}
 		finally {

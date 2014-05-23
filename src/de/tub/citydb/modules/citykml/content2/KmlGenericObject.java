@@ -138,13 +138,17 @@ import de.tub.citydb.api.database.DatabaseSrs;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.api.log.LogLevel;
 import de.tub.citydb.config.Config;
+import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.kmlExporter.Balloon;
 import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.kmlExporter.DisplayForm;
 import de.tub.citydb.config.project.kmlExporter.KmlExporter;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.database.TypeAttributeValueEnum;
+import de.tub.citydb.io.DirectoryScanner;
+import de.tub.citydb.io.DirectoryScanner.CityGMLFilenameFilter;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.util.FileHandler;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
@@ -215,7 +219,7 @@ public abstract class KmlGenericObject {
 	protected DatabaseSrs dbSrs;
 	protected X3DMaterial defaultX3dMaterial;
 
-	private SimpleDateFormat dateFormatter;
+	private DirectoryScanner directoryScanner;
 
 	public KmlGenericObject(Connection connection,
 			KmlExporterManager kmlExporterManager,
@@ -1755,23 +1759,13 @@ public abstract class KmlGenericObject {
 		MultiGeometryType multiGeometry = null;
 		PolygonType polygon = null;
 
-		double zOffset = 0;//getZOffsetFromConfigOrDB(work.getId());
+		double zOffset = 0;
 		
 		List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result , work);
 		
-		zOffset = getZOffsetFromGEService(lowestPointCandidates);
-		
-		/*
-		 double lowestZCoordinate =  ProjConvertor.TransformProjection(
-				lowestPointCandidates.get(0).x/100, // undo trick for very close coordinates
-				lowestPointCandidates.get(0).y/100,	
-				lowestPointCandidates.get(0).z/100,
-				 work.getTargetSrs(),
-				 "4326").get(2);
-		*/
+		zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
 
 		for (Map<String, Object> Row: result) {
-
 
 			String surfaceType = (String)Row.get("type");
 			if (surfaceType != null && !surfaceType.endsWith("Surface")) {
@@ -2279,7 +2273,7 @@ public abstract class KmlGenericObject {
 			if (zOffset == Double.MAX_VALUE) {
 				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result,  work);
 				rs.beforeFirst(); // return cursor to beginning
-				zOffset = getZOffsetFromGEService(lowestPointCandidates);
+				zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
 			}
 
 			while (rs.next()) {				
@@ -2525,32 +2519,62 @@ public abstract class KmlGenericObject {
 
 		return zOffset;
 	}
+	
+	
 
-	protected double getZOffsetFromGEService (List<Point3d> candidates) {
+	protected double getZOffsetFromGEService (List<Point3d> candidates, String _TargetSrs ) {
 
 		double zOffset = 0;
 
 		try{
-			
-			double[] coords = new double[candidates.size()*3];
-			int index = 0;
-			for (Point3d point3d: candidates) {
-				coords[index+0] = point3d.x ; 
-				coords[index+1] = point3d.y ;
-				coords[index+2] = point3d.z ;
-				index++;
-			}
 
-			Logger.getInstance().info("Getting zOffset from Google's elevation API with " + candidates.size() + " points.");
-			
-			zOffset = elevationServiceHandler.getZOffset(coords);
-			Logger.getInstance().info(String.valueOf(zOffset));
+
+
+			Internal intConfig = config.getInternal();		
+			directoryScanner = new DirectoryScanner(true);
+			directoryScanner.addFilenameFilter(new CityGMLFilenameFilter());		
+			List<File> importFiles = directoryScanner.getFiles(intConfig.getImportFiles());
+
+
+			if(!FileHandler.IsFileExists(importFiles.get(0)))
+			{
+
+				double[] coords = new double[candidates.size()*3];
+				int index = 0;
+				for (Point3d point3d: candidates) {
+					// undo trick for very close coordinates
+					List<Double> tmpPointList = ProjConvertor.TransformProjection(point3d.x / 100 , point3d.y / 100 , point3d.z / 100 , _TargetSrs , "4326");
+					coords[index++] = tmpPointList.get(1); 
+					coords[index++] = tmpPointList.get(0);
+					coords[index++] = tmpPointList.get(2);
+				}
+
+
+
+				Logger.getInstance().info("Getting zOffset from Google's elevation API with " + candidates.size() + " points.");
+
+				zOffset = elevationServiceHandler.getZOffset(coords);
+				
+				List<Map<String, Object>> FileInputValue = new ArrayList<Map<String, Object>>();
+				final double tmpZOffSet = zOffset;
+				FileInputValue.set(0, new HashMap<String,Object>()
+						{{
+							put("zOffset", tmpZOffSet);
+							}});
+				
+				FileHandler.CreateXML(importFiles.get(0),FileInputValue);
+			}
+			else {
+				
+				zOffset = (Double)FileHandler.ReadXML(importFiles.get(0), "zOffset").get(0).get("zOffset");
+
+			}
 		}
 
 		catch (Exception e) {
-			
+
 			Logger.getInstance().error(e.toString());
-			
+
 		}
 
 
@@ -2563,6 +2587,7 @@ public abstract class KmlGenericObject {
 	protected List<Point3d> getLowestPointsCoordinates(List<Map<String, Object>> result, KmlSplittingResult work) throws Exception {
 		
 		double currentlyLowestZCoordinate = Double.MAX_VALUE;
+		
 		List<Point3d> coords = new ArrayList<Point3d>();
 		List<Double> ordinates = new ArrayList<Double>();
 		
@@ -2570,7 +2595,8 @@ public abstract class KmlGenericObject {
 		for(Map<String,Object> _row :result)
 		{
 			List<Double> PointList = (List<Double>)_row.get("Geometry");
-			ordinates.addAll(ProjConvertor.TransformProjection(PointList.get(0), PointList.get(1), PointList.get(2), work.getTargetSrs() , "4326"));
+			//ordinates.addAll(ProjConvertor.TransformProjection(PointList.get(0), PointList.get(1), PointList.get(2), work.getTargetSrs() , "4326"));
+			ordinates.addAll(PointList);
 		}
 		
 		// we are only interested in the z coordinate
@@ -2588,7 +2614,13 @@ public abstract class KmlGenericObject {
 				}
 			}
 		}
-		Logger.getInstance().info(String.valueOf(coords.get(0).z));
+		
+		for (Point3d point3d: coords) {
+			point3d.x = point3d.x * 100; // trick for very close coordinates
+			point3d.y = point3d.y * 100;
+			point3d.z = point3d.z * 100;
+		}
+
 		
 		return coords;
 	}

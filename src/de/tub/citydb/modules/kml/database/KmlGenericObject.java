@@ -2546,15 +2546,16 @@ public abstract class KmlGenericObject {
 				else {
 */
 					Logger.getInstance().info("Getting zOffset from Google's elevation API for " + getGmlId() + " with " + candidates.size() + " points.");
+	
 					zOffset = elevationServiceHandler.getZOffset(coords);
 					// save result in DB for next time
-					String genericAttribName = "GE_LoD" + currentLod + "_zOffset";
+					/*String genericAttribName = "GE_LoD" + currentLod + "_zOffset";
 					insertQuery = connection.prepareStatement(Queries.INSERT_GE_ZOFFSET);
 					insertQuery.setString(1, genericAttribName);
 					String strVal = "Auto|" + zOffset + "|" + dateFormatter.format(new Date(System.currentTimeMillis()));
 					insertQuery.setString(2, strVal);
 					insertQuery.setLong(3, id);
-					rs2 = insertQuery.executeQuery();		
+					rs2 = insertQuery.executeQuery();	*/	
 				}
 //			}
 			catch (Exception e) {}
@@ -2630,7 +2631,7 @@ public abstract class KmlGenericObject {
 			point3d.y = point3d.y * 100;
 			point3d.z = point3d.z * 100;
 		}
-		Logger.getInstance().info(String.valueOf(coords.get(0).z));
+		Logger.getInstance().info(String.valueOf(coords.get(0).x)+" , "+String.valueOf(coords.get(0).y)+" , "+String.valueOf(coords.get(0).z));
 		return coords;
 	}
 

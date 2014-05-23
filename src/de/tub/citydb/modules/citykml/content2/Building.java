@@ -260,6 +260,7 @@ public class Building extends KmlGenericObject{
 					return createPlacemarksForGeometry(_surfaceList, work);
 
 				case DisplayForm.COLLADA:
+					break;
 					/*fillGenericObjectForCollada(rs);
 					setGmlId(work.getGmlId());
 					setId(work.getId());
@@ -356,7 +357,7 @@ public class Building extends KmlGenericObject{
 			if (zOffset == Double.MAX_VALUE) {
 				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result, work);
 				rs.beforeFirst(); // return cursor to beginning
-				zOffset = getZOffsetFromGEService(lowestPointCandidates);
+				zOffset = getZOffsetFromGEService(lowestPointCandidates , work.getTargetSrs());
 			}
 
 			while (rs.next()) {	

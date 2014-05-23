@@ -534,7 +534,7 @@ public class GenericCityObject extends KmlGenericObject{
 				List<Point3d> anchorCandidates = new ArrayList<Point3d>();
 				anchorCandidates.clear();
 				anchorCandidates.add(new Point3d(0,0,0)); // will be turned into refPointX,Y,Z by convertToWGS84
-				zOffset = getZOffsetFromGEService(anchorCandidates);
+				zOffset = getZOffsetFromGEService(anchorCandidates,work.getTargetSrs());
 			}
 
 			while (rs.next()) {
