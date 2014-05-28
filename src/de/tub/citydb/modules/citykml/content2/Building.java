@@ -58,6 +58,7 @@ import org.citygml4j.model.citygml.building.BoundarySurfaceProperty;
 import org.citygml4j.model.citygml.texturedsurface._TexturedSurface;
 import org.citygml4j.model.gml.GMLClass;
 import org.citygml4j.model.gml.geometry.AbstractGeometry;
+import org.citygml4j.model.gml.geometry.aggregates.MultiCurveProperty;
 import org.citygml4j.model.gml.geometry.aggregates.MultiPolygon;
 import org.citygml4j.model.gml.geometry.aggregates.MultiSolid;
 import org.citygml4j.model.gml.geometry.aggregates.MultiSurface;
@@ -105,6 +106,8 @@ import de.tub.citydb.util.Util;
 public class Building extends KmlGenericObject{
 
 	public static final String STYLE_BASIS_NAME = ""; // "Building"
+	//private List<List<Double>> _pointList = new ArrayList<List<Double>>();
+	
 
 	public Building(Connection connection,
 			KmlExporterManager kmlExporterManager,
@@ -198,6 +201,7 @@ public class Building extends KmlGenericObject{
 				catch (JAXBException jaxbEx) {}
 			}
 		}
+		
 	}
 
 	
@@ -209,12 +213,11 @@ public class Building extends KmlGenericObject{
 		
 		try {
 			
-			SurfaceGeometry _SurfaceGeometry = new SurfaceGeometry();
 			
 			AbstractBuilding _building = (AbstractBuilding)work.getCityGmlClass();
+			SurfaceGeometry _Surface = new SurfaceGeometry();
 			
-			
-			List<Map<String, Object>> _surfaceList = _SurfaceGeometry.GetAbstractGeometry(_building);
+			List<Map<String, Object>> _surfaceList = _Surface.GetBuildingGeometries(_building);
 					
 			
 			if (_surfaceList.size()!=0) { // result not empty
@@ -463,6 +466,244 @@ public class Building extends KmlGenericObject{
 
 		return placemarkList;
 	}
+	
+	
+
+	public List<Map<String, Object>> GetBuildingGeometries(AbstractBuilding _building) throws Exception
+	{
+		SurfaceGeometry _Surface = new SurfaceGeometry();
+		
+		List<Map<String, Object>> _SurfaceList = new ArrayList<Map<String,Object>>();
+		
+		String _SurfaceType = "undefined";
+		
+		for (int lod = 1; lod < 5; lod++) {
+			
+			SolidProperty solidProperty = null;
+
+			switch (lod) {
+			case 1:
+				solidProperty = _building.getLod1Solid();
+				break;
+			case 2:
+				solidProperty = _building.getLod2Solid();
+				break;
+			case 3:
+				solidProperty = _building.getLod3Solid();
+				break;
+			case 4:
+				solidProperty = _building.getLod4Solid();
+				break;
+			}
+
+			if (solidProperty != null) {
+				if (solidProperty.isSetSolid()) {
+					
+				//	_pointList.clear();					
+					List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(solidProperty.getSolid(), false);    				
+    				for(List<Double> _Geometry : _pointList){
+   					
+    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
+    					_SurfaceType = _Surface.DetectSurfaceType(_Geometry); 					
+    					_BuildingSurfaces.put("type", _SurfaceType);    				
+    					_BuildingSurfaces.put("Geometry", _Geometry);    					   					
+    					_SurfaceList.add(_BuildingSurfaces);
+    				
+    				}
+				
+				} 
+			}
+		
+		}
+		
+		
+		
+		// lodXMultiSurface
+		for (int lod = 1; lod < 5; lod++) {
+			
+			//if (lodGeometry[lod - 1])
+				//continue;
+
+			MultiSurfaceProperty multiSurfaceProperty = null;
+			
+
+			switch (lod) {
+			case 1:
+				multiSurfaceProperty = _building.getLod1MultiSurface();
+				break;
+			case 2:
+				multiSurfaceProperty = _building.getLod2MultiSurface();
+				break;
+			case 3:
+				multiSurfaceProperty = _building.getLod3MultiSurface();
+				break;
+			case 4:
+				multiSurfaceProperty = _building.getLod4MultiSurface();
+				break;
+			}
+
+			if (multiSurfaceProperty != null) {
+				
+				if (multiSurfaceProperty.isSetMultiSurface()) {
+				
+									
+					List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);    				
+    				for(List<Double> _Geometry : _pointList){    					
+    					
+    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();    					
+    					_SurfaceType = _Surface.DetectSurfaceType(_Geometry);    					
+    					_BuildingSurfaces.put("type", _SurfaceType);    				
+    					_BuildingSurfaces.put("Geometry", _Geometry);    					    					
+    					_SurfaceList.add(_BuildingSurfaces);
+    				
+    				}
+					
+				}
+			}
+
+		}
+		
+		
+
+		// lodXTerrainIntersectionCurve
+		for (int lod = 1; lod < 5; lod++) {
+			
+			MultiCurveProperty multiCurveProperty = null;
+
+			switch (lod) {
+			case 1:
+				multiCurveProperty = _building.getLod1TerrainIntersection();
+				break;
+			case 2:
+				multiCurveProperty = _building.getLod2TerrainIntersection();
+				break;
+			case 3:
+				multiCurveProperty = _building.getLod3TerrainIntersection();
+				break;
+			case 4:
+				multiCurveProperty = _building.getLod4TerrainIntersection();
+				break;
+			}
+
+			if (multiCurveProperty != null)
+			{
+				
+				
+				
+				List<List<Double>> _pointList  = _Surface.getMultiCurve(multiCurveProperty);
+				
+				for(List<Double> _Geometry : _pointList){
+					
+					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
+					
+					_BuildingSurfaces.put("type", _SurfaceType);
+				
+					_BuildingSurfaces.put("Geometry", _Geometry);    					
+					
+					_SurfaceList.add(_BuildingSurfaces);
+							
+				}
+
+			}			
+
+		}
+		
+		
+
+		// lodXMultiCurve
+		for (int lod = 2; lod < 5; lod++) {
+
+			MultiCurveProperty multiCurveProperty = null;
+			
+
+			switch (lod) {
+			case 2:
+				multiCurveProperty = _building.getLod2MultiCurve();
+				break;
+			case 3:
+				multiCurveProperty = _building.getLod3MultiCurve();
+				break;
+			case 4:
+				multiCurveProperty = _building.getLod4MultiCurve();
+				break;
+			}
+
+			if (multiCurveProperty != null)
+			{
+				List<List<Double>> _pointList  = _Surface.getMultiCurve(multiCurveProperty);
+				
+				for(List<Double> _Geometry : _pointList){
+					
+					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
+					
+					_BuildingSurfaces.put("type", _SurfaceType);
+				
+					_BuildingSurfaces.put("Geometry", _Geometry);    					
+					
+					_SurfaceList.add(_BuildingSurfaces);
+							
+				}
+
+			}
+		
+		}
+		
+
+		// BoundarySurfacesOfBuilding
+		if (_building.isSetBoundedBySurface()) {
+			
+			
+			for (BoundarySurfaceProperty boundarySurfaceProperty : _building.getBoundedBySurface()) {
+				AbstractBoundarySurface boundarySurface = boundarySurfaceProperty.getBoundarySurface();
+				
+				if (boundarySurface != null) {
+					
+					for (int lod = 2; lod < 5; lod++) {
+			        	
+						MultiSurfaceProperty multiSurfaceProperty = null;
+
+			    		switch (lod) {
+				    		case 2:
+				    			multiSurfaceProperty = boundarySurface.getLod2MultiSurface();
+				    			break;
+				    		case 3:
+				    			multiSurfaceProperty = boundarySurface.getLod3MultiSurface();
+				    			break;
+				    		case 4:
+				    			multiSurfaceProperty = boundarySurface.getLod4MultiSurface();
+				    			break;
+			    		}
+
+			    		if (multiSurfaceProperty != null) {
+			    			
+			    			if (multiSurfaceProperty.isSetMultiSurface()) {
+			    				
+			    				
+			    				_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();			    				
+			    				List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
+			    				
+			    				for(List<Double> _Geometry : _pointList){
+			    					
+			    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();		    					
+			    					_BuildingSurfaces.put("type", _SurfaceType);		    				
+			    					_BuildingSurfaces.put("Geometry", _Geometry);    							    					
+			    					_SurfaceList.add(_BuildingSurfaces);    					
+			    				
+			    				}
+			    			} 
+			    		}
+
+			        }
+				} 
+			}
+			
+		}
+		
+
+		return _SurfaceList;
+		
+	}
+
 	
 	
 	

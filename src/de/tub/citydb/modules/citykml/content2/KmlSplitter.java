@@ -40,6 +40,7 @@ import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
 import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
+import org.citygml4j.model.citygml.appearance.Appearance;
 import org.postgis.Geometry;
 import org.postgis.PGgeometry;
 
@@ -160,7 +161,6 @@ public class KmlSplitter {
 		else if (filterConfig.isSetComplexFilter() &&
 				 filterConfig.getComplexFilter().getTiledBoundingBox().isSet()) {
 			
-			
 			try {
 			
 				LOG.info("Writing placemarks into target file, Please wait ...");
@@ -174,11 +174,14 @@ public class KmlSplitter {
 					
 					CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
 					
-					KmlSplittingResult splitter = new KmlSplittingResult(_CityGML , cityObjectType, displayForm, TargetSrs);
-					
-					
-					dbWorkerPool.addWork(splitter);		
-				
+					if(cityObjectType != CityGMLClass.APPEARANCE)
+					{
+						KmlSplittingResult splitter = new KmlSplittingResult(_CityGML , cityObjectType, displayForm, TargetSrs);										
+						dbWorkerPool.addWork(splitter);		
+					}
+					else {
+						
+					}
 				}
 				
 				

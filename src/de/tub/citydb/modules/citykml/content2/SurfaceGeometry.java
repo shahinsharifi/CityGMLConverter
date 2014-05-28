@@ -98,7 +98,7 @@ public class SurfaceGeometry {
 	}
 	
 	
-	public List<Map<String, Object>> GetAbstractGeometry(AbstractBuilding _building) throws Exception
+	public List<Map<String, Object>> GetBuildingGeometries(AbstractBuilding _building) throws Exception
 	{
 		
 		
@@ -127,7 +127,8 @@ public class SurfaceGeometry {
 				if (solidProperty.isSetSolid()) {
 					
 					_pointList.clear();					
-    				GetSurfaceGeometry(solidProperty.getSolid(), false);    				
+    				GetSurfaceGeometry(solidProperty.getSolid(), false);
+    				
     				for(List<Double> _Geometry : _pointList){
    					
     					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
@@ -337,9 +338,10 @@ public class SurfaceGeometry {
 	
 	
 	
-	public void GetSurfaceGeometry(AbstractGeometry surfaceGeometry,boolean reverse) throws SQLException {
+	public List<List<Double>> GetSurfaceGeometry(AbstractGeometry surfaceGeometry,boolean reverse) throws SQLException {
 
 		
+	
 		GMLClass surfaceGeometryType = surfaceGeometry.getGMLClass();
 		
 
@@ -387,7 +389,7 @@ public class SurfaceGeometry {
 							origGmlId));
 					msg.append(": Ring contains less than 4 coordinates. Skipping invalid ring.");
 					LOG.error(msg.toString());
-					return;
+					return _pointList;
 				}
 
 			}	
@@ -436,7 +438,7 @@ public class SurfaceGeometry {
 									origGmlId));
 							msg.append(": Exterior ring contains less than 4 coordinates. Skipping invalid ring.");
 							LOG.error(msg.toString());
-							return;
+							return _pointList;
 						}
 
 						
@@ -485,7 +487,7 @@ public class SurfaceGeometry {
 													origGmlId));
 											msg.append(": Interior ring contains less than 4 coordinates. Skipping invalid ring.");
 											LOG.error(msg.toString());
-											return;
+											return _pointList;
 										}
 
 										pointList.add(interiorPoints);
@@ -503,7 +505,7 @@ public class SurfaceGeometry {
 											origGmlId));
 									msg.append(": Only gml:LinearRing elements are supported as interior rings.");
 									LOG.error(msg.toString());
-									return;
+									return _pointList;
 								}
 							}
 
@@ -521,7 +523,7 @@ public class SurfaceGeometry {
 							origGmlId));
 					msg.append(": Only gml:LinearRing elements are supported as exterior rings.");
 					LOG.error(msg.toString());
-					return;
+					return _pointList;
 				}
 			}
 		}
@@ -663,7 +665,7 @@ public class SurfaceGeometry {
 						LOG.error(msg.toString());
 					}
 
-					return;
+					return _pointList;
 				}
 			} else {
 				// we cannot continue without having a base surface...
@@ -673,7 +675,7 @@ public class SurfaceGeometry {
 				msg.append(": Could not find <baseSurface> element.");
 
 				LOG.error(msg.toString());	
-				return;
+				return _pointList;
 			}
 
 			/*if (importAppearance && !isCopy && texturedSurface.isSetAppearance()) {
@@ -1038,7 +1040,8 @@ public class SurfaceGeometry {
 				}
 			}
 		}
-		
+		System.out.println("function:"+_pointList.size());
+		return _pointList;
 
 	}
 	
@@ -1182,7 +1185,7 @@ public class SurfaceGeometry {
 	}
 	
 	
-	public static String DetectSurfaceType(List<Double> _pointList){
+	public  String DetectSurfaceType(List<Double> _pointList){
 		
 		
 		List<Double> _TestList = new ArrayList<Double>();

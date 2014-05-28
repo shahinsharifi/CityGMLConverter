@@ -2556,17 +2556,14 @@ public abstract class KmlGenericObject {
 				zOffset = elevationServiceHandler.getZOffset(coords);
 				
 				List<Map<String, Object>> FileInputValue = new ArrayList<Map<String, Object>>();
-				final double tmpZOffSet = zOffset;
-				FileInputValue.set(0, new HashMap<String,Object>()
-						{{
-							put("zOffset", tmpZOffSet);
-							}});
-				
+				Map<String, Object> _Node = new HashMap<String,Object>();
+				_Node.put("zOffset", zOffset);
+				FileInputValue.add(_Node);
 				FileHandler.CreateXML(importFiles.get(0),FileInputValue);
 			}
 			else {
 				
-				zOffset = (Double)FileHandler.ReadXML(importFiles.get(0), "zOffset").get(0).get("zOffset");
+				zOffset = (Double)FileHandler.ReadXML(importFiles.get(0), "zOffset").get("zOffset");
 
 			}
 		}

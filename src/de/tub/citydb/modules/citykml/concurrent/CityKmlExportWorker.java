@@ -293,8 +293,9 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 	private void doWork(KmlSplittingResult work) {
 		final ReentrantLock runLock = this.runLock;
 		runLock.lock();
-
+		
 		CityGMLClass featureClass = work.getCityObjectType();
+
 		try {
 			switch (featureClass) {
 				case BUILDING:
@@ -357,6 +358,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					break;
 
 				case GENERIC_CITY_OBJECT:
+					Logger.getInstance().info("CityObj");
 					singleObject = new GenericCityObject(connection,
 												   	   	 kmlExporterManager,
 												   	   	 cityGMLFactory,
@@ -374,6 +376,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 				case RAILWAY:
 				case ROAD:
 				case SQUARE:
+					Logger.getInstance().info("CityObj");
 					singleObject = new Transportation(connection,
 												   	  kmlExporterManager,
 												   	  cityGMLFactory,
@@ -402,6 +405,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					break;
 
 				case CITY_FURNITURE:
+					Logger.getInstance().info("CityObj");
 					singleObject = new CityFurniture(connection,
 												   	 kmlExporterManager,
 												   	 cityGMLFactory,
@@ -413,6 +417,8 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					break;
 
 				case CITY_OBJECT_GROUP:
+
+					Logger.getInstance().info("CityObj");
 					singleObject = new CityObjectGroup(connection,
 												   	   kmlExporterManager,
 												   	   cityGMLFactory,
@@ -422,11 +428,14 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 												   	   eventDispatcher,
 												   	   config);
 					break;
+					
+				default:
+					break;
 			}
 
 			
 			singleObject.read(work);
-
+			
 			
 			if (!work.isCityObjectGroup() &&  work.getDisplayForm().getForm() == DisplayForm.COLLADA && singleObject.getGmlId() != null) { // object is filled
 
@@ -460,7 +469,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					objectGroup.put(featureClass, currentObjectGroup);
 					objectGroupCounter.put(featureClass, 0);
 				}
-				Logger.getInstance().info("HI2");
+				
 				
 			}
 		}
