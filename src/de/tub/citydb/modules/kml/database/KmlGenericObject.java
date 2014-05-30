@@ -1752,7 +1752,7 @@ public abstract class KmlGenericObject {
 			zOffset = getZOffsetFromGEService(work.getId(), lowestPointCandidates);
 		}
 		
-		Logger.getInstance().info(String.valueOf(zOffset));
+
 		
 		double lowestZCoordinate = convertPointCoordinatesToWGS84(new double[] {
 				lowestPointCandidates.get(0).x/100, // undo trick for very close coordinates

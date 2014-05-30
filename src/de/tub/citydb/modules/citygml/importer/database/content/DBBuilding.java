@@ -288,6 +288,7 @@ public class DBBuilding implements DBImporter {
 			}
 
 			if (solidProperty != null) {
+				LOG.info("lodXSolid");
 				if (solidProperty.isSetSolid()) {
 					solidGeometryId = surfaceGeometryImporter.insert(solidProperty.getSolid(), buildingId);
 				} else {
@@ -368,6 +369,7 @@ public class DBBuilding implements DBImporter {
 			}
 
 			if (multiSurfaceProperty != null) {
+				LOG.info("lodXMultiSurface");
 				if (multiSurfaceProperty.isSetMultiSurface()) {
 					multiGeometryId = surfaceGeometryImporter.insert(multiSurfaceProperty.getMultiSurface(), buildingId);
 				} else {
@@ -418,6 +420,7 @@ public class DBBuilding implements DBImporter {
 
 		// lodXTerrainIntersectionCurve
 		for (int lod = 1; lod < 5; lod++) {
+			LOG.info("lodXTerrainIntersectionCurve");
 			MultiCurveProperty multiCurveProperty = null;
 			PGgeometry multiLine = null;
 
@@ -531,7 +534,7 @@ public class DBBuilding implements DBImporter {
 
 		// BoundarySurfaces
 		if (building.isSetBoundedBySurface()) {
-			
+			LOG.info("BoundarySurfaces");
 			for (BoundarySurfaceProperty boundarySurfaceProperty : building.getBoundedBySurface()) {
 				AbstractBoundarySurface boundarySurface = boundarySurfaceProperty.getBoundarySurface();
 

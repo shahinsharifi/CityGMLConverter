@@ -478,6 +478,8 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		}
 	}
 
+	
+	
 	private void sendGroupToFile(KmlGenericObject objectGroup) {
 		try {
 			double imageScaleFactor = 1;

@@ -98,246 +98,6 @@ public class SurfaceGeometry {
 	}
 	
 	
-	public List<Map<String, Object>> GetBuildingGeometries(AbstractBuilding _building) throws Exception
-	{
-		
-		
-		String _SurfaceType = "undefined";
-		
-		for (int lod = 1; lod < 5; lod++) {
-			
-			SolidProperty solidProperty = null;
-
-			switch (lod) {
-			case 1:
-				solidProperty = _building.getLod1Solid();
-				break;
-			case 2:
-				solidProperty = _building.getLod2Solid();
-				break;
-			case 3:
-				solidProperty = _building.getLod3Solid();
-				break;
-			case 4:
-				solidProperty = _building.getLod4Solid();
-				break;
-			}
-
-			if (solidProperty != null) {
-				if (solidProperty.isSetSolid()) {
-					
-					_pointList.clear();					
-    				GetSurfaceGeometry(solidProperty.getSolid(), false);
-    				
-    				for(List<Double> _Geometry : _pointList){
-   					
-    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-    					_SurfaceType = DetectSurfaceType(_Geometry); 					
-    					_BuildingSurfaces.put("type", _SurfaceType);    				
-    					_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-    					_SurfaceList.add(_BuildingSurfaces);
-    				
-    				}
-				
-				} 
-			}
-		
-		}
-		
-		
-		
-		// lodXMultiSurface
-		for (int lod = 1; lod < 5; lod++) {
-			
-			//if (lodGeometry[lod - 1])
-				//continue;
-
-			MultiSurfaceProperty multiSurfaceProperty = null;
-			
-
-			switch (lod) {
-			case 1:
-				multiSurfaceProperty = _building.getLod1MultiSurface();
-				break;
-			case 2:
-				multiSurfaceProperty = _building.getLod2MultiSurface();
-				break;
-			case 3:
-				multiSurfaceProperty = _building.getLod3MultiSurface();
-				break;
-			case 4:
-				multiSurfaceProperty = _building.getLod4MultiSurface();
-				break;
-			}
-
-			if (multiSurfaceProperty != null) {
-				
-				if (multiSurfaceProperty.isSetMultiSurface()) {
-				
-					_pointList.clear();					
-    				GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);    				
-    				for(List<Double> _Geometry : _pointList){    					
-    					
-    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();    					
-    					_SurfaceType = DetectSurfaceType(_Geometry);    					
-    					_BuildingSurfaces.put("type", _SurfaceType);    				
-    					_BuildingSurfaces.put("Geometry", _Geometry);    					    					
-    					_SurfaceList.add(_BuildingSurfaces);
-    				
-    				}
-					
-				}
-			}
-
-		}
-		
-		
-
-		// lodXTerrainIntersectionCurve
-		for (int lod = 1; lod < 5; lod++) {
-			
-			MultiCurveProperty multiCurveProperty = null;
-
-			switch (lod) {
-			case 1:
-				multiCurveProperty = _building.getLod1TerrainIntersection();
-				break;
-			case 2:
-				multiCurveProperty = _building.getLod2TerrainIntersection();
-				break;
-			case 3:
-				multiCurveProperty = _building.getLod3TerrainIntersection();
-				break;
-			case 4:
-				multiCurveProperty = _building.getLod4TerrainIntersection();
-				break;
-			}
-
-			if (multiCurveProperty != null)
-			{
-				
-				_pointList.clear();
-				
-				_pointList = this.getMultiCurve(multiCurveProperty);
-				
-				for(List<Double> _Geometry : _pointList){
-					
-					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
-					
-					_BuildingSurfaces.put("type", _SurfaceType);
-				
-					_BuildingSurfaces.put("Geometry", _Geometry);    					
-					
-					_SurfaceList.add(_BuildingSurfaces);
-							
-				}
-
-			}			
-
-		}
-		
-		
-
-		// lodXMultiCurve
-		for (int lod = 2; lod < 5; lod++) {
-
-			MultiCurveProperty multiCurveProperty = null;
-			
-
-			switch (lod) {
-			case 2:
-				multiCurveProperty = _building.getLod2MultiCurve();
-				break;
-			case 3:
-				multiCurveProperty = _building.getLod3MultiCurve();
-				break;
-			case 4:
-				multiCurveProperty = _building.getLod4MultiCurve();
-				break;
-			}
-
-			if (multiCurveProperty != null)
-			{
-				_pointList.clear();
-				
-				_pointList = this.getMultiCurve(multiCurveProperty);
-				
-				for(List<Double> _Geometry : _pointList){
-					
-					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
-					
-					_BuildingSurfaces.put("type", _SurfaceType);
-				
-					_BuildingSurfaces.put("Geometry", _Geometry);    					
-					
-					_SurfaceList.add(_BuildingSurfaces);
-							
-				}
-
-			}
-		
-		}
-		
-
-		// BoundarySurfacesOfBuilding
-		if (_building.isSetBoundedBySurface()) {
-			
-			
-			for (BoundarySurfaceProperty boundarySurfaceProperty : _building.getBoundedBySurface()) {
-				AbstractBoundarySurface boundarySurface = boundarySurfaceProperty.getBoundarySurface();
-				
-				if (boundarySurface != null) {
-					
-					for (int lod = 2; lod < 5; lod++) {
-			        	
-						MultiSurfaceProperty multiSurfaceProperty = null;
-
-			    		switch (lod) {
-				    		case 2:
-				    			multiSurfaceProperty = boundarySurface.getLod2MultiSurface();
-				    			break;
-				    		case 3:
-				    			multiSurfaceProperty = boundarySurface.getLod3MultiSurface();
-				    			break;
-				    		case 4:
-				    			multiSurfaceProperty = boundarySurface.getLod4MultiSurface();
-				    			break;
-			    		}
-
-			    		if (multiSurfaceProperty != null) {
-			    			
-			    			if (multiSurfaceProperty.isSetMultiSurface()) {
-			    				
-			    				_pointList.clear();
-			    				_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();			    				
-			    				GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
-			    				
-			    				for(List<Double> _Geometry : _pointList){
-			    					
-			    					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();		    					
-			    					_BuildingSurfaces.put("type", _SurfaceType);		    				
-			    					_BuildingSurfaces.put("Geometry", _Geometry);    							    					
-			    					_SurfaceList.add(_BuildingSurfaces);	    					
-			    				
-			    				}
-			    			} 
-			    		}
-
-			        }
-				} 
-			}
-			
-		}
-		
-
-		return _SurfaceList;
-		
-	}
-
-	
-	
-	
-	
 	public List<List<Double>> GetSurfaceGeometry(AbstractGeometry surfaceGeometry,boolean reverse) throws SQLException {
 
 		
@@ -355,7 +115,7 @@ public class SurfaceGeometry {
 		// a single linearRing
 		if (surfaceGeometryType == GMLClass.LINEAR_RING) {
 
-
+		
 			LinearRing linearRing = (LinearRing)surfaceGeometry;
 			List<Double> points = linearRing.toList3d(reverse);
 
@@ -531,6 +291,7 @@ public class SurfaceGeometry {
 		// ok, handle complexes, composites and aggregates
 		// orientableSurface
 		else if (surfaceGeometryType == GMLClass.ORIENTABLE_SURFACE) {
+	
 			OrientableSurface orientableSurface = (OrientableSurface)surfaceGeometry;
 
 			boolean negativeOrientation = false;
@@ -585,6 +346,7 @@ public class SurfaceGeometry {
 		// texturedSurface
 		// this is a CityGML class, not a GML class.
 		else if (surfaceGeometryType == GMLClass._TEXTURED_SURFACE) {
+		
 			_TexturedSurface texturedSurface = (_TexturedSurface)surfaceGeometry;
 			AbstractSurface abstractSurface = null;
 
@@ -679,45 +441,46 @@ public class SurfaceGeometry {
 			}
 
 			/*if (importAppearance && !isCopy && texturedSurface.isSetAppearance()) {
-		for (_AppearanceProperty appearanceProperty : texturedSurface.getAppearance()) {
-		if (appearanceProperty.isSetAppearance()) {
-		_AbstractAppearance appearance = appearanceProperty.getAppearance();
+				for (_AppearanceProperty appearanceProperty : texturedSurface.getAppearance()) {
+					if (appearanceProperty.isSetAppearance()) {
+						_AbstractAppearance appearance = appearanceProperty.getAppearance();
 
-		// how to map texture coordinates to a composite surface of
-		// arbitrary depth?
-		if (appearance.getCityGMLClass() == CityGMLClass._SIMPLE_TEXTURE &&
-		abstractSurface.getGMLClass() != GMLClass.POLYGON) {
+						// how to map texture coordinates to a composite surface of
+						// arbitrary depth?
+						if (appearance.getCityGMLClass() == CityGMLClass._SIMPLE_TEXTURE &&
+								abstractSurface.getGMLClass() != GMLClass.POLYGON) {
 
-		StringBuilder msg = new StringBuilder(Util.getGeometrySignature(
-		texturedSurface.getGMLClass(),
-		origGmlId));
-		msg.append(": Texture coordinates are only supported for base surfaces of type gml:Polygon.");
+							StringBuilder msg = new StringBuilder(Util.getGeometrySignature(
+									texturedSurface.getGMLClass(),
+									origGmlId));
+							msg.append(": Texture coordinates are only supported for base surfaces of type gml:Polygon.");
 
-		LOG.error(msg.toString());
-		continue;
-		}
+							LOG.error(msg.toString());
+							continue;
+						}
 
-		boolean isFront = !(appearanceProperty.isSetOrientation() &&
-		appearanceProperty.getOrientation().equals("-"));
+						boolean isFront = !(appearanceProperty.isSetOrientation() &&
+								appearanceProperty.getOrientation().equals("-"));
 
-		materialModelImporter.insert(appearance, abstractSurface, cityObjectId, isFront, targetURI);
-		} else {
-		// xlink
-		String href = appearanceProperty.getHref();
+						materialModelImporter.insert(appearance, abstractSurface, cityObjectId, isFront, targetURI);
+					} else {
+						// xlink
+						String href = appearanceProperty.getHref();
 
-		if (href != null && href.length() != 0) {
-		boolean success = materialModelImporter.insertXlink(href, surfaceGeometryId, cityObjectId);
-		if (!success) {
-		LOG.error("XLink reference '" + href + "' could not be resolved.");
-		}
-		}
-		}
-		}
-		}*/
+						if (href != null && href.length() != 0) {
+							boolean success = materialModelImporter.insertXlink(href, surfaceGeometryId, cityObjectId);
+							if (!success) {
+								LOG.error("XLink reference '" + href + "' could not be resolved.");
+							}
+						}
+					}
+				}
+			}*/
 		}
 
 		// compositeSurface
 		else if (surfaceGeometryType == GMLClass.COMPOSITE_SURFACE) {
+			
 			CompositeSurface compositeSurface = (CompositeSurface)surfaceGeometry;
 
 			//if (origGmlId != null && !isCopy)
@@ -762,6 +525,7 @@ public class SurfaceGeometry {
 		// since a surface is a geometric primitive we represent it as composite surface
 		// within the database
 		else if (surfaceGeometryType == GMLClass.SURFACE) {
+			
 			Surface surface = (Surface)surfaceGeometry;
 
 			//if (origGmlId != null && !isCopy)
@@ -801,6 +565,7 @@ public class SurfaceGeometry {
 		// TriangulatedSurface, TIN
 		else if (surfaceGeometryType == GMLClass.TRIANGULATED_SURFACE ||
 				surfaceGeometryType == GMLClass.TIN) {
+			
 			TriangulatedSurface triangulatedSurface = (TriangulatedSurface)surfaceGeometry;
 
 			//if (origGmlId != null && !isCopy)
@@ -825,6 +590,7 @@ public class SurfaceGeometry {
 
 		// Solid
 		else if (surfaceGeometryType == GMLClass.SOLID) {
+			
 			Solid solid = (Solid)surfaceGeometry;
 
 			//if (origGmlId != null && !isCopy)
@@ -867,6 +633,7 @@ public class SurfaceGeometry {
 
 		// CompositeSolid
 		else if (surfaceGeometryType == GMLClass.COMPOSITE_SOLID) {
+			
 			CompositeSolid compositeSolid = (CompositeSolid)surfaceGeometry;
 
 			//if (origGmlId != null && !isCopy)
@@ -893,6 +660,7 @@ public class SurfaceGeometry {
 
 		// MultiPolygon
 		else if (surfaceGeometryType == GMLClass.MULTI_POLYGON) {
+			
 			MultiPolygon multiPolygon = (MultiPolygon)surfaceGeometry;
 
 			//if (origGmlId != null && !isCopy)
@@ -919,6 +687,7 @@ public class SurfaceGeometry {
 
 		// MultiSurface
 		else if (surfaceGeometryType == GMLClass.MULTI_SURFACE) {
+			
 			MultiSurface multiSurface = (MultiSurface)surfaceGeometry;
 			
 			//if (origGmlId != null && !isCopy)
@@ -984,6 +753,7 @@ public class SurfaceGeometry {
 
 		// MultiSolid
 		else if (surfaceGeometryType == GMLClass.MULTI_SOLID) {
+			
 			MultiSolid multiSolid = (MultiSolid)surfaceGeometry;
 
 			//if (origGmlId != null && !isCopy)
@@ -1023,6 +793,7 @@ public class SurfaceGeometry {
 
 		// GeometricComplex
 		else if (surfaceGeometryType == GMLClass.GEOMETRIC_COMPLEX) {
+			
 			GeometricComplex geometricComplex = (GeometricComplex)surfaceGeometry;
 
 			if (geometricComplex.isSetElement()) {
@@ -1040,7 +811,7 @@ public class SurfaceGeometry {
 				}
 			}
 		}
-		System.out.println("function:"+_pointList.size());
+	
 		return _pointList;
 
 	}
@@ -1199,6 +970,21 @@ public class SurfaceGeometry {
 			return "WallSurface";//wall
 		}
 	}	
+	
+	
+	public boolean ClearPointList()
+	{	
+	
+		if(_pointList.size()>0)
+		{
+			_pointList.clear();
+			return true;
+		}
+		else {
+			return false;
+		}
+		
+	}
 	
 
 }

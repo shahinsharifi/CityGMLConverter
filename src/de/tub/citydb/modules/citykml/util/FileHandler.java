@@ -74,7 +74,7 @@ public class FileHandler {
 
 		String _FileName = _file.getName();
 		String _FilePath = _file.getParent();
-		
+	
 		try {
 
 			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -111,7 +111,7 @@ public class FileHandler {
 
 			transformer.transform(source, result);
 			Thread.sleep(100);// It is a delay to prevent the conflict between workers for writing into the file. 
-			LOG.info("Reference elevation data has been saved for the:" + _FileName);
+			LOG.info("Elevation offset has been saved for the:" + _FileName);
 
 			
 		}catch (Exception e) {

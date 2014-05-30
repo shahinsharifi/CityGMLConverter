@@ -205,6 +205,7 @@ public class DBSurfaceGeometry implements DBImporter {
 		// firstly, handle simple surface geometries
 		// a single linearRing
 		if (surfaceGeometryType == GMLClass.LINEAR_RING) {
+			LOG.info("LINEAR_RING");
 			LinearRing linearRing = (LinearRing)surfaceGeometry;
 			List<Double> points = linearRing.toList3d(reverse);
 
@@ -308,6 +309,9 @@ public class DBSurfaceGeometry implements DBImporter {
 
 		// a simple polygon
 		else if (surfaceGeometryType == GMLClass.POLYGON) {
+			
+			LOG.info("POLYGON");
+			
 			Polygon polygon = (Polygon)surfaceGeometry;
 
 			if (polygon.isSetExterior()) {
@@ -520,6 +524,8 @@ public class DBSurfaceGeometry implements DBImporter {
 		// ok, handle complexes, composites and aggregates
 		// orientableSurface
 		else if (surfaceGeometryType == GMLClass.ORIENTABLE_SURFACE) {
+			
+			LOG.info("ORIENTABLE_SURFACE");
 			OrientableSurface orientableSurface = (OrientableSurface)surfaceGeometry;
 
 			boolean negativeOrientation = false;
@@ -725,6 +731,7 @@ public class DBSurfaceGeometry implements DBImporter {
 
 		// compositeSurface
 		else if (surfaceGeometryType == GMLClass.COMPOSITE_SURFACE) {
+			LOG.info("COMPOSITE_SURFACE");
 			CompositeSurface compositeSurface = (CompositeSurface)surfaceGeometry;
 
 			if (origGmlId != null && !isCopy)
@@ -793,6 +800,7 @@ public class DBSurfaceGeometry implements DBImporter {
 		// since a surface is a geometric primitive we represent it as composite surface
 		// within the database
 		else if (surfaceGeometryType == GMLClass.SURFACE) {
+			LOG.info("SURFACE");
 			Surface surface = (Surface)surfaceGeometry;
 
 			if (origGmlId != null && !isCopy)
@@ -849,6 +857,7 @@ public class DBSurfaceGeometry implements DBImporter {
 		// TriangulatedSurface, TIN
 		else if (surfaceGeometryType == GMLClass.TRIANGULATED_SURFACE ||
 				surfaceGeometryType == GMLClass.TIN) {
+			LOG.info("TRIANGULATED_SURFACE");
 			TriangulatedSurface triangulatedSurface = (TriangulatedSurface)surfaceGeometry;
 
 			if (origGmlId != null && !isCopy)
@@ -891,6 +900,7 @@ public class DBSurfaceGeometry implements DBImporter {
 
 		// Solid
 		else if (surfaceGeometryType == GMLClass.SOLID) {
+			LOG.info("SOLID");
 			Solid solid = (Solid)surfaceGeometry;
 
 			if (origGmlId != null && !isCopy)
@@ -957,6 +967,7 @@ public class DBSurfaceGeometry implements DBImporter {
 
 		// CompositeSolid
 		else if (surfaceGeometryType == GMLClass.COMPOSITE_SOLID) {
+			LOG.info("COMPOSITE_SOLID");
 			CompositeSolid compositeSolid = (CompositeSolid)surfaceGeometry;
 
 			if (origGmlId != null && !isCopy)
@@ -1009,6 +1020,7 @@ public class DBSurfaceGeometry implements DBImporter {
 
 		// MultiPolygon
 		else if (surfaceGeometryType == GMLClass.MULTI_POLYGON) {
+			LOG.info("MULTI_POLYGON");
 			MultiPolygon multiPolygon = (MultiPolygon)surfaceGeometry;
 
 			if (origGmlId != null && !isCopy)
@@ -1059,6 +1071,7 @@ public class DBSurfaceGeometry implements DBImporter {
 
 		// MultiSurface
 		else if (surfaceGeometryType == GMLClass.MULTI_SURFACE) {
+			LOG.info("MULTI_SURFACE");
 			MultiSurface multiSurface = (MultiSurface)surfaceGeometry;
 
 			if (origGmlId != null && !isCopy)
@@ -1150,6 +1163,7 @@ public class DBSurfaceGeometry implements DBImporter {
 
 		// MultiSolid
 		else if (surfaceGeometryType == GMLClass.MULTI_SOLID) {
+			LOG.info("MULTI_SOLID");
 			MultiSolid multiSolid = (MultiSolid)surfaceGeometry;
 
 			if (origGmlId != null && !isCopy)
@@ -1213,6 +1227,7 @@ public class DBSurfaceGeometry implements DBImporter {
 
 		// GeometricComplex
 		else if (surfaceGeometryType == GMLClass.GEOMETRIC_COMPLEX) {
+			LOG.info("GEOMETRIC_COMPLEX");
 			GeometricComplex geometricComplex = (GeometricComplex)surfaceGeometry;
 
 			if (geometricComplex.isSetElement()) {
