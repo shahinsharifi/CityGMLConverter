@@ -122,7 +122,6 @@ import de.tub.citydb.modules.citykml.content.DBWaterBody;
 import de.tub.citydb.modules.citykml.content.DbBuilding;
 import de.tub.citydb.modules.citykml.content.ImporterEnum;
 import de.tub.citydb.modules.citykml.content.ImporterManager;
-import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.modules.common.event.FeatureCounterEvent;
@@ -156,7 +155,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 	private ReentrantLock runLock = new ReentrantLock();
 	private WorkQueue<CityGML> workQueue = null;
 	private CityGML firstWork;
-	private KMLObject _kml;
+	
 	private Thread workerThread = null;
 
 	// instance members needed to do work
@@ -392,7 +391,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 							switch (work.getCityGMLClass()) {
 
 								case BUILDING:									
-									insertIntoKML((Building)work, _kml);								
+									//insertIntoKML((Building)work, _kml);								
 									break;
 	
 								case CITY_FURNITURE:
@@ -481,7 +480,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 	}
 	
 	
-	public void insertIntoKML(AbstractBuilding _building, KMLObject _kml) throws SQLException
+	public void insertIntoKML(AbstractBuilding _building) throws SQLException
 	{
 	
 		String _SurfaceType = "undefined";
@@ -514,7 +513,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
     				
     				for(List<Double> _Geometry : _pointList){
     					
-    					_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+    					//_kml.WriteGmlToKml(_Geometry, _SurfaceType);
     				
     				}
 				
@@ -565,7 +564,7 @@ public class CityKmlImportWorker implements Worker<CityGML> {
 			    				
 			    				for(List<Double> _Geometry : _pointList){
 			    					
-			    					_kml.WriteGmlToKml(_Geometry, _SurfaceType);
+			    				//	_kml.WriteGmlToKml(_Geometry, _SurfaceType);
 			    				
 			    				}
 			    			} 

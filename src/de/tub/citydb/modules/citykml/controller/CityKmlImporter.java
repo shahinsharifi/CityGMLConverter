@@ -91,7 +91,6 @@ import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorker;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorkerFactory;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportXlinkResolverWorkerFactory;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportXlinkWorkerFactory;
-import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.modules.common.event.EventType;

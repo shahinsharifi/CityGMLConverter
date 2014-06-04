@@ -42,7 +42,6 @@ import de.tub.citydb.config.Config;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.modules.citygml.common.database.gmlid.DBGmlIdLookupServerManager;
 import de.tub.citydb.modules.citygml.common.database.xlink.DBXlink;
-import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.common.filter.ImportFilter;
 
 public class CityKmlImportWorkerFactory implements WorkerFactory<CityGML> {

@@ -113,7 +113,6 @@ import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorker;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorkerFactory;
-import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.common.concurrent.IOWriterWorkerFactory;
 import de.tub.citydb.modules.common.event.CounterEvent;
@@ -272,7 +271,7 @@ public class CityKmlExporter implements EventHandler {
 		
 		// getting export filter
 	//	ExportFilter exportFilter = new ExportFilter(config, FilterMode.KML_EXPORT);
-		boolean isBBoxActive = false;//config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue();
+		boolean isBBoxActive = (config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive() == null) ? false : true;
 		// bounding box config
 		//Tiling tiling = config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getTiling();
 
@@ -460,6 +459,8 @@ public class CityKmlExporter implements EventHandler {
 							return false;
 						}
 
+						
+						LOG.info("BoundingBox:" + String.valueOf(config.getProject().getCityKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().isSet()));
 						LOG.info("Start reading the input file...");
 						
 						// get database splitter and start query
@@ -584,7 +585,7 @@ public class CityKmlExporter implements EventHandler {
 			}
 		}
 
-		if (isBBoxActive) {
+		/*if (isBBoxActive) {
 			try {
 				eventDispatcher.triggerEvent(new StatusDialogTitle(filename + ".kml", this));
 				eventDispatcher.triggerEvent(new StatusDialogMessage(Internal.I18N.getString("kmlExport.dialog.writingMainFile"), this));
@@ -594,7 +595,7 @@ public class CityKmlExporter implements EventHandler {
 				ex.printStackTrace();
 				return false;
 			}
-		}
+		}*/
 
 		if (config.getProject().getKmlExporter().isWriteJSONFile()) {
 			try {
@@ -700,7 +701,7 @@ public class CityKmlExporter implements EventHandler {
 											 SQLException,
 											 JAXBException,
 											 DatatypeConfigurationException { 
-		System.out.println("Master");
+
 		// create a saxWriter instance 
 		// define indent for xml output and namespace mappings
 		SAXWriter saxWriter = new SAXWriter();

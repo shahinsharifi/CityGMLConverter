@@ -37,11 +37,13 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import de.tub.citydb.api.plugin.extension.config.PluginConfig;
+import de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter;
 import de.tub.citydb.config.project.database.Database;
 import de.tub.citydb.config.project.exporter.Exporter;
 import de.tub.citydb.config.project.global.Global;
 import de.tub.citydb.config.project.importer.Importer;
 import de.tub.citydb.config.project.kmlExporter.KmlExporter;
+
 
 @XmlRootElement
 @XmlType(name="ProjectType", propOrder={
@@ -49,6 +51,7 @@ import de.tub.citydb.config.project.kmlExporter.KmlExporter;
 		"importer",
 		"exporter",
 		"kmlExporter",
+		"citykmlExporter",
 		"global",
 		"extensions"
 })
@@ -61,8 +64,8 @@ public class Project {
 	private Exporter exporter;
 	@XmlElement(name="kmlExport", required=true)
 	private KmlExporter kmlExporter;
-	//@XmlElement(name="CityKmlExport", required=true)
-	//private KmlExporter kmlExporter;
+	@XmlElement(name="CityKmlExport", required=true)
+	private CityKmlExporter citykmlExporter;
 	private Global global;
 	@XmlJavaTypeAdapter(de.tub.citydb.config.project.plugin.PluginConfigListAdapter.class)
 	private HashMap<Class<? extends PluginConfig>, PluginConfig> extensions;
@@ -72,6 +75,7 @@ public class Project {
 		importer = new Importer();
 		exporter = new Exporter();
 		kmlExporter = new KmlExporter();
+		citykmlExporter = new CityKmlExporter();
 		global = new Global();
 		extensions = new HashMap<Class<? extends PluginConfig>, PluginConfig>();
 	}
@@ -119,6 +123,15 @@ public class Project {
 
 	public KmlExporter getKmlExporter() {
 		return kmlExporter;
+	}
+	
+	public void setCityKmlExporter(CityKmlExporter CitykmlExporter) {
+		if (CitykmlExporter != null)
+			this.citykmlExporter = CitykmlExporter;
+	}
+
+	public CityKmlExporter getCityKmlExporter() {
+		return this.citykmlExporter;
 	}
 
 	public PluginConfig getExtension(Class<? extends PluginConfig> pluginConfigClass) {

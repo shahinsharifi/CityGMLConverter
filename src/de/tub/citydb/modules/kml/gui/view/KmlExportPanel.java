@@ -460,6 +460,7 @@ public class KmlExportPanel extends JPanel implements EventHandler {
 		featureClassesLabel.setText(Internal.I18N.getString("filter.border.featureClass"));
 		
 		exportButton.setText(Internal.I18N.getString("export.button.export"));
+		
 	}
 
 	private void clearGui() {

@@ -116,7 +116,6 @@ import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkBasic;
 import de.tub.citydb.modules.citygml.importer.database.content.DBImporterEnum;
 import de.tub.citydb.modules.citygml.importer.database.content.DBSequencerEnum;
-import de.tub.citydb.modules.citykml.util.KMLObject;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.modules.kml.database.Queries;
