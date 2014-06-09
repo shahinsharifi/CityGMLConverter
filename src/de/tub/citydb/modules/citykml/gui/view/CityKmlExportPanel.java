@@ -192,6 +192,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 	private JButton OpenFileButton;
 
 
+	private JLabel InputLabel = new JLabel("Input file:");
+	private JLabel OutputLabel = new JLabel("Output file:");
+	
+	
 	private JPanel browsePanel;
 	private JTextField browseText = new JTextField("");
 	private JButton browseButton = new JButton("");
@@ -302,8 +306,9 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 		browsePanel = new JPanel();
 		browsePanel.setLayout(new GridBagLayout());
-		browsePanel.add(browseText, GuiUtil.setConstraints(0,0,1.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS));
-		browsePanel.add(browseButton, GuiUtil.setConstraints(1,0,0.0,0.0,GridBagConstraints.NONE,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS));
+		browsePanel.add(OutputLabel, GuiUtil.setConstraints(0,0,1.0,0.0,GridBagConstraints.HORIZONTAL,5,8,0,0));		
+		browsePanel.add(browseText, GuiUtil.setConstraints(0,1,1.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS));
+		browsePanel.add(browseButton, GuiUtil.setConstraints(1,1,0.0,0.0,GridBagConstraints.NONE,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS));
 
 		//	versioningPanel = new JPanel();
 		//	versioningPanel.setLayout(new GridBagLayout());
@@ -372,9 +377,9 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		filePanel.setLayout(new GridBagLayout());
 		JScrollPane fileScroll = new JScrollPane(fileList);
 		fileScroll.setPreferredSize(fileScroll.getPreferredSize());
-
-		filePanel.add(fileScroll, GuiUtil.setConstraints(0,0,1.0,1.0,GridBagConstraints.BOTH,5,5,5,5));
-		filePanel.add(fileButton, GuiUtil.setConstraints(1,0,0.0,0.0,GridBagConstraints.BOTH,5,5,5,5));
+		filePanel.add(InputLabel, GuiUtil.setConstraints(0,0,1.0,1.0,GridBagConstraints.BOTH,5,5,5,5));
+		filePanel.add(fileScroll, GuiUtil.setConstraints(0,1,1.0,1.0,GridBagConstraints.BOTH,5,5,5,5));
+		filePanel.add(fileButton, GuiUtil.setConstraints(1,1,0.0,0.0,GridBagConstraints.BOTH,5,5,5,5));
 		fileButton.setLayout(new GridBagLayout());
 		fileButton.add(OpenFileButton, GuiUtil.setConstraints(0,0,0.0,0.0,GridBagConstraints.HORIZONTAL,0,0,0,0));
 		fileButton.add(removeButton, GuiUtil.setConstraints(0,1,0.0,1.0,GridBagConstraints.NORTH,GridBagConstraints.HORIZONTAL,5,0,15,0));

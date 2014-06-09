@@ -27,8 +27,50 @@
  * virtualcitySYSTEMS GmbH, Berlin <http://www.virtualcitysystems.de/>
  * Berlin Senate of Business, Technology and Women <http://www.berlin.de/sen/wtf/>
  */
-@javax.xml.bind.annotation.XmlAccessorType(javax.xml.bind.annotation.XmlAccessType.FIELD)
-@javax.xml.bind.annotation.XmlSchema(namespace="http://www.gis.tu-berlin.de/3dcitydb-impexp/config/matching-merging", 
-		xmlns = { @javax.xml.bind.annotation.XmlNs(prefix = "match", namespaceURI = "http://www.gis.tu-berlin.de/3dcitydb-impexp/config/matching-merging") },
-		elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
-package de.tub.citydb.plugins.matching_merging.config;
+package de.tub.citydb.modules.citykml.util;
+
+import java.util.Collection;
+import java.util.Set;
+
+import org.geotools.filter.expression.ThisPropertyAccessorFactory;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.CRS;
+import org.opengis.geometry.Envelope;
+import org.opengis.metadata.extent.Extent;
+import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.util.GenericName;
+import org.opengis.util.InternationalString;
+
+
+
+public class BoundingBox {
+
+	private org.opengis.geometry.BoundingBox nativeBounds;
+	
+	
+	public BoundingBox(double MinX, double MaxX, double MinY, double MaxY, String EPSG) throws Exception {
+		
+		CoordinateReferenceSystem nativeCrs = CRS.decode("EPSG:" + EPSG, true);
+	    nativeBounds = new ReferencedEnvelope(MinX, MaxX, MinY, MaxY, nativeCrs);
+	    
+	}
+	
+	
+	public boolean Contains(Envelope bounds)
+	{
+		
+		if(this.nativeBounds.contains((org.opengis.geometry.BoundingBox)bounds))
+		{
+			return true;
+		}
+		else {
+			return false;
+		}
+		
+	}
+	
+	
+	
+}

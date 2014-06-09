@@ -41,6 +41,10 @@ import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
 import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
 import org.citygml4j.model.citygml.appearance.Appearance;
+import org.citygml4j.model.citygml.core.AbstractCityObject;
+import org.citygml4j.model.gml.geometry.primitives.Envelope;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.CRS;
 import org.postgis.Geometry;
 import org.postgis.PGgeometry;
 
@@ -87,7 +91,7 @@ public class KmlSplitter {
 		this.displayForm = displayForm;
 //		this.config = config;
 
-		this.filterConfig = config.getProject().getKmlExporter().getFilter();
+		this.filterConfig = config.getProject().getCityKmlExporter().getFilter();
 		CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.clear();
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetBuilding() 
 				&& config.getProject().getKmlExporter().getLodToExportFrom() > 0) {
@@ -163,6 +167,16 @@ public class KmlSplitter {
 			
 			try {
 			
+				Double xMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getX();
+				Double yMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getY();
+				Double xMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getX();
+				Double yMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getY();
+
+				
+				de.tub.citydb.modules.citykml.util.BoundingBox _bounds = 
+						new de.tub.citydb.modules.citykml.util.BoundingBox(xMin , xMax , yMin , yMax , this.TargetSrs);
+				
+				
 				LOG.info("Writing placemarks into target file, Please wait ...");
 				
 				while (reader.hasNextChunk()) {
@@ -174,13 +188,32 @@ public class KmlSplitter {
 					
 					CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
 					
-					if(cityObjectType != CityGMLClass.APPEARANCE)
+					
+					AbstractCityObject cityObject = (AbstractCityObject)_CityGML;
+
+					// bounding box filter
+					// first of all compute bounding box for cityobject since we need it anyways
+					
+					Envelope envelope = cityObject.getBoundedBy().getEnvelope().convert3d();
+					
+					ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(
+							envelope.getLowerCorner().toList3d().get(0),
+							envelope.getUpperCorner().toList3d().get(0),	
+							envelope.getLowerCorner().toList3d().get(1),							
+							envelope.getUpperCorner().toList3d().get(1),
+							CRS.decode("EPSG:" + this.TargetSrs, true));
+					
+					if(envelope != null && _bounds.Contains(_refEnvelope))
 					{
-						KmlSplittingResult splitter = new KmlSplittingResult(_CityGML , cityObjectType, displayForm, TargetSrs);										
-						dbWorkerPool.addWork(splitter);		
-					}
-					else {
 						
+						if(cityObjectType != CityGMLClass.APPEARANCE)
+						{
+							KmlSplittingResult splitter = new KmlSplittingResult(_CityGML , cityObjectType, displayForm, TargetSrs);										
+							dbWorkerPool.addWork(splitter);		
+						}
+						else {
+							
+						}
 					}
 				}
 				

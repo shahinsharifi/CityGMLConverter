@@ -79,6 +79,9 @@ import net.opengis.kml._2.ViewRefreshModeEnumType;
 
 
 
+
+
+
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
 import org.citygml4j.factory.CityGMLFactory;
@@ -100,6 +103,7 @@ import de.tub.citydb.config.Config;
 import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.database.Database;
 import de.tub.citydb.config.project.database.Database.PredefinedSrsName;
+import de.tub.citydb.config.project.exporter.ExportFilterConfig;
 // import de.tub.citydb.config.project.database.Workspace;
 import de.tub.citydb.config.project.filter.FeatureClass;
 import de.tub.citydb.config.project.filter.TiledBoundingBox;
@@ -219,7 +223,7 @@ public class CityKmlExporter implements EventHandler {
 	}
 		
 
-	public boolean doProcess(JAXBChunkReader reader){
+	public boolean doProcess(JAXBChunkReader reader) throws Exception{
 		
 		geometryCounter = 0;
 		
@@ -272,9 +276,10 @@ public class CityKmlExporter implements EventHandler {
 		// getting export filter
 	//	ExportFilter exportFilter = new ExportFilter(config, FilterMode.KML_EXPORT);
 		boolean isBBoxActive = (config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive() == null) ? false : true;
+		
+		
 		// bounding box config
 		//Tiling tiling = config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getTiling();
-
 		
 		
 		// create a saxWriter instance 
