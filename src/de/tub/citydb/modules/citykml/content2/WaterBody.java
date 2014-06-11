@@ -44,9 +44,9 @@ import org.citygml4j.factory.CityGMLFactory;
 
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
-import de.tub.citydb.config.project.kmlExporter.Balloon;
-import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.Balloon;
+import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
@@ -75,15 +75,15 @@ public class WaterBody extends KmlGenericObject{
 	}
 
 	protected List<DisplayForm> getDisplayForms() {
-		return config.getProject().getKmlExporter().getWaterBodyDisplayForms();
+		return config.getProject().getCityKmlExporter().getWaterBodyDisplayForms();
 	}
 
 	public ColladaOptions getColladaOptions() {
-		return config.getProject().getKmlExporter().getWaterBodyColladaOptions();
+		return config.getProject().getCityKmlExporter().getWaterBodyColladaOptions();
 	}
 
 	public Balloon getBalloonSettings() {
-		return config.getProject().getKmlExporter().getWaterBodyBalloon();
+		return config.getProject().getCityKmlExporter().getWaterBodyBalloon();
 	}
 
 	public String getStyleBasisName() {
@@ -102,7 +102,7 @@ public class WaterBody extends KmlGenericObject{
 		boolean reversePointOrder = false;
 
 		try {
-			int lodToExportFrom = config.getProject().getKmlExporter().getLodToExportFrom();
+			int lodToExportFrom = config.getProject().getCityKmlExporter().getLodToExportFrom();
 			currentLod = lodToExportFrom == 5 ? 4: lodToExportFrom;
 			int minLod = lodToExportFrom == 5 ? 0: lodToExportFrom;
 
@@ -182,7 +182,7 @@ public class WaterBody extends KmlGenericObject{
 				case DisplayForm.GEOMETRY:
 					setGmlId(work.getGmlId());
 					setId(work.getId());
-					if (config.getProject().getKmlExporter().getFilter().isSetComplexFilter()) { // region
+					if (config.getProject().getCityKmlExporter().getFilter().isSetComplexFilter()) { // region
 						if (work.getDisplayForm().isHighlightingEnabled()) {
 						//	kmlExporterManager.print(createPlacemarksForHighlighting(work),
 						//							 work,

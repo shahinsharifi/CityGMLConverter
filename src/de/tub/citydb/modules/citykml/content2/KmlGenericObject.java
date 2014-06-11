@@ -139,10 +139,10 @@ import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.api.log.LogLevel;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.config.internal.Internal;
-import de.tub.citydb.config.project.kmlExporter.Balloon;
-import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
-import de.tub.citydb.config.project.kmlExporter.KmlExporter;
+import de.tub.citydb.config.project.CitykmlExporter.Balloon;
+import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.io.DirectoryScanner;
@@ -1786,7 +1786,7 @@ public abstract class KmlGenericObject {
 		
 			for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
 
-				List<Double> Target_Coordinates = ProjConvertor.TransformProjection(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");
+				List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");
 				
 				
 				tmpPoint[j] = new org.postgis.Point(
@@ -1989,7 +1989,7 @@ public abstract class KmlGenericObject {
 //						byte buf[] = null;
 						StringTokenizer texCoordsTokenized = null;
 	
-						if (selectedTheme.equals(KmlExporter.THEME_NONE)) {
+						if (selectedTheme.equals(CityKmlExporter.THEME_NONE)) {
 							addX3dMaterial(surfaceId, defaultX3dMaterial);
 						}
 						else if	(!selectedTheme.equalsIgnoreCase(theme) && // no surface data for this surface and theme
@@ -2543,7 +2543,7 @@ public abstract class KmlGenericObject {
 				int index = 0;
 				for (Point3d point3d: candidates) {
 					// undo trick for very close coordinates
-					List<Double> tmpPointList = ProjConvertor.TransformProjection(point3d.x / 100 , point3d.y / 100 , point3d.z / 100 , _TargetSrs , "4326");
+					List<Double> tmpPointList = ProjConvertor.transformPoint(point3d.x / 100 , point3d.y / 100 , point3d.z / 100 , _TargetSrs , "4326");
 					coords[index++] = tmpPointList.get(1); 
 					coords[index++] = tmpPointList.get(0);
 					coords[index++] = tmpPointList.get(2);

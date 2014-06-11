@@ -41,9 +41,9 @@ import org.citygml4j.factory.CityGMLFactory;
 
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
-import de.tub.citydb.config.project.kmlExporter.Balloon;
-import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.Balloon;
+import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
@@ -72,7 +72,7 @@ public class CityObjectGroup extends KmlGenericObject{
 	}
 
 	protected List<DisplayForm> getDisplayForms() {
-		return config.getProject().getKmlExporter().getCityObjectGroupDisplayForms();
+		return config.getProject().getCityKmlExporter().getCityObjectGroupDisplayForms();
 	}
 
 	public ColladaOptions getColladaOptions() {
@@ -80,7 +80,7 @@ public class CityObjectGroup extends KmlGenericObject{
 	}
 
 	public Balloon getBalloonSettings() {
-		return config.getProject().getKmlExporter().getCityObjectGroupBalloon();
+		return config.getProject().getCityKmlExporter().getCityObjectGroupBalloon();
 	}
 
 	public String getStyleBasisName() {

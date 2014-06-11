@@ -54,7 +54,7 @@ import de.tub.citydb.api.database.DatabaseSrs;
 import de.tub.citydb.api.gui.BoundingBox;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.config.project.exporter.ExportFilterConfig;
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.filter.ExportFilter;
@@ -174,28 +174,27 @@ public class KmlSplitter {
 				
 				if(boundingBoxSrs != 4326)
 				{
-					Double xMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getX();
-					Double yMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getY();
-					Double xMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getX();
-					Double yMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getY();
+					
+					BoundingBox BBox = filterConfig.getComplexFilter().getTiledBoundingBox();
 						
-					_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(xMin , xMax , yMin , yMax , this.TargetSrs);
+					_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(
+							BBox.getLowerLeftCorner().getX() ,
+							BBox.getLowerLeftCorner().getY() ,
+							BBox.getUpperRightCorner().getX() ,
+							BBox.getUpperRightCorner().getY()
+							, this.TargetSrs);
 	
 				}else {
 					
-					LOG.info("Converting BoundignBox ...");
-				
-					Double xMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getX();
-					Double yMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getY();
-					Double xMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getX();
-					Double yMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getY();
 					
-					
-					List<Double> LowerCorner =  ProjConvertor.TransformProjection(xMin, yMin, 0, "4326", "3068");
-					List<Double> UpperCorner =  ProjConvertor.TransformProjection(xMax, yMax, 0, "4326", "3068");
-
-					
-					_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(LowerCorner.get(1) , UpperCorner.get(1) , LowerCorner.get(0) , UpperCorner.get(0) , this.TargetSrs);
+					BoundingBox BBox = ProjConvertor.transformBBox(filterConfig.getComplexFilter().getTiledBoundingBox() , "4326", this.TargetSrs); 
+											
+					_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(
+							BBox.getLowerLeftCorner().getX() ,
+							BBox.getUpperRightCorner().getX() ,
+							BBox.getLowerLeftCorner().getY() ,
+							BBox.getUpperRightCorner().getY() ,
+							this.TargetSrs);
 					
 				}
 				

@@ -107,9 +107,9 @@ import org.postgis.Polygon;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.config.internal.Internal;
-import de.tub.citydb.config.project.kmlExporter.Balloon;
-import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.Balloon;
+import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.database.TableEnum;
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
@@ -147,15 +147,15 @@ public class Building extends KmlGenericObject{
 	}
 
 	protected List<DisplayForm> getDisplayForms() {
-		return config.getProject().getKmlExporter().getBuildingDisplayForms();
+		return config.getProject().getCityKmlExporter().getBuildingDisplayForms();
 	}
 
 	public ColladaOptions getColladaOptions() {
-		return config.getProject().getKmlExporter().getBuildingColladaOptions();
+		return config.getProject().getCityKmlExporter().getBuildingColladaOptions();
 	}
 
 	public Balloon getBalloonSettings() {
-		return config.getProject().getKmlExporter().getBuildingBalloon();
+		return config.getProject().getCityKmlExporter().getBuildingBalloon();
 	}
 
 	public String getStyleBasisName() {
@@ -182,7 +182,7 @@ public class Building extends KmlGenericObject{
 		finally {
 
 			if (placemarks.size() == 0) {
-				int lodToExportFrom = config.getProject().getKmlExporter().getLodToExportFrom();
+				int lodToExportFrom = config.getProject().getCityKmlExporter().getLodToExportFrom();
 				String fromMessage = " from LoD" + lodToExportFrom;
 				if (lodToExportFrom == 5) {
 					if (work.getDisplayForm().getForm() == DisplayForm.COLLADA)
@@ -261,7 +261,7 @@ public class Building extends KmlGenericObject{
 
 
 					if (work.getDisplayForm().isHighlightingEnabled()) {
-						if (config.getProject().getKmlExporter().getFilter().isSetComplexFilter()) { // region
+						if (config.getProject().getCityKmlExporter().getFilter().isSetComplexFilter()) { // region
 
 							List<PlacemarkType> hlPlacemarks = createPlacemarksForHighlighting(_surfaceList, work);
 
@@ -439,7 +439,7 @@ public class Building extends KmlGenericObject{
 				}				
 
 				PolygonType polygon = kmlFactory.createPolygonType();
-				switch (config.getProject().getKmlExporter().getAltitudeMode()) {
+				switch (config.getProject().getCityKmlExporter().getAltitudeMode()) {
 				case ABSOLUTE:
 					polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.ABSOLUTE));
 					break;

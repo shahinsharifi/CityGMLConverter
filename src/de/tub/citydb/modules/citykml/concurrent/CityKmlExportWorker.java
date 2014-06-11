@@ -50,10 +50,10 @@ import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
 // import de.tub.citydb.config.project.database.Database;
 import de.tub.citydb.config.project.exporter.ExportFilterConfig;
-import de.tub.citydb.config.project.kmlExporter.Balloon;
-import de.tub.citydb.config.project.kmlExporter.BalloonContentMode;
-import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.Balloon;
+import de.tub.citydb.config.project.CitykmlExporter.BalloonContentMode;
+import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.content2.BalloonTemplateHandlerImpl;
@@ -128,14 +128,14 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 
 		elevationServiceHandler = new ElevationServiceHandler();
 
-		filterConfig = config.getProject().getKmlExporter().getFilter();
+		filterConfig = config.getProject().getCityKmlExporter().getFilter();
 		ColladaOptions colladaOptions = null; 
 
 		objectGroupCounter.put(CityGMLClass.BUILDING, 0);
 		objectGroupSize.put(CityGMLClass.BUILDING, 1);
 		objectGroup.put(CityGMLClass.BUILDING, null);
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetBuilding()) {
-			colladaOptions = config.getProject().getKmlExporter().getBuildingColladaOptions();
+			colladaOptions = config.getProject().getCityKmlExporter().getBuildingColladaOptions();
 			if (colladaOptions.isGroupObjects()) {
 				objectGroupSize.put(CityGMLClass.BUILDING, colladaOptions.getGroupSize());
 			}
@@ -145,7 +145,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		objectGroupSize.put(CityGMLClass.WATER_BODY, 1);
 		objectGroup.put(CityGMLClass.WATER_BODY, null);
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetWaterBody()) {
-			colladaOptions = config.getProject().getKmlExporter().getWaterBodyColladaOptions();
+			colladaOptions = config.getProject().getCityKmlExporter().getWaterBodyColladaOptions();
 			if (colladaOptions.isGroupObjects()) {
 				objectGroupSize.put(CityGMLClass.WATER_BODY, colladaOptions.getGroupSize());
 			}
@@ -155,7 +155,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		objectGroupSize.put(CityGMLClass.LAND_USE, 1);
 		objectGroup.put(CityGMLClass.LAND_USE, null);
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetLandUse()) {
-			colladaOptions = config.getProject().getKmlExporter().getLandUseColladaOptions();
+			colladaOptions = config.getProject().getCityKmlExporter().getLandUseColladaOptions();
 			if (colladaOptions.isGroupObjects()) {
 				objectGroupSize.put(CityGMLClass.LAND_USE, colladaOptions.getGroupSize());
 			}
@@ -165,7 +165,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		objectGroupSize.put(CityGMLClass.SOLITARY_VEGETATION_OBJECT, 1);
 		objectGroup.put(CityGMLClass.SOLITARY_VEGETATION_OBJECT, null);
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetVegetation()) {
-			colladaOptions = config.getProject().getKmlExporter().getVegetationColladaOptions();
+			colladaOptions = config.getProject().getCityKmlExporter().getVegetationColladaOptions();
 			if (colladaOptions.isGroupObjects()) {
 				objectGroupSize.put(CityGMLClass.SOLITARY_VEGETATION_OBJECT, colladaOptions.getGroupSize());
 			}
@@ -175,7 +175,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		objectGroupSize.put(CityGMLClass.TRANSPORTATION_COMPLEX, 1);
 		objectGroup.put(CityGMLClass.TRANSPORTATION_COMPLEX, null);
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetTransportation()) {
-			colladaOptions = config.getProject().getKmlExporter().getTransportationColladaOptions();
+			colladaOptions = config.getProject().getCityKmlExporter().getTransportationColladaOptions();
 			if (colladaOptions.isGroupObjects()) {
 				objectGroupSize.put(CityGMLClass.TRANSPORTATION_COMPLEX, colladaOptions.getGroupSize());
 			}
@@ -185,7 +185,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		objectGroupSize.put(CityGMLClass.RELIEF_FEATURE, 1);
 		objectGroup.put(CityGMLClass.RELIEF_FEATURE, null);
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetReliefFeature()) {
-			colladaOptions = config.getProject().getKmlExporter().getReliefColladaOptions();
+			colladaOptions = config.getProject().getCityKmlExporter().getReliefColladaOptions();
 			if (colladaOptions.isGroupObjects()) {
 				objectGroupSize.put(CityGMLClass.RELIEF_FEATURE, colladaOptions.getGroupSize());
 			}
@@ -195,7 +195,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		objectGroupSize.put(CityGMLClass.GENERIC_CITY_OBJECT, 1);
 		objectGroup.put(CityGMLClass.GENERIC_CITY_OBJECT, null);
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetGenericCityObject()) {
-			colladaOptions = config.getProject().getKmlExporter().getGenericCityObjectColladaOptions();
+			colladaOptions = config.getProject().getCityKmlExporter().getGenericCityObjectColladaOptions();
 			if (colladaOptions.isGroupObjects()) {
 				objectGroupSize.put(CityGMLClass.GENERIC_CITY_OBJECT, colladaOptions.getGroupSize());
 			}
@@ -205,7 +205,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		objectGroupSize.put(CityGMLClass.CITY_FURNITURE, 1);
 		objectGroup.put(CityGMLClass.CITY_FURNITURE, null);
 		if (filterConfig.getComplexFilter().getFeatureClass().isSetCityFurniture()) {
-			colladaOptions = config.getProject().getKmlExporter().getCityFurnitureColladaOptions();
+			colladaOptions = config.getProject().getCityKmlExporter().getCityFurnitureColladaOptions();
 			if (colladaOptions.isGroupObjects()) {
 				objectGroupSize.put(CityGMLClass.CITY_FURNITURE, colladaOptions.getGroupSize());
 			}
@@ -538,20 +538,20 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		Balloon balloonSettings = null;
 		switch (cityObjectType) {
 			case BUILDING:
-				balloonSettings = config.getProject().getKmlExporter().getBuildingBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getBuildingBalloon();
 				break;
 			case LAND_USE:
-				balloonSettings = config.getProject().getKmlExporter().getLandUseBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getLandUseBalloon();
 				break;
 			case WATER_BODY:
 			case WATER_CLOSURE_SURFACE:
 			case WATER_GROUND_SURFACE:
 			case WATER_SURFACE:
-				balloonSettings = config.getProject().getKmlExporter().getWaterBodyBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getWaterBodyBalloon();
 				break;
 			case SOLITARY_VEGETATION_OBJECT:
 			case PLANT_COVER:
-				balloonSettings = config.getProject().getKmlExporter().getVegetationBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getVegetationBalloon();
 				break;
 			case TRAFFIC_AREA:
 			case AUXILIARY_TRAFFIC_AREA:
@@ -560,7 +560,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 			case RAILWAY:
 			case ROAD:
 			case SQUARE:
-				balloonSettings = config.getProject().getKmlExporter().getTransportationBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getTransportationBalloon();
 				break;
 /*
 			case RASTER_RELIEF:
@@ -569,16 +569,16 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 			case TIN_RELIEF:
 */
 			case RELIEF_FEATURE:
-				balloonSettings = config.getProject().getKmlExporter().getReliefBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getReliefBalloon();
 				break;
 			case GENERIC_CITY_OBJECT:
-				balloonSettings = config.getProject().getKmlExporter().getGenericCityObjectBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getGenericCityObjectBalloon();
 				break;
 			case CITY_FURNITURE:
-				balloonSettings = config.getProject().getKmlExporter().getCityFurnitureBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getCityFurnitureBalloon();
 				break;
 			case CITY_OBJECT_GROUP:
-				balloonSettings = config.getProject().getKmlExporter().getCityObjectGroupBalloon();
+				balloonSettings = config.getProject().getCityKmlExporter().getCityObjectGroupBalloon();
 				break;
 			default:
 				return null;

@@ -32,7 +32,7 @@ package de.tub.citydb.modules.citykml.content2;
 import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
 
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 
 public class KmlSplittingResult {
 

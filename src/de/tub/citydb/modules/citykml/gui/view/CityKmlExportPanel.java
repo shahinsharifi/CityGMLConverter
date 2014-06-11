@@ -1271,9 +1271,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				return;
 			}
 
-			// tile amount calculation
-			//	int tileAmount = 1;
-			/*if (filter.isSetComplexFilter() &&
+			int tileAmount = 1;
+			if (filter.isSetComplexFilter() &&
 				filter.getComplexFilter().getTiledBoundingBox().isSet()) {
 				try {
 					tileAmount = CityKmlExporter.calculateRowsColumnsAndDelta();
@@ -1285,15 +1284,14 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				}
 			}
 			tileAmount = tileAmount * activeDisplayFormsAmount;
-			 */
 
-			/*	mainView.setStatusText(Internal.I18N.getString("main.status.kmlExport.label"));
-			Logger.getInstance().info("Initializing database export...");*/
+			mainView.setStatusText(Internal.I18N.getString("main.status.kmlExport.label"));
+			Logger.getInstance().info("Initializing database export...");
 
 			final ExportStatusDialog exportDialog = new ExportStatusDialog(mainView, 
 					Internal.I18N.getString("kmlExport.dialog.window"),
 					Internal.I18N.getString("export.dialog.msg"),
-					1);
+					tileAmount);
 
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -1316,8 +1314,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				}
 			});
 
-
+			
+			
 			//Start reading the input file
+			LOG.info("Start reading the input file...");
 			JAXBChunkReader _Reader = doImport();
 
 			if (_Reader != null) {				

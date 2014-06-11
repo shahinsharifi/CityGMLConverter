@@ -73,10 +73,10 @@ import com.sun.j3d.utils.geometry.GeometryInfo;
 
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
-import de.tub.citydb.config.project.kmlExporter.Balloon;
-import de.tub.citydb.config.project.kmlExporter.ColladaOptions;
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
-import de.tub.citydb.config.project.kmlExporter.KmlExporter;
+import de.tub.citydb.config.project.CitykmlExporter.Balloon;
+import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
@@ -114,15 +114,15 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 	}
 
 	protected List<DisplayForm> getDisplayForms() {
-		return config.getProject().getKmlExporter().getVegetationDisplayForms();
+		return config.getProject().getCityKmlExporter().getVegetationDisplayForms();
 	}
 
 	public ColladaOptions getColladaOptions() {
-		return config.getProject().getKmlExporter().getVegetationColladaOptions();
+		return config.getProject().getCityKmlExporter().getVegetationColladaOptions();
 	}
 
 	public Balloon getBalloonSettings() {
-		return config.getProject().getKmlExporter().getVegetationBalloon();
+		return config.getProject().getCityKmlExporter().getVegetationBalloon();
 	}
 
 	public String getStyleBasisName() {
@@ -138,7 +138,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 		ResultSet rs = null;
 
 		try {
-			int lodToExportFrom = config.getProject().getKmlExporter().getLodToExportFrom();
+			int lodToExportFrom = config.getProject().getCityKmlExporter().getLodToExportFrom();
 			currentLod = lodToExportFrom == 5 ? 4: lodToExportFrom;
 			int minLod = lodToExportFrom == 5 ? 1: lodToExportFrom;
 
@@ -256,7 +256,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 				case DisplayForm.GEOMETRY:
 					setGmlId(work.getGmlId());
 					setId(work.getId());
-					if (config.getProject().getKmlExporter().getFilter().isSetComplexFilter()) { // region
+					if (config.getProject().getCityKmlExporter().getFilter().isSetComplexFilter()) { // region
 						if (work.getDisplayForm().isHighlightingEnabled()) {
 							kmlExporterManager.print(createPlacemarksForHighlighting(work),
 													 work,
@@ -395,7 +395,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 		ModelType model = kmlFactory.createModelType();
 		LocationType location = kmlFactory.createLocationType();
 
-		switch (config.getProject().getKmlExporter().getAltitudeMode()) {
+		switch (config.getProject().getCityKmlExporter().getAltitudeMode()) {
 		case ABSOLUTE:
 			model.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.ABSOLUTE));
 			break;
@@ -413,9 +413,9 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 
 		LinkType link = kmlFactory.createLinkType();
 
-		if (config.getProject().getKmlExporter().isOneFilePerObject() &&
-			!config.getProject().getKmlExporter().isExportAsKmz() &&
-			config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue())
+		if (config.getProject().getCityKmlExporter().isOneFilePerObject() &&
+			!config.getProject().getCityKmlExporter().isExportAsKmz() &&
+			config.getProject().getCityKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue())
 		{
 			link.setHref(getGmlId() + ".dae");
 		}
@@ -454,7 +454,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 			return;
 		}
 
-		String selectedTheme = config.getProject().getKmlExporter().getAppearanceTheme();
+		String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
 
 		int texImageCounter = 0;
 		PGgeometry pgBuildingGeometry = null;
@@ -508,7 +508,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 //						byte buf[] = null;
 						StringTokenizer texCoordsTokenized = null;
 	
-						if (selectedTheme.equals(KmlExporter.THEME_NONE)) {
+						if (selectedTheme.equals(CityKmlExporter.THEME_NONE)) {
 							addX3dMaterial(surfaceId, defaultX3dMaterial);
 						}
 						else if	(!selectedTheme.equalsIgnoreCase(theme) && // no surface data for this surface and theme
@@ -786,7 +786,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 				}
 
 				PolygonType polygon = kmlFactory.createPolygonType();
-				switch (config.getProject().getKmlExporter().getAltitudeMode()) {
+				switch (config.getProject().getCityKmlExporter().getAltitudeMode()) {
 				case ABSOLUTE:
 					polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.ABSOLUTE));
 					break;

@@ -32,7 +32,7 @@ package de.tub.citydb.modules.citykml.content2;
 import java.util.HashMap;
 
 import de.tub.citydb.api.log.LogLevel;
-import de.tub.citydb.config.project.kmlExporter.DisplayForm;
+import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.log.Logger;
 
 public class Queries {

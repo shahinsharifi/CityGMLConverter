@@ -32,5 +32,6 @@ package de.tub.citydb.modules.common.filter;
 public enum FilterMode {
 	IMPORT,
 	EXPORT,
-	KML_EXPORT
+	KML_EXPORT,
+	CityKML
 }

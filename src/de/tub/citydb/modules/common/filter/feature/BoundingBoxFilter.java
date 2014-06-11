@@ -78,6 +78,8 @@ public class BoundingBoxFilter implements Filter<Envelope> {
 			filterConfig = config.getProject().getExporter().getFilter();
 		else if (mode == FilterMode.KML_EXPORT)
 			filterConfig = config.getProject().getKmlExporter().getFilter();
+		else if (mode == FilterMode.CityKML)
+			filterConfig = config.getProject().getCityKmlExporter().getFilter();
 		else
 			filterConfig = config.getProject().getImporter().getFilter();			
 
@@ -90,7 +92,7 @@ public class BoundingBoxFilter implements Filter<Envelope> {
 
 		if (isActive) {
 			boundingBoxConfig = filterConfig.getComplexFilter().getBoundingBox();
-			if (mode == FilterMode.EXPORT || mode == FilterMode.KML_EXPORT)
+			if (mode == FilterMode.EXPORT || mode == FilterMode.KML_EXPORT || mode == FilterMode.CityKML)
 				useTiling = ((TiledBoundingBox)boundingBoxConfig).getTiling().getMode() != TilingMode.NO_TILING;
 
 			if (boundingBoxConfig.getLowerLeftCorner().getX() != null && 
@@ -99,12 +101,12 @@ public class BoundingBoxFilter implements Filter<Envelope> {
 					boundingBoxConfig.getUpperRightCorner().getY() != null) {
 				boundingBox = new BoundingBox(boundingBoxConfig);
 				if (boundingBox.getSrs() == null) {
-					boundingBox.setSrs(DatabaseConnectionPool.getInstance().getActiveConnectionMetaData().getReferenceSystem());
-					LOG.warn("SRS on bounding box filter not set. Choosing database SRS '" + boundingBox.getSrs().getDatabaseSrsName() + "' instead.");
+				//	boundingBox.setSrs(DatabaseConnectionPool.getInstance().getActiveConnectionMetaData().getReferenceSystem());
+				//	LOG.warn("SRS on bounding box filter not set. Choosing database SRS '" + boundingBox.getSrs().getDatabaseSrsName() + "' instead.");
 				}
 
 				// check whether we have to transform the bounding box
-				DatabaseSrs targetSrs = DatabaseConnectionPool.getInstance().getActiveConnectionMetaData().getReferenceSystem();
+			/*	DatabaseSrs targetSrs = DatabaseConnectionPool.getInstance().getActiveConnectionMetaData().getReferenceSystem();
 
 				// targetSrs differs if a coordinate transformation is applied to the CityGML export
 				if (mode == FilterMode.EXPORT) {
@@ -120,7 +122,7 @@ public class BoundingBoxFilter implements Filter<Envelope> {
 						LOG.error("Failed to initialize bounding box filter.");
 					}
 				}
-
+*/
 				activeBoundingBox = boundingBox;
 
 				if (useTiling) {
