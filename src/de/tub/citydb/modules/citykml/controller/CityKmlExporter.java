@@ -465,7 +465,6 @@ public class CityKmlExporter implements EventHandler {
 						}
 
 						
-						LOG.info("BoundingBox:" + String.valueOf(config.getProject().getCityKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().isSet()));
 						LOG.info("Start reading the input file...");
 						
 						// get database splitter and start query

@@ -140,7 +140,6 @@ import de.tub.citydb.gui.components.checkboxtree.DefaultCheckboxTreeCellRenderer
 import de.tub.citydb.gui.components.checkboxtree.DefaultTreeCheckingModel;
 import de.tub.citydb.gui.components.ExportStatusDialog;
 import de.tub.citydb.gui.components.ImportStatusDialog;
-import de.tub.citydb.gui.components.bbox.BoundingBoxPanelImpl;
 import de.tub.citydb.gui.components.checkboxtree.CheckboxTree;
 import de.tub.citydb.gui.factory.PopupMenuDecorator;
 import de.tub.citydb.io.DirectoryScanner;
@@ -151,12 +150,11 @@ import de.tub.citydb.modules.citykml.concurrent.CityKmlFeatureReaderWorkerFactor
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorker;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorkerFactory;
 import de.tub.citydb.modules.citykml.controller.CityKmlImporter;
-
+import de.tub.citydb.modules.citykml.gui.components.bbox.BoundingBoxPanelImpl;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.modules.common.event.InterruptEnum;
 import de.tub.citydb.modules.common.event.InterruptEvent;
-
 import de.tub.citydb.modules.common.event.StatusDialogMessage;
 import de.tub.citydb.modules.common.event.StatusDialogProgressBar;
 import de.tub.citydb.modules.common.event.StatusDialogTitle;
@@ -275,7 +273,6 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 	private DefaultMutableTreeNode cityObjectGroup;
 
 	private JButton exportButton = new JButton("");
-
 
 
 
@@ -415,7 +412,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		bboxComponent = new BoundingBoxPanelImpl(config);
 
 		boundingBoxPanel.add(bboxComponent, GuiUtil.setConstraints(0,0,1.0,0.0,GridBagConstraints.HORIZONTAL,2,lmargin,0,BORDER_THICKNESS));
-
+		
+		
 		tilingButtonGroup.add(noTilingRadioButton);
 		noTilingRadioButton.setIconTextGap(10);
 		tilingButtonGroup.add(automaticTilingRadioButton);
@@ -506,15 +504,15 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		displayAsPanel.add(colladaVisibleFromText, GuiUtil.setConstraints(3,3,0.25,1.0,GridBagConstraints.BOTH,2,BORDER_THICKNESS,0,0));
 		displayAsPanel.add(pixelsColladaLabel, GuiUtil.setConstraints(4,3,0.0,1.0,GridBagConstraints.BOTH,2,BORDER_THICKNESS,0,BORDER_THICKNESS));
 
-		displayAsPanel.add(themeLabel, GuiUtil.setConstraints(0,4,0.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,32,BORDER_THICKNESS,0));
+		//displayAsPanel.add(themeLabel, GuiUtil.setConstraints(0,4,0.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,32,BORDER_THICKNESS,0));
 		//		themeComboBox.setMinimumSize(new Dimension(80, (int)themeComboBox.getPreferredSize().getHeight()));
 		//		themeComboBox.setPreferredSize(new Dimension(80, (int)fetchThemesButton.getPreferredSize().getHeight()));
 		GridBagConstraints tcb = GuiUtil.setConstraints(1,4,1.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,0);
 		tcb.gridwidth = 1;
-		displayAsPanel.add(themeComboBox, tcb);
-		GridBagConstraints fb = GuiUtil.setConstraints(2,4,0.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS);
-		fb.gridwidth = 3;
-		displayAsPanel.add(fetchThemesButton, fb);
+		//displayAsPanel.add(themeComboBox, tcb);
+		//GridBagConstraints fb = GuiUtil.setConstraints(2,4,0.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS);
+		//fb.gridwidth = 3;
+		//displayAsPanel.add(fetchThemesButton, fb);
 
 
 		JPanel exportAndDisplayPanel = new JPanel();
@@ -1191,6 +1189,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 	private void doExport() throws Exception {
 
+		
 		final ReentrantLock lock = this.mainLock;
 		lock.lock();
 
@@ -1241,6 +1240,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			// BoundingBox check
 			if (filter.isSetComplexFilter() &&
 					filter.getComplexFilter().getTiledBoundingBox().isSet()) {
+
+				
 				Double xMin = filter.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getX();
 				Double yMin = filter.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getY();
 				Double xMax = filter.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getX();
@@ -1252,7 +1253,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 					return;
 				}
 			}
-
+			
+			
 			// Feature classes check
 			if (filter.isSetComplexFilter() &&
 					!filter.getComplexFilter().getFeatureClass().isSetBuilding() &&

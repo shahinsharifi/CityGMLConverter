@@ -29,6 +29,7 @@
  */
 package de.tub.citydb.modules.citykml.content2;
 
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -58,6 +59,7 @@ import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.filter.ExportFilter;
 import de.tub.citydb.modules.citykml.controller.CityKmlExporter;
+import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.kml.util.CityObject4JSON;
 import de.tub.citydb.util.Util;
 
@@ -167,14 +169,36 @@ public class KmlSplitter {
 			
 			try {
 			
-				Double xMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getX();
-				Double yMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getY();
-				Double xMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getX();
-				Double yMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getY();
-
+				int boundingBoxSrs = filterConfig.getComplexFilter().getTiledBoundingBox().getSrs().getSrid();
+				de.tub.citydb.modules.citykml.util.BoundingBox _bounds = null;
 				
-				de.tub.citydb.modules.citykml.util.BoundingBox _bounds = 
-						new de.tub.citydb.modules.citykml.util.BoundingBox(xMin , xMax , yMin , yMax , this.TargetSrs);
+				if(boundingBoxSrs != 4326)
+				{
+					Double xMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getX();
+					Double yMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getY();
+					Double xMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getX();
+					Double yMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getY();
+						
+					_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(xMin , xMax , yMin , yMax , this.TargetSrs);
+	
+				}else {
+					
+					LOG.info("Converting BoundignBox ...");
+				
+					Double xMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getX();
+					Double yMin = filterConfig.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getY();
+					Double xMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getX();
+					Double yMax = filterConfig.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getY();
+					
+					
+					List<Double> LowerCorner =  ProjConvertor.TransformProjection(xMin, yMin, 0, "4326", "3068");
+					List<Double> UpperCorner =  ProjConvertor.TransformProjection(xMax, yMax, 0, "4326", "3068");
+
+					
+					_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(LowerCorner.get(1) , UpperCorner.get(1) , LowerCorner.get(0) , UpperCorner.get(0) , this.TargetSrs);
+					
+				}
+				
 				
 				
 				LOG.info("Writing placemarks into target file, Please wait ...");
