@@ -77,6 +77,7 @@ import net.opengis.kml._2.StyleType;
 import net.opengis.kml._2.ViewRefreshModeEnumType;
 // import oracle.ord.im.OrdImage;
 
+
 import org.citygml4j.factory.CityGMLFactory;
 import org.citygml4j.model.citygml.CityGMLClass;
 import org.citygml4j.util.xml.SAXEventBuffer;
@@ -346,14 +347,19 @@ public class KmlExporter implements EventHandler {
 
 					if (lastTempFolder != null && lastTempFolder.exists()) deleteFolder(lastTempFolder); // just in case
 
+					
+					
 					File file = null;
 					OutputStreamWriter fileWriter = null;
 					ZipOutputStream zipOut = null;
 
 					try {
+						
 						String fileExtension = config.getProject().getKmlExporter().isExportAsKmz() ? ".kmz" : ".kml";
 						if (isBBoxActive && tiling.getMode() != TilingMode.NO_TILING) {
+				
 							exportFilter.getBoundingBoxFilter().setActiveTile(i, j);
+											
 							file = new File(path + File.separator + filename + "_Tile_"
 									 	 	+ i + "_" + j + "_" + displayForm.getName() + fileExtension);
 						}
@@ -450,7 +456,9 @@ public class KmlExporter implements EventHandler {
 
 						// get database splitter and start query
 						kmlSplitter = null;
+						
 						try {
+						
 							kmlSplitter = new KmlSplitter(
 									dbPool,
 									kmlWorkerPool,
@@ -460,6 +468,7 @@ public class KmlExporter implements EventHandler {
 
 							if (shouldRun)
 								kmlSplitter.startQuery();
+							
 						} catch (SQLException sqlE) {
 							Logger.getInstance().error("SQL error: " + sqlE.getMessage());
 							return false;

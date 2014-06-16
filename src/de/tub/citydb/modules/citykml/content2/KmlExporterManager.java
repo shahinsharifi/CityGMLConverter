@@ -97,7 +97,7 @@ public class KmlExporterManager {
 		this.kmlFactory = kmlFactory;
 		this.config = config;
 
-		isBBoxActive = false;//config.getProject().getKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue();
+		isBBoxActive = false;//config.getProject().getCityKmlExporter().getFilter().getComplexFilter().getTiledBoundingBox().getActive().booleanValue();
 		mainFilename = config.getInternal().getExportFileName().trim();
 		if (mainFilename.lastIndexOf(File.separator) != -1) {
 			if (mainFilename.lastIndexOf(".") == -1) {
@@ -122,7 +122,7 @@ public class KmlExporterManager {
 				
 		SAXEventBuffer buffer = new SAXEventBuffer();
 		Marshaller kmlMarshaller = jaxbKmlContext.createMarshaller();
-		if (isBBoxActive && config.getProject().getKmlExporter().isOneFilePerObject()) {
+		if (isBBoxActive && config.getProject().getCityKmlExporter().isOneFilePerObject()) {
 			kmlMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 		}
 		else {
@@ -150,8 +150,8 @@ public class KmlExporterManager {
 						StringBuffer parentFrame = new StringBuffer(BalloonTemplateHandlerImpl.parentFrameStart);
 /*
 						if (isBBoxActive && 
-	        				config.getProject().getKmlExporter().isOneFilePerObject() &&
-	        				!config.getProject().getKmlExporter().isExportAsKmz())
+	        				config.getProject().getCityKmlExporter().isOneFilePerObject() &&
+	        				!config.getProject().getCityKmlExporter().isExportAsKmz())
 	        				parentFrame.append(".."); // one up
 	        			else
 */
@@ -169,8 +169,8 @@ public class KmlExporterManager {
     						path = path.substring(0, path.lastIndexOf(File.separator));
     						File directory =  new File(path);
 
-							if (config.getProject().getKmlExporter().isExportAsKmz()) {
-								if (!isBBoxActive || !config.getProject().getKmlExporter().isOneFilePerObject()) {
+							if (config.getProject().getCityKmlExporter().isExportAsKmz()) {
+								if (!isBBoxActive || !config.getProject().getCityKmlExporter().isOneFilePerObject()) {
         							// export temporarily as kml, it will be later added to kmz if needed
     								directory = new File(path, TEMP_FOLDER);
     								if (!directory.exists()) {
@@ -180,7 +180,7 @@ public class KmlExporterManager {
     							}
 							}
 							else { // export as kml
-								if (config.getProject().getKmlExporter().isOneFilePerObject()) {
+								if (config.getProject().getCityKmlExporter().isOneFilePerObject()) {
 									directory = new File(path, work.getGmlId());
 		        					if (!directory.exists()) {
 		        						directory.mkdir();
@@ -188,7 +188,7 @@ public class KmlExporterManager {
     							}
     						}
 
-    						if (!config.getProject().getKmlExporter().isOneFilePerObject() || !config.getProject().getKmlExporter().isExportAsKmz()) {
+    						if (!config.getProject().getCityKmlExporter().isOneFilePerObject() || !config.getProject().getCityKmlExporter().isExportAsKmz()) {
 	       						try {
 	       							File balloonsDirectory = new File(directory, BalloonTemplateHandlerImpl.balloonDirectoryName);
 	       							if (!balloonsDirectory.exists()) {
@@ -209,7 +209,7 @@ public class KmlExporterManager {
         				placemark.setDescription(parentFrame.toString());
         			}
 
-        			if (isBBoxActive && config.getProject().getKmlExporter().isOneFilePerObject()) {
+        			if (isBBoxActive && config.getProject().getCityKmlExporter().isOneFilePerObject()) {
         				if (gmlId == null) {
         					gmlId = work.getGmlId();
 							String path = config.getInternal().getExportFileName().trim();
@@ -235,7 +235,7 @@ public class KmlExporterManager {
 							kmlType.setAbstractFeatureGroup(kmlFactory.createDocument(document));
 
 							String fileExtension = ".kml";
-							if (config.getProject().getKmlExporter().isExportAsKmz()) {
+							if (config.getProject().getCityKmlExporter().isExportAsKmz()) {
 								fileExtension = ".kmz";
 								File placemarkFile = new File(placemarkDirectory, filename + ".kmz");
 								zipOut = new ZipOutputStream(new FileOutputStream(placemarkFile));
@@ -261,10 +261,10 @@ public class KmlExporterManager {
 								linkType.setHref(gmlId + "/" + gmlId + "_" + displayFormName + fileExtension);
 							}
 
-							linkType.setViewRefreshMode(ViewRefreshModeEnumType.fromValue(config.getProject().getKmlExporter().getViewRefreshMode()));
+							linkType.setViewRefreshMode(ViewRefreshModeEnumType.fromValue(config.getProject().getCityKmlExporter().getViewRefreshMode()));
 							linkType.setViewFormat("");
 							if (linkType.getViewRefreshMode() == ViewRefreshModeEnumType.ON_STOP) {
-								linkType.setViewRefreshTime(config.getProject().getKmlExporter().getViewRefreshTime());
+								linkType.setViewRefreshTime(config.getProject().getCityKmlExporter().getViewRefreshTime());
 							}
 
 							LatLonAltBoxType latLonAltBoxType = kmlFactory.createLatLonAltBoxType();
@@ -277,7 +277,7 @@ public class KmlExporterManager {
 							}
 
 							LodType lodType = kmlFactory.createLodType();
-							lodType.setMinLodPixels(config.getProject().getKmlExporter().getSingleObjectRegionSize());
+							lodType.setMinLodPixels(config.getProject().getCityKmlExporter().getSingleObjectRegionSize());
 							if (work.getDisplayForm().getVisibleUpTo() == -1)
 								lodType.setMaxLodPixels(-1.0);
 							else
@@ -302,8 +302,8 @@ public class KmlExporterManager {
         		}
         	}
 
-        	if (isBBoxActive && config.getProject().getKmlExporter().isOneFilePerObject() && kmlType != null) { // some Placemarks ARE null
-				if (config.getProject().getKmlExporter().isExportAsKmz()) {
+        	if (isBBoxActive && config.getProject().getCityKmlExporter().isOneFilePerObject() && kmlType != null) { // some Placemarks ARE null
+				if (config.getProject().getCityKmlExporter().isExportAsKmz()) {
     				kmlMarshaller.marshal(kmlFactory.createKml(kmlType), fileWriter);
 					zipOut.closeEntry();
 
@@ -347,7 +347,7 @@ public class KmlExporterManager {
 		SAXEventBuffer buffer = new SAXEventBuffer();
 
 		Marshaller kmlMarshaller = jaxbKmlContext.createMarshaller();
-		if (isBBoxActive && config.getProject().getKmlExporter().isOneFilePerObject()) {
+		if (isBBoxActive && config.getProject().getCityKmlExporter().isOneFilePerObject()) {
 			kmlMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 		}
 		else {
@@ -367,8 +367,8 @@ public class KmlExporterManager {
 
 				StringBuffer parentFrame = new StringBuffer(BalloonTemplateHandlerImpl.parentFrameStart);
     			if (isBBoxActive && 
-           			config.getProject().getKmlExporter().isOneFilePerObject() &&
-           			!config.getProject().getKmlExporter().isExportAsKmz())
+           			config.getProject().getCityKmlExporter().isOneFilePerObject() &&
+           			!config.getProject().getCityKmlExporter().isExportAsKmz())
         			parentFrame.append(".."); // one up
         		else
         			parentFrame.append("."); // same folder
@@ -378,7 +378,7 @@ public class KmlExporterManager {
 				placemark.setDescription(parentFrame.toString());
 				colladaBundle.setExternalBalloonFileContent(placemarkDescription);
 			}
-			if (isBBoxActive && config.getProject().getKmlExporter().isOneFilePerObject()) {
+			if (isBBoxActive && config.getProject().getCityKmlExporter().isOneFilePerObject()) {
 				
 				// the file per object
 				KmlType kmlType = kmlFactory.createKmlType();
@@ -398,7 +398,7 @@ public class KmlExporterManager {
 
 				String fileExtension = ".kml";
 				try {
-					if (config.getProject().getKmlExporter().isExportAsKmz()) {
+					if (config.getProject().getCityKmlExporter().isExportAsKmz()) {
 						fileExtension = ".kmz";
 						File placemarkFile = new File(placemarkDirectory, colladaBundle.getGmlId() + "_collada.kmz");
 						zipOut = new ZipOutputStream(new FileOutputStream(placemarkFile));
@@ -435,7 +435,7 @@ public class KmlExporterManager {
 				}
 
 				LodType lodType = kmlFactory.createLodType();
-				lodType.setMinLodPixels(config.getProject().getKmlExporter().getSingleObjectRegionSize());
+				lodType.setMinLodPixels(config.getProject().getCityKmlExporter().getSingleObjectRegionSize());
 /*
 				if (work.getDisplayForm().getVisibleUpTo() == -1)
 					lodType.setMaxLodPixels(-1.0);
@@ -447,10 +447,10 @@ public class KmlExporterManager {
 
 				LinkType linkType = kmlFactory.createLinkType();
 				linkType.setHref(colladaBundle.getGmlId() + "/" + colladaBundle.getGmlId() + "_" + DisplayForm.COLLADA_STR + fileExtension);
-				linkType.setViewRefreshMode(ViewRefreshModeEnumType.fromValue(config.getProject().getKmlExporter().getViewRefreshMode()));
+				linkType.setViewRefreshMode(ViewRefreshModeEnumType.fromValue(config.getProject().getCityKmlExporter().getViewRefreshMode()));
 				linkType.setViewFormat("");
 				if (linkType.getViewRefreshMode() == ViewRefreshModeEnumType.ON_STOP) {
-					linkType.setViewRefreshTime(config.getProject().getKmlExporter().getViewRefreshTime());
+					linkType.setViewRefreshTime(config.getProject().getCityKmlExporter().getViewRefreshTime());
 				}
 
 				// confusion between atom:link and kml:Link in ogckml22.xsd
@@ -459,7 +459,7 @@ public class KmlExporterManager {
 
 				kmlMarshaller.marshal(kmlFactory.createNetworkLink(networkLinkType), buffer);
 			}
-			else { // !config.getProject().getKmlExporter().isOneFilePerObject()
+			else { // !config.getProject().getCityKmlExporter().isOneFilePerObject()
 				kmlMarshaller.marshal(kmlFactory.createPlacemark(placemark), buffer);
 			}
 
@@ -469,8 +469,8 @@ public class KmlExporterManager {
 
 		// so much for the placemark, now model, images and balloon...
 
-		if (config.getProject().getKmlExporter().isExportAsKmz() &&	isBBoxActive
-				&& config.getProject().getKmlExporter().isOneFilePerObject()) {
+		if (config.getProject().getCityKmlExporter().isExportAsKmz() &&	isBBoxActive
+				&& config.getProject().getCityKmlExporter().isOneFilePerObject()) {
 			// marshalling in parallel threads should save some time
 	        StringWriter sw = new StringWriter();
 	        colladaMarshaller.marshal(colladaBundle.getCollada(), sw);
@@ -536,7 +536,7 @@ public class KmlExporterManager {
 		else {
 			String path = config.getInternal().getExportFileName().trim();
 			path = path.substring(0, path.lastIndexOf(File.separator));
-			if (config.getProject().getKmlExporter().isExportAsKmz()) {
+			if (config.getProject().getCityKmlExporter().isExportAsKmz()) {
 				// export temporarily as kml, it will be later added to kmz if needed
 				File tempFolder = new File(path, TEMP_FOLDER);
 				if (!tempFolder.exists()) {

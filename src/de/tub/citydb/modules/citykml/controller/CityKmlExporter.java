@@ -83,6 +83,9 @@ import net.opengis.kml._2.ViewRefreshModeEnumType;
 
 
 
+
+
+import org.citygml4j.builder.jaxb.JAXBBuilder;
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
 import org.citygml4j.factory.CityGMLFactory;
@@ -225,7 +228,7 @@ public class CityKmlExporter implements EventHandler {
 	}
 		
 
-	public boolean doProcess(JAXBChunkReader reader) throws Exception{
+	public boolean doProcess(JAXBBuilder jaxbBuilder , File reader) throws Exception{
 		
 		geometryCounter = 0;
 		
@@ -260,26 +263,9 @@ public class CityKmlExporter implements EventHandler {
 */
 		// check whether spatial indexes are enabled
 		
-		/*
+		
 
-		String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
-		if (!selectedTheme.equals(de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter.THEME_NONE)) {
-			try {
-				for (DisplayForm displayForm : config.getProject().getCityKmlExporter().getBuildingDisplayForms()) {
-					if (displayForm.getForm() == DisplayForm.COLLADA && displayForm.isActive()) {
-						if (!DBUtil.getAppearanceThemeList().contains(selectedTheme)) {
-							Logger.getInstance().error("Database does not contain appearance theme \"" + selectedTheme + "\"");
-							return false;
-						}
-					}
-				}
-			}
-			catch (SQLException e) {
-				Logger.getInstance().error("Generic DB error: " + e.getMessage());
-				return false;
-			}
-		}
-*/
+	
 
 		boolean balloonCheck = checkBalloonSettings(CityGMLClass.BUILDING);
 		balloonCheck = checkBalloonSettings(CityGMLClass.WATER_BODY) && balloonCheck;
@@ -366,6 +352,8 @@ public class CityKmlExporter implements EventHandler {
 
 					if (lastTempFolder != null && lastTempFolder.exists()) deleteFolder(lastTempFolder); // just in case
 
+					
+					
 					File file = null;
 					OutputStreamWriter fileWriter = null;
 					ZipOutputStream zipOut = null;
@@ -373,7 +361,9 @@ public class CityKmlExporter implements EventHandler {
 					try {
 						String fileExtension = config.getProject().getCityKmlExporter().isExportAsKmz() ? ".kmz" : ".kml";
 						if (isBBoxActive && tiling.getMode() != TilingMode.NO_TILING) {
+							
 							exportFilter.getBoundingBoxFilter().setActiveTile(i, j);
+							
 							file = new File(path + File.separator + filename + "_Tile_"
 									 	 	+ i + "_" + j + "_" + displayForm.getName() + fileExtension);
 						}
@@ -413,15 +403,15 @@ public class CityKmlExporter implements EventHandler {
 								minThreads,
 								maxThreads,
 								new CityKmlExportWorkerFactory(
-								jaxbKmlContext,
-								jaxbColladaContext,
-								ioWriterPool,
-								kmlFactory,
-								cityGMLFactory,
-								config,
-								eventDispatcher),
-								300,
-								false);
+										jaxbKmlContext,
+										jaxbColladaContext,
+										ioWriterPool,
+										kmlFactory,
+										cityGMLFactory,
+										config,
+										eventDispatcher),
+										300,
+										false);
 
 						// prestart pool workers
 						ioWriterPool.prestartCoreWorkers();
@@ -466,17 +456,16 @@ public class CityKmlExporter implements EventHandler {
 							Logger.getInstance().error("I/O error: " + saxE.getMessage());
 							return false;
 						}
-						
-						
-						
+
 						// get database splitter and start query
 						kmlSplitter = null;
 						try {
 							
 							kmlSplitter = new KmlSplitter(
 									kmlWorkerPool,
-								//	exportFilter,
+									exportFilter,
 									TargetSrs,
+									jaxbBuilder,
 									displayForm,
 									config);
 
@@ -584,14 +573,17 @@ public class CityKmlExporter implements EventHandler {
 
 					}
 /*
-
+					catch (FileNotFoundException fnfe) {
+						Logger.getInstance().error("Path \"" + path + "\" not found.");
+						return false;
+					}
 */
 					finally {}
 				}
 			}
 		}
 
-		/*if (isBBoxActive) {
+		if (isBBoxActive) {
 			try {
 				eventDispatcher.triggerEvent(new StatusDialogTitle(filename + ".kml", this));
 				eventDispatcher.triggerEvent(new StatusDialogMessage(Internal.I18N.getString("kmlExport.dialog.writingMainFile"), this));
@@ -601,7 +593,7 @@ public class CityKmlExporter implements EventHandler {
 				ex.printStackTrace();
 				return false;
 			}
-		}*/
+		}
 
 		if (config.getProject().getCityKmlExporter().isWriteJSONFile()) {
 			try {
@@ -638,15 +630,14 @@ public class CityKmlExporter implements EventHandler {
 		eventDispatcher.triggerEvent(new StatusDialogMessage(Internal.I18N.getString("export.dialog.finish.msg"), this));
 
 		// show exported features
-		/*if (!featureCounterMap.isEmpty()) {
+		if (!featureCounterMap.isEmpty()) {
 			Logger.getInstance().info("Exported CityGML features:");
 			for (CityGMLClass type : featureCounterMap.keySet())
 				Logger.getInstance().info(type + ": " + featureCounterMap.get(type));
-		}*/
+		}
 		Logger.getInstance().info("Processed geometry objects: " + geometryCounter);
 
-		if (lastTempFolder != null && lastTempFolder.exists()) 
-			deleteFolder(lastTempFolder); // just in case
+		if (lastTempFolder != null && lastTempFolder.exists()) deleteFolder(lastTempFolder); // just in case
 
 		return shouldRun;
 	}

@@ -1102,9 +1102,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 
 
-	private JAXBChunkReader doImport() throws Exception {
+	private File doImport() throws Exception {
 
 		JAXBChunkReader _ChunkReader = null;
+		File file = null;
 		final de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter importer = config.getProject().getCityKmlExporter();
 
 		Internal intConfig = config.getInternal();		
@@ -1158,7 +1159,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			
 			try {
 
-				File file = importFiles.get(fileCounter++);
+				file = importFiles.get(fileCounter++);
 				intConfig.setImportPath(file.getParent());
 				intConfig.setCurrentImportFile(file);
 
@@ -1183,7 +1184,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			}
 		}
 		
-		return _ChunkReader;
+		return file;
 
 	}
 
@@ -1318,7 +1319,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			
 			//Start reading the input file
 			LOG.info("Start reading the input file...");
-			JAXBChunkReader _Reader = doImport();
+			File _Reader = doImport();
 
 			if (_Reader != null) {				
 
@@ -1329,7 +1330,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				
 				try {
 
-					success = CityKmlExporter.doProcess(_Reader);
+					success = CityKmlExporter.doProcess(jaxbBuilder,_Reader);
 
 				} catch (Exception e) {
 					// TODO Auto-generated catch block

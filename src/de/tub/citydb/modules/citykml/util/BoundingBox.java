@@ -61,7 +61,7 @@ public class BoundingBox {
 	public boolean Contains(Envelope bounds)
 	{
 		
-		if(this.nativeBounds.contains((org.opengis.geometry.BoundingBox)bounds))
+		if(this.nativeBounds.intersects((org.opengis.geometry.BoundingBox)bounds))
 		{
 			return true;
 		}

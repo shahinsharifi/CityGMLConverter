@@ -141,6 +141,7 @@ public class CityKmlImporter implements EventHandler {
 	
 	private static List<CityGML> _Reader;
 	private static JAXBChunkReader _ChunkReader;
+	private static File inputFile;
 	
 	
 	private static List<List<Double>> pointList = new ArrayList<List<Double>>();
@@ -363,6 +364,8 @@ public class CityKmlImporter implements EventHandler {
 
 				
 				try {
+					
+					
 					
 					_ChunkReader = (JAXBChunkReader)in.createFilteredCityGMLReader(in.createCityGMLReader(file), inputFilter);	
 				

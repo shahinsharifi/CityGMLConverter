@@ -159,8 +159,10 @@ public class KmlSplitter {
 					
 					if (rs.next()) {
 						long id = rs.getLong("id");
-						if (KmlExporter.getAlreadyExported().containsKey(id)) continue;
+						if (KmlExporter.getAlreadyExported().containsKey(id))
+							continue;
 						CityGMLClass cityObjectType = Util.classId2cityObject(rs.getInt("class_id"));
+							
 						addWorkToQueue(id, gmlId, cityObjectType, 0, 0);
 					}
 				}
@@ -180,16 +182,16 @@ public class KmlSplitter {
 				}
 			}
 		}
-		else if (filterConfig.isSetComplexFilter() &&
-				 filterConfig.getComplexFilter().getTiledBoundingBox().isSet()) {
+		else if (filterConfig.isSetComplexFilter() && filterConfig.getComplexFilter().getTiledBoundingBox().isSet()) {
 			
 			BoundingBox tile = exportFilter.getBoundingBoxFilter().getFilterState();
 			ResultSet rs = null;
 			PreparedStatement spatialQuery = null;
 			String lineGeom = null;
 			String polyGeom = null;
-						
+					
 			try {
+				
 				spatialQuery = connection.prepareStatement(Queries.GET_IDS);
 
 				int srid = dbSrs.getSrid();
@@ -234,7 +236,7 @@ public class KmlSplitter {
 					addWorkToQueue(id, gmlId, cityObjectType, 
 								   exportFilter.getBoundingBoxFilter().getTileRow(),
 								   exportFilter.getBoundingBoxFilter().getTileColumn());
-
+					
 					objectCount++;
 				}
 
@@ -297,7 +299,7 @@ public class KmlSplitter {
 			cityObject4Json.setTileColumn(column);
 			double[] ordinatesArray = getEnvelopeInWGS84(id);
 			cityObject4Json.setEnvelope(ordinatesArray);
-
+			
 			KmlSplittingResult splitter = new KmlSplittingResult(id, gmlId, cityObjectType, displayForm);
 			dbWorkerPool.addWork(splitter);
 			KmlExporter.getAlreadyExported().put(id, cityObject4Json);
@@ -309,10 +311,12 @@ public class KmlSplitter {
 				String lineGeom = null;
 				String polyGeom = null;
 				
+					
 				try {
 					if (filterConfig.isSetComplexFilter() &&
 						filterConfig.getComplexFilter().getTiledBoundingBox().isSet()) {
-
+						Logger.getInstance().info("3");
+						
 						query = connection.prepareStatement(Queries.CITYOBJECTGROUP_MEMBERS_IN_BBOX);
 						BoundingBox tile = exportFilter.getBoundingBoxFilter().getFilterState();
 						int srid = dbSrs.getSrid();
@@ -339,6 +343,8 @@ public class KmlSplitter {
 					else {
 						query = connection.prepareStatement(Queries.CITYOBJECTGROUP_MEMBERS);
 						query.setLong(1, id);
+						
+						
 					}
 					rs = query.executeQuery();
 					
@@ -348,6 +354,8 @@ public class KmlSplitter {
 									   Util.classId2cityObject(rs.getInt("class_id")), 
 									   row,
 									   column);
+						
+						
 					}
 				}
 				catch (SQLException sqlEx) {

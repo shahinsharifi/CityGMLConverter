@@ -2631,7 +2631,6 @@ public abstract class KmlGenericObject {
 			point3d.y = point3d.y * 100;
 			point3d.z = point3d.z * 100;
 		}
-		Logger.getInstance().info(String.valueOf(coords.get(0).x)+" , "+String.valueOf(coords.get(0).y)+" , "+String.valueOf(coords.get(0).z));
 		return coords;
 	}
 
