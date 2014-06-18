@@ -58,6 +58,7 @@ import org.geotools.referencing.CRS;
 import org.postgis.Geometry;
 import org.postgis.PGgeometry;
 
+import sun.util.logging.resources.logging;
 import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.api.database.DatabaseSrs;
 import de.tub.citydb.api.gui.BoundingBox;
@@ -309,14 +310,15 @@ public class KmlSplitter {
 							envelope.getUpperCorner().toList3d().get(1),
 							CRS.decode("EPSG:" + this.TargetSrs, true));
 
-					if(envelope != null && _bounds.Contains(_refEnvelope))
-					{
 
+					if(envelope != null && _bounds.ContainCentroid(_refEnvelope))						
+					{
+						
 						if(cityObjectType != CityGMLClass.APPEARANCE)
 						{
 
 
-							KmlSplittingResult splitter = new KmlSplittingResult(_CityGML , cityObjectType, displayForm, TargetSrs);										
+							KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs);										
 							dbWorkerPool.addWork(splitter);				
 
 						}
@@ -368,91 +370,7 @@ public class KmlSplitter {
 		shouldRun = false;
 	}
 
-	private void addWorkToQueue(CityGML _cityGML , CityGMLClass cityObjectType, DisplayForm displayForm,
-			String _TargetSrs, int row, int column) throws Exception {
-
-		if ((filterConfig.isSetSimpleFilter() || CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.contains(cityObjectType))) {
-
-			/*CityObject4JSON cityObject4Json = new CityObject4JSON(gmlId);
-				cityObject4Json.setTileRow(row);
-				cityObject4Json.setTileColumn(column);
-				double[] ordinatesArray = getEnvelopeInWGS84(id);
-				cityObject4Json.setEnvelope(ordinatesArray);*/
-			//CityGML _work , CityGMLClass cityObjectType, DisplayForm displayForm ,String _TargetSrs
-			KmlSplittingResult splitter = new KmlSplittingResult(_cityGML , cityObjectType, displayForm, TargetSrs);										
-			dbWorkerPool.addWork(splitter);	
-			//CityKmlExporter.getAlreadyExported().put(id, cityObject4Json);
-
-			if (splitter.isCityObjectGroup() &&
-					(filterConfig.isSetSimpleFilter() ||
-							CURRENTLY_ALLOWED_CITY_OBJECT_TYPES.size() > 1)) {
-
-				ResultSet rs = null;
-				PreparedStatement query = null;
-				String lineGeom = null;
-				String polyGeom = null;
-
-				try {
-
-					if (filterConfig.isSetComplexFilter() &&
-							filterConfig.getComplexFilter().getTiledBoundingBox().isSet()) {
-
-						query = connection.prepareStatement(Queries.CITYOBJECTGROUP_MEMBERS_IN_BBOX);
-						BoundingBox tile = exportFilter.getBoundingBoxFilter().getFilterState();
-						int srid = dbSrs.getSrid();
-
-						lineGeom = "SRID=" + srid + ";LINESTRING(" +
-								tile.getLowerLeftCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-								tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-								tile.getUpperRightCorner().getX() + " " + tile.getLowerLeftCorner().getY() + ")'";
-
-						polyGeom = "SRID=" + srid + ";POLYGON((" +
-								tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-								tile.getLowerLeftCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-								tile.getUpperRightCorner().getX() + " " + tile.getUpperRightCorner().getY() + "," +
-								tile.getUpperRightCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "," +
-								tile.getLowerLeftCorner().getX() + " " + tile.getLowerLeftCorner().getY() + "))";
-
-						//	query.setLong(1, id);
-						query.setString(2, lineGeom);
-						//query.setLong(3, id);
-						query.setString(4, polyGeom);
-
-						rs = query.executeQuery();
-					}
-					else {
-						query = connection.prepareStatement(Queries.CITYOBJECTGROUP_MEMBERS);
-						//		query.setLong(1, id);
-					}
-					rs = query.executeQuery();
-
-					while (rs.next() && shouldRun) {
-
-						/*	addWorkToQueue(rs.getLong("id"), // recursion for recursive groups
-									   	   rs.getString("gmlId"),
-										   Util.classId2cityObject(rs.getInt("class_id")), 
-										   row,
-										   column);
-						 */
-					}
-				}
-				catch (SQLException sqlEx) {
-					throw sqlEx;
-				}
-				finally {
-					if (rs != null) {
-						try { rs.close(); }	catch (SQLException sqlEx) { throw sqlEx; }
-						rs = null;
-					}
-
-					if (query != null) {
-						try { query.close(); } catch (SQLException sqlEx) { throw sqlEx; }
-						query = null;
-					}
-				}
-			}
-		}
-	}
+	
 
 	private double[] getEnvelopeInWGS84(long id) {
 		double[] ordinatesArray = null;

@@ -43,9 +43,9 @@ public class KmlSplittingResult {
 	private DisplayForm displayForm;
 	private CityGMLClass cityObjectType;
 
-	public KmlSplittingResult(CityGML _work , CityGMLClass cityObjectType, DisplayForm displayForm ,String _TargetSrs) {
+	public KmlSplittingResult(String GmlID,CityGML _work , CityGMLClass cityObjectType, DisplayForm displayForm ,String _TargetSrs) {
 		this.setId(id);
-		this.setGmlId(gmlId);
+		this.setGmlId(GmlID);
 		this.setCityGmlClass(_work);
 		this.setTargetSrs(_TargetSrs);
 		this.setCityObjectType(cityObjectType);

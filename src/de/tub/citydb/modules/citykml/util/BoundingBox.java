@@ -32,7 +32,9 @@ package de.tub.citydb.modules.citykml.util;
 import java.util.Collection;
 import java.util.Set;
 
+import org.citygml4j.model.gml.geometry.primitives.DirectPosition;
 import org.geotools.filter.expression.ThisPropertyAccessorFactory;
+import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.opengis.geometry.Envelope;
@@ -42,6 +44,9 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
 
 
 
@@ -72,5 +77,31 @@ public class BoundingBox {
 	}
 	
 	
+	public double OverlapArea(Envelope bounds)
+	{
+	
+		Geometry _buildingPolygon = JTS.toGeometry((org.opengis.geometry.BoundingBox)bounds);
+		
+		Geometry _nativePolygon = JTS.toGeometry(this.nativeBounds);		
+		Polygon _overlapArea = (Polygon)_nativePolygon.intersection(_buildingPolygon);
+		double TargetArea = _overlapArea.getArea();
+		double BuildingArea = _buildingPolygon.getArea();
+				
+		return (TargetArea/BuildingArea)*100;
+		
+	}
+	
+
+	public boolean ContainCentroid(Envelope bounds)
+	{
+	
+		Geometry _buildingPolygon = JTS.toGeometry((org.opengis.geometry.BoundingBox)bounds);
+
+		Geometry _nativePolygon = JTS.toGeometry(this.nativeBounds);
+		
+		return _nativePolygon.contains(_buildingPolygon.getCentroid());
+		
+	}
+
 	
 }
