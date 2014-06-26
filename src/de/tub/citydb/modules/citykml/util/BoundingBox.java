@@ -29,11 +29,17 @@
  */
 package de.tub.citydb.modules.citykml.util;
 
+import java.awt.Shape;
+import java.lang.annotation.Target;
 import java.util.Collection;
 import java.util.Set;
 
+import javax.sound.sampled.Line;
+
 import org.citygml4j.model.gml.geometry.primitives.DirectPosition;
 import org.geotools.filter.expression.ThisPropertyAccessorFactory;
+import org.geotools.geometry.iso.PrecisionModel;
+import org.geotools.geometry.jts.GeometryBuilder;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -45,8 +51,16 @@ import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
 
+import sun.reflect.generics.tree.Tree;
+
+import com.vividsolutions.jts.awt.PointShapeFactory.Point;
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Polygon;
+
+import de.tub.citydb.log.Logger;
 
 
 
@@ -86,22 +100,40 @@ public class BoundingBox {
 		Polygon _overlapArea = (Polygon)_nativePolygon.intersection(_buildingPolygon);
 		double TargetArea = _overlapArea.getArea();
 		double BuildingArea = _buildingPolygon.getArea();
-				
+
 		return (TargetArea/BuildingArea)*100;
 		
 	}
 	
 
 	public boolean ContainCentroid(Envelope bounds)
-	{
-	
-		Geometry _buildingPolygon = JTS.toGeometry((org.opengis.geometry.BoundingBox)bounds);
-
-		Geometry _nativePolygon = JTS.toGeometry(this.nativeBounds);
-		
-		return _nativePolygon.contains(_buildingPolygon.getCentroid());
-		
+	{					
+		Geometry _buildingPolygon = JTS.toGeometry((org.opengis.geometry.BoundingBox)bounds);		
+		return ContainPoint(_buildingPolygon.getCentroid());		
 	}
+	
+	
+	private boolean ContainPoint(com.vividsolutions.jts.geom.Point _point)
+	{	
 
+		double pointX = _point.getX();
+		double pointY = _point.getY();
+		
+		
+		if(
+			Double.compare(pointX,this.nativeBounds.getMaxX()) < 0 &&
+			Double.compare(pointX,this.nativeBounds.getMinX()) > 0 && 
+			Double.compare(pointY,this.nativeBounds.getMaxY()) < 0 &&
+			Double.compare(pointY,this.nativeBounds.getMinY()) > 0
+		)
+			return true;
+		
+		else 
+			return false;
+		
+					
+	}
+	
+	
 	
 }
