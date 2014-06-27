@@ -45,13 +45,22 @@ import java.util.List;
 
 
 
+
+
+
+
 import org.geotools.geometry.DirectPosition2D;
+import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
+import org.opengis.geometry.coordinate.GeometryFactory;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.postgis.Geometry;
 import org.postgis.PGgeometry;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Point;
 
 import de.tub.citydb.api.database.DatabaseSrs;
 import de.tub.citydb.api.gui.BoundingBox;
@@ -76,16 +85,19 @@ public class ProjConvertor {
 		    CRSAuthorityFactory   factory = CRS.getAuthorityFactory(true);
 	        CoordinateReferenceSystem srcCRS = factory.createCoordinateReferenceSystem("EPSG:" + _SourceSrs);
 	        CoordinateReferenceSystem dstCRS = factory.createCoordinateReferenceSystem("EPSG:" + _TargetSrs);
-	        boolean lenient = true; // allow for some error due to different datums
-	        MathTransform transform = CRS.findMathTransform(srcCRS, dstCRS, lenient);
 	        
-	        double[] srcProjec = {x, y};// easting, northing, 
-	        double[] dstProjec = {0, 0};
-	        transform.transform(srcProjec, 0, dstProjec, 0, 1);
-	        points.add(dstProjec[1]);
-			points.add(dstProjec[0]);
-			points.add(z);
+	        MathTransform transform = CRS.findMathTransform(srcCRS, dstCRS,false);
 
+			com.vividsolutions.jts.geom.GeometryFactory geometryFactory = new com.vividsolutions.jts.geom.GeometryFactory();
+			Coordinate coord = new Coordinate(x, y);
+			Point sourcePoint = geometryFactory.createPoint(coord);
+			Point targetGeometry = (Point)JTS.transform( sourcePoint, transform);
+			
+			
+			points.add(targetGeometry.getY());
+			points.add(targetGeometry.getX());
+			points.add(z);
+			
 			
 		} catch (Exception e) {
 			points.add(0,0.0);

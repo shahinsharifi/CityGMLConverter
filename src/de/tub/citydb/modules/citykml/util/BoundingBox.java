@@ -29,17 +29,9 @@
  */
 package de.tub.citydb.modules.citykml.util;
 
-import java.awt.Shape;
-import java.lang.annotation.Target;
-import java.util.Collection;
-import java.util.Set;
 
-import javax.sound.sampled.Line;
+import java.util.List;
 
-import org.citygml4j.model.gml.geometry.primitives.DirectPosition;
-import org.geotools.filter.expression.ThisPropertyAccessorFactory;
-import org.geotools.geometry.iso.PrecisionModel;
-import org.geotools.geometry.jts.GeometryBuilder;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -48,10 +40,6 @@ import org.opengis.metadata.extent.Extent;
 import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.CoordinateSystem;
-import org.opengis.util.GenericName;
-import org.opengis.util.InternationalString;
-
-import sun.reflect.generics.tree.Tree;
 
 import com.vividsolutions.jts.awt.PointShapeFactory.Point;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -67,10 +55,12 @@ import de.tub.citydb.log.Logger;
 public class BoundingBox {
 
 	private org.opengis.geometry.BoundingBox nativeBounds;
+	private String SourceSRS;
 	
 	
-	public BoundingBox(double MinX, double MaxX, double MinY, double MaxY, String EPSG) throws Exception {
+	public BoundingBox(double MinX, double MinY, double MaxX, double MaxY, String EPSG) throws Exception {
 		
+		SourceSRS = EPSG;
 		CoordinateReferenceSystem nativeCrs = CRS.decode("EPSG:" + EPSG, true);
 	    nativeBounds = new ReferencedEnvelope(MinX, MaxX, MinY, MaxY, nativeCrs);
 	    
@@ -91,9 +81,10 @@ public class BoundingBox {
 	}
 	
 	
-	public double OverlapArea(Envelope bounds)
-	{
 	
+	
+	public double OverlapArea(Envelope bounds)
+	{	
 		Geometry _buildingPolygon = JTS.toGeometry((org.opengis.geometry.BoundingBox)bounds);
 		
 		Geometry _nativePolygon = JTS.toGeometry(this.nativeBounds);		
@@ -101,37 +92,41 @@ public class BoundingBox {
 		double TargetArea = _overlapArea.getArea();
 		double BuildingArea = _buildingPolygon.getArea();
 
-		return (TargetArea/BuildingArea)*100;
-		
+		return (TargetArea/BuildingArea)*100;		
 	}
 	
 
-	public boolean ContainCentroid(Envelope bounds)
+	
+	
+	public boolean ContainCentroid(Envelope bounds, String targetSRS) throws Exception
 	{					
 		Geometry _buildingPolygon = JTS.toGeometry((org.opengis.geometry.BoundingBox)bounds);		
-		return ContainPoint(_buildingPolygon.getCentroid());		
+		return ContainPoint(_buildingPolygon.getCentroid(),targetSRS);		
 	}
 	
 	
-	private boolean ContainPoint(com.vividsolutions.jts.geom.Point _point)
+	
+	
+	private boolean ContainPoint(com.vividsolutions.jts.geom.Point _point, String targetSRS) throws Exception
 	{	
+		double pointX = 0.0, pointY = 0.0;
+		
+		if(SourceSRS.equals("4326"))
+		{
+			List<Double> tmpPoint = ProjConvertor.transformPoint(_point.getX(), _point.getY(), 0, targetSRS, SourceSRS);//We should convert the CRS of the building's center point to the CRS of BoundingBox. 
+			pointX = tmpPoint.get(1);
+			pointY = tmpPoint.get(0);					
+		}
+		else {			
+			pointX = _point.getX();
+			pointY = _point.getY();				
+		}
 
-		double pointX = _point.getX();
-		double pointY = _point.getY();
-		
-		
-		if(
-			Double.compare(pointX,this.nativeBounds.getMaxX()) < 0 &&
-			Double.compare(pointX,this.nativeBounds.getMinX()) > 0 && 
-			Double.compare(pointY,this.nativeBounds.getMaxY()) < 0 &&
-			Double.compare(pointY,this.nativeBounds.getMinY()) > 0
-		)
-			return true;
-		
+		if(Double.compare(pointX,this.nativeBounds.getMaxX()) < 0 && Double.compare(pointX,this.nativeBounds.getMinX()) > 0 && 			
+		   Double.compare(pointY,this.nativeBounds.getMaxY()) < 0 && Double.compare(pointY,this.nativeBounds.getMinY()) > 0)
+			return true;		
 		else 
-			return false;
-		
-					
+			return false;						
 	}
 	
 	

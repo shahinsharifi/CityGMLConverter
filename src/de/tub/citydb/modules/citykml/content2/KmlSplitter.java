@@ -198,29 +198,21 @@ public class KmlSplitter {
 					
 					if(boundingBoxSrs != 4326)
 					{
+						_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(
+								tile.getLowerLeftCorner().getX() ,
+								tile.getLowerLeftCorner().getY() ,
+								tile.getUpperRightCorner().getX() ,
+								tile.getUpperRightCorner().getY() ,
+								this.TargetSrs);						
 
-			
+					}else {
 
 						_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(
 								tile.getLowerLeftCorner().getX() ,
 								tile.getLowerLeftCorner().getY() ,
 								tile.getUpperRightCorner().getX() ,
-								tile.getUpperRightCorner().getY()
-								, this.TargetSrs);
-
-					}else {
-
-
-					
-						BoundingBox BBox = ProjConvertor.transformBBox(tile , "4326", this.TargetSrs); 
-
-						_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(
-								BBox.getLowerLeftCorner().getX() ,
-								BBox.getUpperRightCorner().getX() ,
-								BBox.getLowerLeftCorner().getY() ,
-								BBox.getUpperRightCorner().getY() ,
-								this.TargetSrs);
-
+								tile.getUpperRightCorner().getY(),
+								"4326");
 					}
 					
 				}
@@ -235,20 +227,21 @@ public class KmlSplitter {
 								BBox.getLowerLeftCorner().getX() ,
 								BBox.getLowerLeftCorner().getY() ,
 								BBox.getUpperRightCorner().getX() ,
-								BBox.getUpperRightCorner().getY()
-								, this.TargetSrs);
+								BBox.getUpperRightCorner().getY() ,
+								this.TargetSrs);
 
 					}else {
 
 
-						BoundingBox BBox = ProjConvertor.transformBBox(filterConfig.getComplexFilter().getTiledBoundingBox() , "4326", this.TargetSrs); 
-
+					//	BoundingBox BBox = ProjConvertor.transformBBox(filterConfig.getComplexFilter().getTiledBoundingBox() , "4326", this.TargetSrs); 
+						BoundingBox BBox = filterConfig.getComplexFilter().getTiledBoundingBox();
+						
 						_bounds = new de.tub.citydb.modules.citykml.util.BoundingBox(
 								BBox.getLowerLeftCorner().getX() ,
-								BBox.getUpperRightCorner().getX() ,
 								BBox.getLowerLeftCorner().getY() ,
+								BBox.getUpperRightCorner().getX() ,
 								BBox.getUpperRightCorner().getY() ,
-								this.TargetSrs);
+								"4326");
 
 					}
 
@@ -303,7 +296,6 @@ public class KmlSplitter {
 					// first of all compute bounding box for cityobject since we need it anyways
 
 					Envelope envelope = cityObject.getBoundedBy().getEnvelope().convert3d();
-
 					ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(
 							envelope.getLowerCorner().toList3d().get(0),
 							envelope.getUpperCorner().toList3d().get(0),	
@@ -312,19 +304,14 @@ public class KmlSplitter {
 							CRS.decode("EPSG:" + this.TargetSrs, true));
 
 
-					if(envelope != null && _bounds.ContainCentroid(_refEnvelope))						
-					{
-						
+					if(envelope != null && _bounds.ContainCentroid(_refEnvelope,TargetSrs))						
+					{						
 						if(cityObjectType != CityGMLClass.APPEARANCE)
 						{
-
-
 							KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs);										
 							dbWorkerPool.addWork(splitter);				
-
 						}
 						else {
-
 						}
 					}
 				}
