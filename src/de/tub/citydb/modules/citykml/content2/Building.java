@@ -245,28 +245,17 @@ public class Building extends KmlGenericObject{
 					return createPlacemarksForFootprint(_surfaceList, work);
 
 				case DisplayForm.EXTRUDED:
-					PreparedStatement psQuery2 = connection.prepareStatement(Queries.GET_EXTRUDED_HEIGHT);
-					for (int i = 1; i <= psQuery2.getParameterMetaData().getParameterCount(); i++) {
-						psQuery2.setLong(i, buildingPartId);
-					}
-					ResultSet rs2 = psQuery2.executeQuery();
-					rs2.next();
-					double measuredHeight = rs2.getDouble("envelope_measured_height");
-					try { rs2.close(); /* release cursor on DB */ } catch (SQLException e) {}
-					try { psQuery2.close(); /* release cursor on DB */ } catch (SQLException e) {}
-
+					
+					double measuredHeight = _building.getMeasuredHeight().getValue();
 					return createPlacemarksForExtruded(_surfaceList, work, measuredHeight, reversePointOrder);
 
 				case DisplayForm.GEOMETRY:
-
 
 					if (work.getDisplayForm().isHighlightingEnabled()) {
 						if (config.getProject().getCityKmlExporter().getFilter().isSetComplexFilter()) { // region
 
 							List<PlacemarkType> hlPlacemarks = createPlacemarksForHighlighting(_surfaceList, work);
-
 							hlPlacemarks.addAll(createPlacemarksForGeometry(_surfaceList, work));
-
 							return hlPlacemarks;
 						}
 						else { // reverse order for single buildings
@@ -276,8 +265,6 @@ public class Building extends KmlGenericObject{
 							return placemarks;
 						}
 					}
-
-
 
 					return createPlacemarksForGeometry(_surfaceList, work);
 

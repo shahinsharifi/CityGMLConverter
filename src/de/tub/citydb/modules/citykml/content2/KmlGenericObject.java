@@ -121,6 +121,8 @@ import org.collada._2005._11.colladaschema.Triangles;
 import org.collada._2005._11.colladaschema.UpAxisType;
 import org.collada._2005._11.colladaschema.Vertices;
 import org.collada._2005._11.colladaschema.VisualScene;
+import org.geotools.geometry.jts.GeometryBuilder;
+import org.geotools.geometry.jts.JTS;
 import org.postgis.Geometry;											// collides with Collada-Geometry
 import org.postgis.MultiPolygon;
 import org.postgis.PGgeometry;
@@ -1460,7 +1462,7 @@ public abstract class KmlGenericObject {
 		return newValue;
 	}
 	
-	protected List<PlacemarkType> createPlacemarksForFootprint(List<Map<String, Object>> result, KmlSplittingResult work) throws SQLException {
+	protected List<PlacemarkType> createPlacemarksForFootprint(List<Map<String, Object>> result, KmlSplittingResult work) throws Exception {
 
 		ResultSet rs = null;
 		List<PlacemarkType> placemarkList = new ArrayList<PlacemarkType>();
@@ -1483,10 +1485,10 @@ public abstract class KmlGenericObject {
 
 		PolygonType polygon = null;
 		PolygonType[] multiPolygon = null;
-		while (rs.next()) {
-			PGgeometry pgBuildingGeometry = (PGgeometry)rs.getObject(1);
+		for (Map<String, Object> Row: result) {
+			
 
-			if (!rs.wasNull() && pgBuildingGeometry != null) {
+			if (Row != null) {
 				eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
 
 				polygon = kmlFactory.createPolygonType();
@@ -1494,7 +1496,38 @@ public abstract class KmlGenericObject {
 				polygon.setExtrude(false);
 				polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.CLAMP_TO_GROUND));
 
-				Geometry groundSurface = convertToWGS84(pgBuildingGeometry.getGeometry());
+
+				//***********************************************************************
+				
+				@SuppressWarnings("unchecked")
+				List<Double> _Geometry = (List<Double>)Row.get("Geometry");
+				
+				org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
+			
+				for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
+
+					List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");							
+					tmpPoint[j] = new org.postgis.Point(
+							Target_Coordinates.get(1),
+							Target_Coordinates.get(0),
+							Target_Coordinates.get(2)
+							);
+				
+				}
+				
+				Polygon surface = new Polygon(
+	                    new org.postgis.LinearRing[] {
+	                        new org.postgis.LinearRing(
+	                            tmpPoint
+	                        )
+	                    }
+	                );
+				
+				
+				//***********************************************************************
+
+				Geometry groundSurface = surface;
+				
 				switch (groundSurface.getType()) {
 				case Geometry.POLYGON:
 					Polygon polyGeom = (Polygon) groundSurface;
@@ -1602,7 +1635,7 @@ public abstract class KmlGenericObject {
 															double measuredHeight,
 															boolean reversePointOrder) throws Exception {
 
-		ResultSet rs = null;
+
 		List<PlacemarkType> placemarkList = new ArrayList<PlacemarkType>();
 		PlacemarkType placemark = kmlFactory.createPlacemarkType();
 		placemark.setName(work.getGmlId());
@@ -1621,18 +1654,49 @@ public abstract class KmlGenericObject {
 
 		PolygonType polygon = null;
 		PolygonType[] multiPolygon = null;
-		while (rs.next()) {
-			PGgeometry pgBuildingGeometry = (PGgeometry)rs.getObject(1); 
+		
+		for (Map<String, Object> Row: result) {
+			
 
-			if (!rs.wasNull() && pgBuildingGeometry != null) {
+			if (Row != null) {
 				eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
 
 				polygon = kmlFactory.createPolygonType();
 				polygon.setTessellate(true);
 				polygon.setExtrude(true);
 				polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.RELATIVE_TO_GROUND));
+				
+				
+				//***********************************************************************
+				
+				@SuppressWarnings("unchecked")
+				List<Double> _Geometry = (List<Double>)Row.get("Geometry");
+				
+				org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
+			
+				for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
 
-				Geometry groundSurface = convertToWGS84(pgBuildingGeometry.getGeometry());
+					List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");							
+					tmpPoint[j] = new org.postgis.Point(
+							Target_Coordinates.get(1),
+							Target_Coordinates.get(0),
+							Target_Coordinates.get(2)
+							);
+				
+				}
+				
+				Polygon surface = new Polygon(
+	                    new org.postgis.LinearRing[] {
+	                        new org.postgis.LinearRing(
+	                            tmpPoint
+	                        )
+	                    }
+	                );
+				
+				
+				//***********************************************************************
+
+				Geometry groundSurface = surface;
 
 				switch (groundSurface.getType()) {
 				case Geometry.POLYGON:
@@ -1781,23 +1845,17 @@ public abstract class KmlGenericObject {
 			@SuppressWarnings("unchecked")
 			List<Double> _Geometry = (List<Double>)Row.get("Geometry");
 			
-			org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];
-			
+			org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
 		
 			for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
 
-				List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");
-				
-				
+				List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");							
 				tmpPoint[j] = new org.postgis.Point(
 						Target_Coordinates.get(1),
 						Target_Coordinates.get(0),
 						Target_Coordinates.get(2)
 						);
-				
 			}
-			
-			
 			
 			Polygon surface = new Polygon(
                     new org.postgis.LinearRing[] {
