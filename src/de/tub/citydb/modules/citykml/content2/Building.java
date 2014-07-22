@@ -35,6 +35,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +52,20 @@ import net.opengis.kml._2.PlacemarkType;
 import net.opengis.kml._2.PolygonType;
 
 import org.citygml4j.factory.CityGMLFactory;
+import org.citygml4j.geometry.Matrix;
 import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
+import org.citygml4j.model.citygml.appearance.AbstractSurfaceData;
+import org.citygml4j.model.citygml.appearance.AbstractTextureParameterization;
+import org.citygml4j.model.citygml.appearance.Appearance;
+import org.citygml4j.model.citygml.appearance.AppearanceProperty;
+import org.citygml4j.model.citygml.appearance.ParameterizedTexture;
+import org.citygml4j.model.citygml.appearance.SurfaceDataProperty;
+import org.citygml4j.model.citygml.appearance.TexCoordGen;
+import org.citygml4j.model.citygml.appearance.TexCoordList;
+import org.citygml4j.model.citygml.appearance.TextureAssociation;
+import org.citygml4j.model.citygml.appearance.TextureCoordinates;
+import org.citygml4j.model.citygml.appearance.X3DMaterial;
 import org.citygml4j.model.citygml.building.AbstractBoundarySurface;
 import org.citygml4j.model.citygml.building.AbstractBuilding;
 import org.citygml4j.model.citygml.building.AbstractOpening;
@@ -70,6 +83,7 @@ import org.citygml4j.model.citygml.building.OpeningProperty;
 import org.citygml4j.model.citygml.building.Room;
 import org.citygml4j.model.citygml.texturedsurface._TexturedSurface;
 import org.citygml4j.model.gml.GMLClass;
+import org.citygml4j.model.gml.base.AssociationAttributeGroup;
 import org.citygml4j.model.gml.geometry.AbstractGeometry;
 import org.citygml4j.model.gml.geometry.GeometryProperty;
 import org.citygml4j.model.gml.geometry.aggregates.MultiCurveProperty;
@@ -114,6 +128,8 @@ import de.tub.citydb.database.TableEnum;
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkBasic;
+import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkTextureParam;
+import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkTextureParamEnum;
 import de.tub.citydb.modules.citygml.importer.database.content.DBImporterEnum;
 import de.tub.citydb.modules.citygml.importer.database.content.DBSequencerEnum;
 import de.tub.citydb.modules.common.event.CounterEvent;
@@ -227,12 +243,17 @@ public class Building extends KmlGenericObject{
 	private List<PlacemarkType> readBuildingPart(KmlSplittingResult work) throws Exception {
 
 		int buildingPartId = 1;
+		List<Map<String, Object>> _SurfaceDataList = new ArrayList<Map<String,Object>>();
 		boolean reversePointOrder = false;
 
 		try {
 
 
 			AbstractBuilding _building = (AbstractBuilding)work.getCityGmlClass();
+			
+			
+			
+
 
 			List<Map<String, Object>> _surfaceList = GetBuildingGeometries(_building);
 
@@ -269,8 +290,8 @@ public class Building extends KmlGenericObject{
 					return createPlacemarksForGeometry(_surfaceList, work);
 
 				case DisplayForm.COLLADA:
-					break;
-					/*fillGenericObjectForCollada(rs);
+				//	break;
+					fillGenericObjectForCollada(work,_surfaceList,_SurfaceDataList);
 					setGmlId(work.getGmlId());
 					setId(work.getId());
 
@@ -281,16 +302,16 @@ public class Building extends KmlGenericObject{
 					List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
 					double zOffset = getZOffsetFromConfigOrDB(work.getId());
 					if (zOffset == Double.MAX_VALUE) {
-						zOffset = getZOffsetFromGEService(work.getId(), anchorCandidates);
+					//	zOffset = getZOffsetFromGEService(work.getId(), anchorCandidates);
 					}
 					setZOffset(zOffset);
 
 					ColladaOptions colladaOptions = getColladaOptions();
 					setIgnoreSurfaceOrientation(colladaOptions.isIgnoreSurfaceOrientation());
 					try {
-						if (work.getDisplayForm().isHighlightingEnabled()) {
+					/*	if (work.getDisplayForm().isHighlightingEnabled()) {
 							return createPlacemarksForHighlighting(buildingPartId, work);
-						}
+						}*/
 						// just COLLADA, no KML
 						List<PlacemarkType> dummy = new ArrayList<PlacemarkType>();
 						dummy.add(null);
@@ -298,7 +319,7 @@ public class Building extends KmlGenericObject{
 					}
 					catch (Exception ioe) {
 						ioe.printStackTrace();
-					}*/
+					}
 				}
 			}
 		}
@@ -1010,7 +1031,7 @@ public class Building extends KmlGenericObject{
 											for(List<Double> _Geometry : _pointList){
 
 												Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-																
+													
 												_BuildingSurfaces.put("type", _SurfaceType);    				
 												_BuildingSurfaces.put("Geometry", _Geometry);    					   					
 												_SurfaceList.add(_BuildingSurfaces);

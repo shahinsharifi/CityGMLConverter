@@ -211,6 +211,7 @@ public class Building extends KmlGenericObject{
 						psQuery.setLong(i, buildingPartId);
 					}
 				
+				
 					rs = psQuery.executeQuery();
 					if (rs.isBeforeFirst()) {
 						break; // result set not empty
@@ -268,6 +269,14 @@ public class Building extends KmlGenericObject{
 				reversePointOrder = false;
 			}
 
+			/*String Test = "";
+			while (rs.next()) {
+				Test += rs.getObject(1).toString()+"-";
+				Test += rs.getObject(2).toString()+"-";
+				Test += rs.getObject(3).toString();
+			}
+			System.out.println(work.getId() + "=" + work.getGmlId() + ":" +  ">" +Test);*/
+			
 			if (rs != null) { // result not empty
 
 				switch (work.getDisplayForm().getForm()) {
@@ -310,6 +319,8 @@ public class Building extends KmlGenericObject{
 					return createPlacemarksForGeometry(rs, work);
 
 				case DisplayForm.COLLADA:
+
+					
 					fillGenericObjectForCollada(rs);
 					setGmlId(work.getGmlId());
 					setId(work.getId());

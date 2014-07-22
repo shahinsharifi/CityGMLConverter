@@ -1997,15 +1997,15 @@ public abstract class KmlGenericObject {
 		return placemarkList;
 	}
 
-	protected void fillGenericObjectForCollada(ResultSet rs) throws SQLException {	
+	protected void fillGenericObjectForCollada(KmlSplittingResult work , List<Map<String, Object>> _SurfaceList , List<Map<String, Object>> _SurfaceDataList) throws SQLException {	
 
-		String selectedTheme = config.getProject().getKmlExporter().getAppearanceTheme();
+		String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
 
 		int texImageCounter = 0;
 		PGgeometry pgBuildingGeometry = null;
 
-		while (rs.next()) {
-			long surfaceRootId = rs.getLong(1);
+		//while (rs.next()) {
+			long surfaceRootId = 0;//rs.getLong(1);
 			for (String colladaQuery: Queries.COLLADA_GEOMETRY_AND_APPEARANCE_FROM_ROOT_ID) { // parent surfaces come first
 				PreparedStatement psQuery = null;
 				ResultSet rs2 = null;
@@ -2047,14 +2047,14 @@ public abstract class KmlGenericObject {
 //						byte buf[] = null;
 						StringTokenizer texCoordsTokenized = null;
 	
-						if (selectedTheme.equals(CityKmlExporter.THEME_NONE)) {
+					/*	if (selectedTheme.equals(CityKmlExporter.THEME_NONE)) {
 							addX3dMaterial(surfaceId, defaultX3dMaterial);
 						}
 						else if	(!selectedTheme.equalsIgnoreCase(theme) && // no surface data for this surface and theme
 								getX3dMaterial(parentId) != null) { // material for parent surface known
 							addX3dMaterial(surfaceId, getX3dMaterial(parentId));
 						}
-						else {
+						else {*/
 							texImageUri = rs2.getString("tex_image_uri");
 //							texImage = (OrdImage)rs2.getORAData("tex_image", OrdImage.getORADataFactory());
 							String texCoords = rs2.getString("texture_coordinates");
@@ -2139,7 +2139,7 @@ public abstract class KmlGenericObject {
 									addX3dMaterial(surfaceId, defaultX3dMaterial);
 								}
 							}
-						}
+						//}
 	
 						Polygon surface = (Polygon)pgBuildingGeometry.getGeometry();
 						double[] ordinatesArray = new double[surface.numPoints()*3];
@@ -2216,13 +2216,14 @@ public abstract class KmlGenericObject {
 						try { psQuery.close(); } catch (SQLException e) {}
 				}
 			}
-		}
+	//	}
 
 		// count rest images
 		eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));
 	}
 
 	public PlacemarkType createPlacemarkForColladaModel() throws SQLException {
+		
 		PlacemarkType placemark = kmlFactory.createPlacemarkType();
 		placemark.setName(getGmlId());
 		placemark.setId(DisplayForm.COLLADA_PLACEMARK_ID + placemark.getName());
@@ -2578,7 +2579,6 @@ public abstract class KmlGenericObject {
 		return zOffset;
 	}
 	
-	
 
 	protected double getZOffsetFromGEService (List<Point3d> candidates, String _TargetSrs ) {
 
@@ -2680,7 +2680,6 @@ public abstract class KmlGenericObject {
 		return coords;
 	}
 	
-	
 
 	protected double[] convertPointCoordinatesToWGS84(double[] coords) throws SQLException {
 
@@ -2724,8 +2723,7 @@ public abstract class KmlGenericObject {
 		
 		return pointCoords;
 	}
-	
-	
+		
 
 	protected Geometry convertToWGS84(Geometry geometry) throws SQLException {
 

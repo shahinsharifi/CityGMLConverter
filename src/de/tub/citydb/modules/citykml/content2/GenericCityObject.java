@@ -251,7 +251,7 @@ public class GenericCityObject extends KmlGenericObject{
     protected void fillGenericObjectForCollada(ResultSet rs) throws SQLException {
     
 		if (transformation == null) { // no implicit geometry
-			super.fillGenericObjectForCollada(rs);
+		//	super.fillGenericObjectForCollada(rs);
 			return;
 		}
 

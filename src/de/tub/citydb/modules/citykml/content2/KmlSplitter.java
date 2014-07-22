@@ -72,6 +72,8 @@ import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.filter.ExportFilter;
+import de.tub.citydb.modules.citygml.importer.database.content.DBAppearance;
+import de.tub.citydb.modules.citygml.importer.database.content.DBImporterEnum;
 import de.tub.citydb.modules.citykml.controller.CityKmlExporter;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
@@ -287,33 +289,39 @@ public class KmlSplitter {
 					CityGMLChunk chunk = _ChunkReader.nextChunk();
 
 					CityGML _CityGML = chunk.unmarshal();
+					
+					if (_CityGML.getCityGMLClass() == CityGMLClass.APPEARANCE) {
+						
+						System.out.println(_CityGML.getCityGMLClass());
 
-					CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
+					} else if (CityGMLClass.ABSTRACT_CITY_OBJECT.isInstance(_CityGML.getCityGMLClass())) {
+						
+						CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
 
-					AbstractCityObject cityObject = (AbstractCityObject)_CityGML;
+						AbstractCityObject cityObject = (AbstractCityObject)_CityGML;
 
-					// bounding box filter
-					// first of all compute bounding box for cityobject since we need it anyways
+						// bounding box filter
+						// first of all compute bounding box for cityobject since we need it anyways
 
-					Envelope envelope = cityObject.getBoundedBy().getEnvelope().convert3d();
-					ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(
-							envelope.getLowerCorner().toList3d().get(0),
-							envelope.getUpperCorner().toList3d().get(0),	
-							envelope.getLowerCorner().toList3d().get(1),							
-							envelope.getUpperCorner().toList3d().get(1),
-							CRS.decode("EPSG:" + this.TargetSrs, true));
+						Envelope envelope = cityObject.getBoundedBy().getEnvelope().convert3d();
+						ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(
+								envelope.getLowerCorner().toList3d().get(0),
+								envelope.getUpperCorner().toList3d().get(0),	
+								envelope.getLowerCorner().toList3d().get(1),							
+								envelope.getUpperCorner().toList3d().get(1),
+								CRS.decode("EPSG:" + this.TargetSrs, true));
 
 
-					if(envelope != null && _bounds.ContainCentroid(_refEnvelope,TargetSrs))						
-					{						
-						if(cityObjectType != CityGMLClass.APPEARANCE)
-						{
+						if(envelope != null && _bounds.ContainCentroid(_refEnvelope,TargetSrs))						
+						{													
 							KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs);										
-							dbWorkerPool.addWork(splitter);				
+							dbWorkerPool.addWork(splitter);					
 						}
-						else {
-						}
+						
+					
 					}
+
+					
 				}
 
 

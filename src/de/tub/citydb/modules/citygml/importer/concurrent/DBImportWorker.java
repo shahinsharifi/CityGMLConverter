@@ -255,6 +255,7 @@ public class DBImportWorker implements Worker<CityGML> {
 
 				if (work.getCityGMLClass() == CityGMLClass.APPEARANCE) {
 					// global appearances
+					System.out.println(work.getCityGMLClass());
 					DBAppearance dbAppearance = (DBAppearance)dbImporterManager.getDBImporter(DBImporterEnum.APPEARANCE);
 					if (dbAppearance != null)
 						id = dbAppearance.insert((Appearance)work, CityGMLClass.CITY_MODEL, 0);
