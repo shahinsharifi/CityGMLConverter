@@ -293,19 +293,20 @@ public class Building extends KmlGenericObject{
 						Logger.getInstance().info("Object " + work.getGmlId() + " has more than " + GEOMETRY_AMOUNT_WARNING + " geometries. This may take a while to process...");
 					}
 
-					List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
-					double zOffset = getZOffsetFromConfigOrDB(work.getId());
-					List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(_surfaceList , work);
 					
-					zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
+				//	List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(_surfaceList , work);
+
+				//	double zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
+					
+					List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
+					double zOffset = getZOffsetFromGEService(anchorCandidates,work.getTargetSrs());
+					
 					setZOffset(zOffset);
-				//	System.out.println(zOffset);
+					//System.out.println(zOffset);
 					ColladaOptions colladaOptions = getColladaOptions();
 					setIgnoreSurfaceOrientation(colladaOptions.isIgnoreSurfaceOrientation());
 					try {
-					/*	if (work.getDisplayForm().isHighlightingEnabled()) {
-							return createPlacemarksForHighlighting(buildingPartId, work);
-						}*/
+						
 						// just COLLADA, no KML
 						List<PlacemarkType> dummy = new ArrayList<PlacemarkType>();
 						dummy.add(null);
@@ -333,10 +334,10 @@ public class Building extends KmlGenericObject{
 
 	public PlacemarkType createPlacemarkForColladaModel(KmlSplittingResult work) throws Exception {
 		// undo trick for very close coordinates
-		List<Double> originInWGS84 = ProjConvertor.transformPoint(getOriginX()/100, getOriginY()/100 - 20, getOriginZ()/100, work.getTargetSrs(), "4326");
+		List<Double> originInWGS84 = ProjConvertor.transformPoint(getOriginX()/100, getOriginY()/100, getOriginZ()/100, work.getTargetSrs(), "4326");
 		
-		setLocationX(reducePrecisionForXorY(originInWGS84.get(0)));
-		setLocationY(reducePrecisionForXorY(originInWGS84.get(1)));
+		setLocationX(reducePrecisionForXorY(originInWGS84.get(1)));
+		setLocationY(reducePrecisionForXorY(originInWGS84.get(0)));
 		setLocationZ(reducePrecisionForZ(originInWGS84.get(2)));
 
 		return super.createPlacemarkForColladaModel(work);
@@ -687,7 +688,7 @@ public class Building extends KmlGenericObject{
 		// BoundarySurfacesOfBuilding
 		if (_building.isSetBoundedBySurface()) {
 
-			int ParentCounter = 0;
+			long ParentCounter = 1;
 			for (BoundarySurfaceProperty boundarySurfaceProperty : _building.getBoundedBySurface()) {
 				AbstractBoundarySurface boundarySurface = boundarySurfaceProperty.getBoundarySurface();
 				Map<String, Object> _BuildingParentSurfaces = new HashMap<String, Object>();
@@ -717,11 +718,14 @@ public class Building extends KmlGenericObject{
 								String _Pid = multiSurfaceProperty.getMultiSurface().getId();
 								_BuildingParentSurfaces.put("id", _Pid);
 								_BuildingParentSurfaces.put("Geometry", null);
+								_ParentSurfaceList.add(_BuildingParentSurfaces);
 								
 								
 								_Surface.ClearPointList();
+								_Surface.ClearIdList();
 								_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();			    												
 								List<List<Double>> _pointList  = _Surface.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
+								
 								int counter = 0;
 								for(List<Double> _Geometry : _pointList){
 
@@ -738,7 +742,8 @@ public class Building extends KmlGenericObject{
 						}
 
 					}
-				}ParentCounter++; 
+				}
+				ParentCounter++; 
 			}
 
 		}

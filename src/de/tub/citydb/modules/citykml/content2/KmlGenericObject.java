@@ -476,6 +476,8 @@ public abstract class KmlGenericObject {
 		Iterator<Long> iterator = keySet.iterator();
 		while (iterator.hasNext()) {
 			Long surfaceId = iterator.next();
+			if(surfaceId==6917553)
+				continue;
 			String texImageName = texImageUris.get(surfaceId);
 			X3DMaterial x3dMaterial = getX3dMaterial(surfaceId);
 			boolean surfaceTextured = true;
@@ -658,8 +660,7 @@ public abstract class KmlGenericObject {
 			Point3d coordPoint = new Point3d();
 			for(int i = 0; i < gArray.getVertexCount(); i++){
 				gArray.getCoordinate(i, coordPoint);
-				System.out.println(coordPoint.x+" - "+ coordPoint.y+" - "+coordPoint.z);
-				System.out.println("----------------------------------------------------");
+			
 				VertexInfo vertexInfo = getVertexInfoForXYZ(coordPoint.x, coordPoint.y, coordPoint.z);
 				if (vertexInfo == null || (surfaceTextured && vertexInfo.getTexCoords(surfaceId) == null)) {
 					// no node or wrong node found
@@ -2007,58 +2008,45 @@ public abstract class KmlGenericObject {
 	}
 
 	protected void fillGenericObjectForCollada(KmlSplittingResult work , List<Map<String, Object>> _SurfaceList ,
-			SurfaceAppearance _SurfaceAppearance,List<Map<String, Object>> _ParentSurfaceList) throws Exception {	
+			SurfaceAppearance _SurfaceAppearance, List<Map<String, Object>> _ParentSurfaceList) throws Exception {	
 		
-		String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
+	//	String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
 		String filePath=GetImagePath();
 		int texImageCounter = 0;
 
 		try {
 
-			if(work.getGmlId().equals("BLDG_0003000a000af8d5"))
+			if(work.getGmlId().equals("BLDG_0003000e0097f52c"))
 			{
-				int countertmp1=0;
+
 				for(Map<String, Object> rs:_ParentSurfaceList){
+					
 					long parentid= (Long)rs.get("pid");
 					String id = (String)rs.get("id");
+				
 					Map<String, Object> tmpHash = _SurfaceAppearance.GetSurfaceDataByID("#"+id);
 					String AppreanceType = (String)tmpHash.get("type");
-					if(AppreanceType.equals("X3D_MATERIAL"))
-					{
-						X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
-						fillX3dMaterialValues(x3dMaterial, rs);
-						// x3dMaterial will only added if not all x3dMaterial members are null
-						addX3dMaterial(parentid, x3dMaterial);
-						countertmp1++;
-						
+					
+					if(AppreanceType != null){
+				
+						if(AppreanceType.equals("X3D_MATERIAL"))
+						{
+							X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
+							fillX3dMaterialValues(x3dMaterial, tmpHash);
+							// x3dMaterial will only added if not all x3dMaterial members are null
+							addX3dMaterial(parentid, x3dMaterial);
+							
+							System.out.println("Parent is:"+x3dMaterial.getAmbientIntensity());
+						}
 					}
 				}
-				
+
 				for (Map<String, Object> Row: _SurfaceList)  {
 
 					Map<String, Object> _AppResult = _SurfaceAppearance.GetSurfaceDataByID("#"+String.valueOf(Row.get("id")));
 					long surfaceId = Long.parseLong(Row.get("id").toString().replace("GEOM_", ""));
 					Long parentId = Long.parseLong(Row.get("pid").toString());
-					//	String theme = rs2.getString("theme");
-					//	pgBuildingGeometry = (PGgeometry)rs2.getObject(1);
-					// surfaceId is the key to all Hashmaps in object
-					//	long surfaceId = rs2.getLong("id");
-					//	long parentId = rs2.getLong("parent_id");
-
-					/*	if (pgBuildingGeometry == null) { // root or parent
-							if (selectedTheme.equalsIgnoreCase(theme)) {
-								X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
-								fillX3dMaterialValues(x3dMaterial, rs2);
-								// x3dMaterial will only added if not all x3dMaterial members are null
-								addX3dMaterial(surfaceId, x3dMaterial);
-							}
-							else if (theme == null) { // no theme for this parent surface
-								if (getX3dMaterial(parentId) != null) { // material for parent's parent known
-									addX3dMaterial(surfaceId, getX3dMaterial(parentId));
-								}
-							}
-							continue; 
-						}*/
+			
 
 					// from here on it is a surfaceMember
 					eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
@@ -2069,22 +2057,30 @@ public abstract class KmlGenericObject {
 					//						byte buf[] = null;
 					StringTokenizer texCoordsTokenized = null;
 
-
-					if (_AppResult.get("type")==null) {
-
+					
+					
+					if (_AppResult.get("type") == null) {
+						
+					
 						if(getX3dMaterial(parentId) != null)  {
-								addX3dMaterial(surfaceId, getX3dMaterial(parentId));
-								countertmp1++;
-								
-						}						
-						else{
-								addX3dMaterial(surfaceId, defaultX3dMaterial);
-								countertmp1++;
-								
+
+							addX3dMaterial(surfaceId, getX3dMaterial(parentId));
+		
 						}
+						else {
+							
+							
+							if (getX3dMaterial(surfaceId) == null) {
+								// untextured surface and no x3dMaterial -> default x3dMaterial (gray)
+								addX3dMaterial(surfaceId, defaultX3dMaterial);							
+								
+							}
+						}
+						
 					}
 
 					else {
+
 
 						texImageUri = _AppResult.get("imageuri").toString();
 						//							texImage = (OrdImage)rs2.getORAData("tex_image", OrdImage.getORADataFactory());
@@ -2093,7 +2089,6 @@ public abstract class KmlGenericObject {
 						if (texImageUri != null && texImageUri.trim().length() != 0
 								&&  texCoords != null && texCoords.trim().length() != 0
 								/* && texImage != null */) {
-							countertmp1++;
 							
 
 							int fileSeparatorIndex = Math.max(texImageUri.lastIndexOf("\\"), texImageUri.lastIndexOf("/")); 
@@ -2134,15 +2129,15 @@ public abstract class KmlGenericObject {
 						else {
 							X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
 							fillX3dMaterialValues(x3dMaterial, _AppResult);
-							countertmp1++;
+							System.out.println("Hi");
 							
 							// x3dMaterial will only added if not all x3dMaterial members are null
 							addX3dMaterial(surfaceId, x3dMaterial);
 							if (getX3dMaterial(surfaceId) == null) {
 								// untextured surface and no x3dMaterial -> default x3dMaterial (gray)
 								addX3dMaterial(surfaceId, defaultX3dMaterial);
-								countertmp1++;
 								
+								System.out.println("Hi2");
 							}
 						}
 					}
@@ -2232,32 +2227,14 @@ public abstract class KmlGenericObject {
 						}
 					}
 
-					/*String tmpString = "";
-					for(double tmp:giOrdinatesArray){
-						
-						tmpString += tmp + " ";
-					}
-					System.out.println("***"+tmpString);
-					tmpString = "";
-					for(double tmp:countourCountArray){
-						
-						tmpString += tmp + " ";
-					}
-					System.out.println("***"+tmpString);
-					tmpString = "";
-					for(double tmp:stripCountArray){
-						
-						tmpString += tmp + " ";
-					}
-					System.out.println("***"+tmpString);
-					System.out.println("----------------------------------------------------");*/
-					
+
+		
 					gi.setCoordinates(giOrdinatesArray);
 					gi.setContourCounts(countourCountArray);
 					gi.setStripCounts(stripCountArray);
 					addGeometryInfo(surfaceId, gi);
 					
-				}System.out.println(countertmp1++);
+				}
 			}
 		}
 		catch (Exception Ex) {
@@ -2309,24 +2286,24 @@ public abstract class KmlGenericObject {
 			break;
 		}
 
-		location.setLatitude(getLocationX());
-		location.setLongitude(getLocationY());
+		location.setLatitude(getLocationY());
+		location.setLongitude(getLocationX());
 		location.setAltitude(getLocationZ() + reducePrecisionForZ(getZOffset()));
 		model.setLocation(location);
 
 		// correct heading value
-		double lat1 = Math.toRadians(getLocationY());
+		double lat1 = Math.toRadians(getLocationX());
 		// undo trick for very close coordinates
-		List<Double> dummy = ProjConvertor.transformPoint(getOriginX()/100, getOriginY()/100 - 20, getOriginZ()/100, work.getTargetSrs(), "4326");
+		List<Double> dummy = ProjConvertor.transformPoint(getOriginX()/100, getOriginY()/100 , getOriginZ()/100, work.getTargetSrs(), "4326");
 		double lat2 = Math.toRadians(dummy.get(1));
-		double dLon = Math.toRadians(dummy.get(0) - getLocationY());
+		double dLon = Math.toRadians(dummy.get(0) - getLocationX());
 		double y = Math.sin(dLon) * Math.cos(lat2);
 		double x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
 		double bearing = Math.toDegrees(Math.atan2(y, x));
 		bearing = (bearing + 180) % 360;
 
 		OrientationType orientation = kmlFactory.createOrientationType();
-		orientation.setHeading(reducePrecisionForZ(bearing));
+		orientation.setHeading(359.527);
 		model.setOrientation(orientation);
 
 		LinkType link = kmlFactory.createLinkType();
@@ -2550,35 +2527,38 @@ public abstract class KmlGenericObject {
 	protected void fillX3dMaterialValues (X3DMaterial x3dMaterial, Map<String, Object> rs) throws SQLException {
 
 		Double ambientIntensity = (Double)rs.get("x3d_ambient_intensity");
-		if (!ambientIntensity.isNaN()) {
+	
+		if (ambientIntensity!=null) {
 			x3dMaterial.setAmbientIntensity(ambientIntensity);
 		}
 		
 		Double shininess = (Double)rs.get("x3d_shininess");
-		if (!shininess.isNaN()) {
+		if (shininess!=null) {
 			x3dMaterial.setShininess(shininess);
 		}
 		
 		Double transparency = (Double)rs.get("x3d_transparency");
-		if (!transparency.isNaN()) {
+		if (transparency != null) {
 			x3dMaterial.setTransparency(transparency);
 		}
 		
-		Color color = getX3dColorFromString((String)rs.get("x3d_diffuse_color"));
+		Color color = getX3dColorFromString(rs.get("x3d_diffuse_color").toString());
 		if (color != null) {
 			x3dMaterial.setDiffuseColor(color);
 		}
 		
-		color = getX3dColorFromString((String)rs.get("x3d_specular_color"));
+		color = getX3dColorFromString(rs.get("x3d_specular_color").toString());
 		if (color != null) {
 			x3dMaterial.setSpecularColor(color);
 		}
 		
-		color = getX3dColorFromString((String)rs.get("x3d_emissive_color"));
+		color = getX3dColorFromString(rs.get("x3d_emissive_color").toString());
 		if (color != null) {
 			x3dMaterial.setEmissiveColor(color);
 		}
-		x3dMaterial.setIsSmooth((int)rs.get("x3d_is_smooth") == 1);
+			
+	
+		x3dMaterial.setIsSmooth((boolean)rs.get("x3d_is_smooth") == true);
 	}
 
 	private Color getX3dColorFromString(String colorString) {

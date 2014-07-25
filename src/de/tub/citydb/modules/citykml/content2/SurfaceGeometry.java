@@ -161,7 +161,7 @@ public class SurfaceGeometry {
 		
 			
 			Polygon polygon = (Polygon)surfaceGeometry;
-			SetSurfaceID(polygon.getId());
+			
 			if (polygon.isSetExterior()) {
 				List<List<Double>> pointList = new ArrayList<List<Double>>();
 				AbstractRing exteriorAbstractRing = polygon.getExterior().getRing();
@@ -272,7 +272,7 @@ public class SurfaceGeometry {
 
 
 						}
-						
+						SetSurfaceID(polygon.getId());
 						_pointList.addAll(pointList);
 
 
@@ -987,5 +987,19 @@ public class SurfaceGeometry {
 		
 	}
 	
+	
+	public boolean ClearIdList()
+	{	
+	
+		if(_SurfaceGmlId.size()>0)
+		{
+			_SurfaceGmlId.clear();
+			return true;
+		}
+		else {
+			return false;
+		}
+		
+	}
 
 }

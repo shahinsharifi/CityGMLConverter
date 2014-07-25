@@ -643,7 +643,7 @@ public abstract class KmlGenericObject {
 			Point3d coordPoint = new Point3d();
 			for(int i = 0; i < gArray.getVertexCount(); i++){
 				gArray.getCoordinate(i, coordPoint);
-
+				System.out.println("("+surfaceId+")"+i);
 				VertexInfo vertexInfo = getVertexInfoForXYZ(coordPoint.x, coordPoint.y, coordPoint.z);
 				if (vertexInfo == null || (surfaceTextured && vertexInfo.getTexCoords(surfaceId) == null)) {
 					// no node or wrong node found
@@ -681,7 +681,7 @@ public abstract class KmlGenericObject {
 								+ coordPoint.z + "). TOLERANCE = " + TOLERANCE_AFTER_TRIANGULATION);
 					}
 				}
-			}
+			}System.out.println("*************************************");
 		}
 
 		VertexInfo vertexInfoIterator = firstVertexInfo;
@@ -1910,7 +1910,7 @@ public abstract class KmlGenericObject {
 
 		while (rs.next()) {
 			long surfaceRootId = rs.getLong(1);
-			if(surfaceRootId==1930 ||surfaceRootId==1931 ||surfaceRootId==1932 )
+			if(surfaceRootId==72 ||surfaceRootId==73 ||surfaceRootId==74 )
 			{
 			for (String colladaQuery: Queries.COLLADA_GEOMETRY_AND_APPEARANCE_FROM_ROOT_ID) { // parent surfaces come first
 				PreparedStatement psQuery = null;
@@ -2157,7 +2157,7 @@ public abstract class KmlGenericObject {
 			}
 			}
 		}
-		System.out.println(countertmp1);
+		
 
 		// count rest images
 		eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));

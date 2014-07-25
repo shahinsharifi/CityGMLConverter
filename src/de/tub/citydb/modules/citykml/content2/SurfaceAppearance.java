@@ -213,15 +213,17 @@ public class SurfaceAppearance {
 
 					AbstractSurfaceData _AbstractSurfaceData = _SurfaceDataMember.getSurfaceData();
 
-
+					
 
 					//	String typeOfMember = _AbstractSurfaceData.getCityGMLClass().name();
 
 					if(_AbstractSurfaceData.getCityGMLClass().name().equals("X3D_MATERIAL")){
 
 						X3DMaterial _X3D = (X3DMaterial)_AbstractSurfaceData; 
-						if(_X3D.getTarget().equals(_SurfaceID))
+						
+						if(_X3D.getTarget().get(0).equals(_SurfaceID))
 						{
+							
 							_SurfaceData.put("id", _X3D.getId());    				
 							_SurfaceData.put("imageuri", null);    										
 							_SurfaceData.put("type", "X3D_MATERIAL");    				
@@ -233,7 +235,8 @@ public class SurfaceAppearance {
 							_SurfaceData.put("x3d_specular_color", _X3D.getSpecularColor());
 							_SurfaceData.put("x3d_emissive_color", _X3D.getEmissiveColor());  
 							_SurfaceData.put("x3d_is_smooth", _X3D.getIsSmooth());  
-							_SurfaceData.put("coord", null);  							
+							_SurfaceData.put("coord", null); 
+							
 						}								
 
 					}else if(_AbstractSurfaceData.getCityGMLClass().name().equals("PARAMETERIZED_TEXTURE")){
