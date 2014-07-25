@@ -79,12 +79,23 @@ public class SurfaceGeometry {
 	private List<List<Double>> _pointList = new ArrayList<List<Double>>();
 	private final Logger LOG = Logger.getInstance();
 	private List<Map<String, Object>> _SurfaceList = new ArrayList<Map<String,Object>>();
+	private List<String> _SurfaceGmlId = new ArrayList<String>();
 	
 	public SurfaceGeometry() {
 			
 	
 	}
 	
+	public void SetSurfaceID(String _SurfaceId)
+	{
+		_SurfaceGmlId.add(_SurfaceId);
+	}
+	
+	public List<String> GetSurfaceID()
+	{
+		return _SurfaceGmlId;
+	}
+
 	
 	public List<List<Double>> GetSurfaceGeometry(AbstractGeometry surfaceGeometry,boolean reverse) throws SQLException {
 
@@ -105,6 +116,7 @@ public class SurfaceGeometry {
 
 		
 			LinearRing linearRing = (LinearRing)surfaceGeometry;
+			SetSurfaceID(linearRing.getId());
 			List<Double> points = linearRing.toList3d(reverse);
 
 			if (points != null && !points.isEmpty()) {
@@ -149,6 +161,7 @@ public class SurfaceGeometry {
 		
 			
 			Polygon polygon = (Polygon)surfaceGeometry;
+			SetSurfaceID(polygon.getId());
 			if (polygon.isSetExterior()) {
 				List<List<Double>> pointList = new ArrayList<List<Double>>();
 				AbstractRing exteriorAbstractRing = polygon.getExterior().getRing();

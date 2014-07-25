@@ -360,7 +360,7 @@ public class KmlExporterManager {
 
 		PlacemarkType placemark = colladaBundle.getPlacemark();
 		//*******************************
-		System.out.println("Manager2");
+		
 		if (placemark != null) {
 			String placemarkDescription = placemark.getDescription();
 			if (placemarkDescription != null && balloonInSeparateFile) {

@@ -46,6 +46,7 @@ import org.citygml4j.model.citygml.appearance.AbstractSurfaceData;
 import org.citygml4j.model.citygml.appearance.AbstractTextureParameterization;
 import org.citygml4j.model.citygml.appearance.Appearance;
 import org.citygml4j.model.citygml.appearance.AppearanceProperty;
+import org.citygml4j.model.citygml.appearance.Color;
 import org.citygml4j.model.citygml.appearance.ParameterizedTexture;
 import org.citygml4j.model.citygml.appearance.SurfaceDataProperty;
 import org.citygml4j.model.citygml.appearance.TexCoordGen;
@@ -60,13 +61,22 @@ import de.tub.citydb.util.Util;
 public class SurfaceAppearance {
 
 	private AbstractBuilding _building;
+	private boolean IsSetAppearance = false;
 	List<Map<String, Object>> _SurfaceDataList = new ArrayList<Map<String,Object>>();
 
 	public SurfaceAppearance(AbstractBuilding _Building)
 	{	
-
 		this._building = _Building;
-
+	}
+	
+	public void SetAppearance(boolean _IsSet)
+	{
+		this.IsSetAppearance = _IsSet;
+	}
+	
+	public boolean GetAppearance()
+	{
+		return this.IsSetAppearance;
 	}
 
 	public List<Map<String, Object>> GetAllSurfaceData()
@@ -92,6 +102,13 @@ public class SurfaceAppearance {
 						_SurfaceData.put("imageuri", null);    										
 						_SurfaceData.put("type", "X3D_MATERIAL");    				
 						_SurfaceData.put("target", _X3D.getTarget());
+						_SurfaceData.put("x3d_ambient_intensity", _X3D.getAmbientIntensity());    							
+						_SurfaceData.put("x3d_shininess", _X3D.getShininess());    							
+						_SurfaceData.put("x3d_transparency", _X3D.getTransparency());    							
+						_SurfaceData.put("x3d_diffuse_color", _X3D.getDiffuseColor());    							
+						_SurfaceData.put("x3d_specular_color", _X3D.getSpecularColor());
+						_SurfaceData.put("x3d_emissive_color", _X3D.getEmissiveColor());  
+						_SurfaceData.put("x3d_is_smooth", _X3D.getIsSmooth());  
 						_SurfaceData.put("coord", null);    							
 
 
@@ -101,6 +118,13 @@ public class SurfaceAppearance {
 						_SurfaceData.put("id", _Texture.getId());    				
 						_SurfaceData.put("imageuri", _Texture.getImageURI());    										
 						_SurfaceData.put("type", "PARAMETERIZED_TEXTURE");
+						_SurfaceData.put("x3d_ambient_intensity", null);    							
+						_SurfaceData.put("x3d_shininess", null);    							
+						_SurfaceData.put("x3d_transparency", null);    							
+						_SurfaceData.put("x3d_diffuse_color", null);    							
+						_SurfaceData.put("x3d_specular_color", null);
+						_SurfaceData.put("x3d_emissive_color", null);  
+						_SurfaceData.put("x3d_is_smooth", null);  
 
 						for (TextureAssociation target : _Texture.getTarget()) {
 							String targetURI = target.getUri();
@@ -202,7 +226,14 @@ public class SurfaceAppearance {
 							_SurfaceData.put("imageuri", null);    										
 							_SurfaceData.put("type", "X3D_MATERIAL");    				
 							_SurfaceData.put("target", _X3D.getTarget());
-							_SurfaceData.put("coord", null);    							
+							_SurfaceData.put("x3d_ambient_intensity", _X3D.getAmbientIntensity());    							
+							_SurfaceData.put("x3d_shininess", _X3D.getShininess());    							
+							_SurfaceData.put("x3d_transparency", _X3D.getTransparency());    							
+							_SurfaceData.put("x3d_diffuse_color", _X3D.getDiffuseColor());    							
+							_SurfaceData.put("x3d_specular_color", _X3D.getSpecularColor());
+							_SurfaceData.put("x3d_emissive_color", _X3D.getEmissiveColor());  
+							_SurfaceData.put("x3d_is_smooth", _X3D.getIsSmooth());  
+							_SurfaceData.put("coord", null);  							
 						}								
 
 					}else if(_AbstractSurfaceData.getCityGMLClass().name().equals("PARAMETERIZED_TEXTURE")){
@@ -218,6 +249,13 @@ public class SurfaceAppearance {
 								_SurfaceData.put("id", _Texture.getId());    				
 								_SurfaceData.put("imageuri", _Texture.getImageURI());    										
 								_SurfaceData.put("type", "PARAMETERIZED_TEXTURE");
+								_SurfaceData.put("x3d_ambient_intensity", null);    							
+								_SurfaceData.put("x3d_shininess", null);    							
+								_SurfaceData.put("x3d_transparency", null);    							
+								_SurfaceData.put("x3d_diffuse_color", null);    							
+								_SurfaceData.put("x3d_specular_color", null);
+								_SurfaceData.put("x3d_emissive_color", null);  
+								_SurfaceData.put("x3d_is_smooth", null);  
 
 								if (targetURI != null && targetURI.length() != 0) {
 

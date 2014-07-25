@@ -359,11 +359,12 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 
 		if (transformation == null) { // no implicit geometry
 			// undo trick for very close coordinates
-			double[] originInWGS84 = convertPointCoordinatesToWGS84(new double[] {getOriginX()/100, getOriginY()/100, getOriginZ()/100});
+			/*	double[] originInWGS84 = convertPointCoordinatesToWGS84(new double[] {getOriginX()/100, getOriginY()/100, getOriginZ()/100});
 			setLocationX(reducePrecisionForXorY(originInWGS84[0]));
 			setLocationY(reducePrecisionForXorY(originInWGS84[1]));
 			setLocationZ(reducePrecisionForZ(originInWGS84[2]));
-			return super.createPlacemarkForColladaModel();
+			return super.createPlacemarkForColladaModel();*/
+			return null;
 		}
 
 		double[] originInWGS84 = convertPointCoordinatesToWGS84(new double[] {0, 0, 0}); // will be turned into refPointX,Y,Z by convertToWGS84
@@ -487,7 +488,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 						if (pgBuildingGeometry == null) { // root or parent	
 							if (selectedTheme.equalsIgnoreCase(theme)) {
 								X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
-								fillX3dMaterialValues(x3dMaterial, rs2);
+							//	fillX3dMaterialValues(x3dMaterial, rs2);
 								// x3dMaterial will only added if not all x3dMaterial members are null
 								addX3dMaterial(surfaceId, x3dMaterial);
 							}
@@ -592,7 +593,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 							}
 							else {
 								X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
-								fillX3dMaterialValues(x3dMaterial, rs2);
+						//		fillX3dMaterialValues(x3dMaterial, rs2);
 								// x3dMaterial will only added if not all x3dMaterial members are null
 								addX3dMaterial(surfaceId, x3dMaterial);
 								if (getX3dMaterial(surfaceId) == null) {

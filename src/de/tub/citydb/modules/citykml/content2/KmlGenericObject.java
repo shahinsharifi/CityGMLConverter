@@ -34,8 +34,11 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 // import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -145,6 +148,7 @@ import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter;
+import de.tub.citydb.config.project.kmlExporter.KmlExporter;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.io.DirectoryScanner;
@@ -155,6 +159,9 @@ import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.modules.common.event.GeometryCounterEvent;
+import de.tub.citydb.modules.citykml.content2.Queries;
+import de.tub.citydb.modules.citykml.content2.TexCoords;
+import de.tub.citydb.modules.citykml.content2.VertexInfo;
 import de.tub.citydb.util.Util;
 
 public abstract class KmlGenericObject {
@@ -170,24 +177,24 @@ public abstract class KmlGenericObject {
 	 */
 	private final static double TOLERANCE_BEFORE_TRIANGULATION = 0.015d; // this is very tolerant!!!
 	private final static double TOLERANCE_AFTER_TRIANGULATION = 0.0150005d; // this is very tolerant!!!
-	
+
 	private final static String NO_TEXIMAGE = "default";
 
 	private HashMap<Long, GeometryInfo> geometryInfos = new HashMap<Long, GeometryInfo>();
 	// coordinates include texCoordinates, which geometryInfo does not
 	// texCoordinates in geometryInfo would be float --> precision loss
 	private NodeZ coordinateTree;
-	
+
 	// key is surfaceId, surfaceId is originally a Long, here we use an Object for compatibility with the textureAtlasAPI
 	private HashMap<Object, String> texImageUris = new HashMap<Object, String>();
 	// key is imageUri
 	private HashMap<String, BufferedImage> texImages = new HashMap<String, BufferedImage>();
 	// for images in unusual formats or wrapping textures. Most times it will be null.
 	// key is imageUri
-//	private HashMap<String, OrdImage> texOrdImages = null;
+	//	private HashMap<String, OrdImage> texOrdImages = null;
 	// key is surfaceId, surfaceId is originally a Long
 	private HashMap<Long, X3DMaterial> x3dMaterials = null;
-	
+
 	private long id;
 	private String gmlId;
 	private BigInteger vertexIdCounter = new BigInteger("-1");
@@ -205,7 +212,7 @@ public abstract class KmlGenericObject {
 	private double locationZ;
 
 	private double zOffset;
-	
+
 	private boolean ignoreSurfaceOrientation = true;
 
 	protected Connection connection;
@@ -216,7 +223,7 @@ public abstract class KmlGenericObject {
 	protected BalloonTemplateHandlerImpl balloonTemplateHandler;
 	protected EventDispatcher eventDispatcher;
 	protected Config config;
-	
+
 	protected int currentLod;
 	protected DatabaseSrs dbSrs;
 	protected X3DMaterial defaultX3dMaterial;
@@ -241,8 +248,8 @@ public abstract class KmlGenericObject {
 		this.eventDispatcher = eventDispatcher;
 		this.config = config;
 
-	//	dbSrs = DatabaseConnectionPool.getInstance().getActiveConnectionMetaData().getReferenceSystem();
-/*
+		//	dbSrs = DatabaseConnectionPool.getInstance().getActiveConnectionMetaData().getReferenceSystem();
+		/*
 		dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
 		defaultX3dMaterial = cityGMLFactory.createX3DMaterial();
@@ -332,7 +339,7 @@ public abstract class KmlGenericObject {
 	protected double getLocationZ() {
 		return locationZ;
 	}
-	
+
 	public void setIgnoreSurfaceOrientation(boolean ignoreSurfaceOrientation) {
 		this.ignoreSurfaceOrientation = ignoreSurfaceOrientation;
 	}
@@ -366,8 +373,8 @@ public abstract class KmlGenericObject {
 		Asset.Contributor contributor = colladaFactory.createAssetContributor();
 		// System.getProperty("line.separator") produces weird effects here
 		contributor.setAuthoringTool(this.getClass().getPackage().getImplementationTitle() + ", version " +
-									 this.getClass().getPackage().getImplementationVersion() + "; " +
-									 this.getClass().getPackage().getImplementationVendor());
+				this.getClass().getPackage().getImplementationVersion() + "; " +
+				this.getClass().getPackage().getImplementationVendor());
 		asset.getContributor().add(contributor);
 		collada.setAsset(asset);
 
@@ -376,38 +383,38 @@ public abstract class KmlGenericObject {
 		LibraryEffects libraryEffects = colladaFactory.createLibraryEffects();
 		LibraryGeometries libraryGeometries = colladaFactory.createLibraryGeometries();
 		LibraryVisualScenes libraryVisualScenes = colladaFactory.createLibraryVisualScenes();
-		
+
 		// --------------------------- geometry (constant part) ---------------------------
 		org.collada._2005._11.colladaschema.Geometry geometry = colladaFactory.createGeometry();
 		geometry.setId("geometry0");
-		
+
 		Source positionSource = colladaFactory.createSource();
 		positionSource.setId("geometry0-position");
-		
+
 		FloatArray positionArray = colladaFactory.createFloatArray();
 		positionArray.setId("geometry0-position-array");
 		List<Double> positionValues = positionArray.getValue();
 		positionSource.setFloatArray(positionArray);
-		
+
 		Accessor positionAccessor = colladaFactory.createAccessor();
 		positionAccessor.setSource("#" + positionArray.getId());
 		positionAccessor.setStride(new BigInteger("3"));
-        Param paramX = colladaFactory.createParam();
-        paramX.setType("float");
-        paramX.setName("X");
-        Param paramY = colladaFactory.createParam();
-        paramY.setType("float");
-        paramY.setName("Y");
-        Param paramZ = colladaFactory.createParam();
-        paramZ.setType("float");
-        paramZ.setName("Z");
+		Param paramX = colladaFactory.createParam();
+		paramX.setType("float");
+		paramX.setName("X");
+		Param paramY = colladaFactory.createParam();
+		paramY.setType("float");
+		paramY.setName("Y");
+		Param paramZ = colladaFactory.createParam();
+		paramZ.setType("float");
+		paramZ.setName("Z");
 		positionAccessor.getParam().add(paramX);
 		positionAccessor.getParam().add(paramY);
 		positionAccessor.getParam().add(paramZ);
 		Source.TechniqueCommon positionTechnique = colladaFactory.createSourceTechniqueCommon();
 		positionTechnique.setAccessor(positionAccessor);
 		positionSource.setTechniqueCommon(positionTechnique);
-		
+
 		Source texCoordsSource = colladaFactory.createSource();
 		texCoordsSource.setId("geometry0-texCoords");
 
@@ -415,19 +422,19 @@ public abstract class KmlGenericObject {
 		texCoordsArray.setId("geometry0-texCoords-array");
 		List<Double> texCoordsValues = texCoordsArray.getValue();
 		texCoordsSource.setFloatArray(texCoordsArray);
-		
+
 		Accessor texCoordsAccessor = colladaFactory.createAccessor();
 		texCoordsAccessor.setSource("#" + texCoordsArray.getId());
 		texCoordsAccessor.setStride(new BigInteger("2"));
-        Param paramS = colladaFactory.createParam();
-        paramS.setType("float");
-        paramS.setName("S");
-        Param paramT = colladaFactory.createParam();
-        paramT.setType("float");
-        paramT.setName("T");
-        texCoordsAccessor.getParam().add(paramS);
-        texCoordsAccessor.getParam().add(paramT);
-        Source.TechniqueCommon texCoordsTechnique = colladaFactory.createSourceTechniqueCommon();
+		Param paramS = colladaFactory.createParam();
+		paramS.setType("float");
+		paramS.setName("S");
+		Param paramT = colladaFactory.createParam();
+		paramT.setType("float");
+		paramT.setName("T");
+		texCoordsAccessor.getParam().add(paramS);
+		texCoordsAccessor.getParam().add(paramT);
+		Source.TechniqueCommon texCoordsTechnique = colladaFactory.createSourceTechniqueCommon();
 		texCoordsTechnique.setAccessor(texCoordsAccessor);
 		texCoordsSource.setTechniqueCommon(texCoordsTechnique);
 
@@ -437,7 +444,7 @@ public abstract class KmlGenericObject {
 		input.setSemantic("POSITION");
 		input.setSource("#" + positionSource.getId());
 		vertices.getInput().add(input);
-		
+
 		Mesh mesh = colladaFactory.createMesh();
 		mesh.getSource().add(positionSource);
 		mesh.getSource().add(texCoordsSource);
@@ -463,7 +470,7 @@ public abstract class KmlGenericObject {
 		// --------------------------- now the variable part ---------------------------
 		Triangles triangles = null;
 		HashMap<String, Triangles> trianglesByTexImageName = new HashMap<String, Triangles>();
-		
+
 		// geometryInfos contains all surfaces, textured or not
 		Set<Long> keySet = geometryInfos.keySet();
 		Iterator<Long> iterator = keySet.iterator();
@@ -475,8 +482,8 @@ public abstract class KmlGenericObject {
 			if (texImageName == null) {
 				surfaceTextured = false;
 				texImageName = (x3dMaterial != null) ?
-							   buildNameFromX3dMaterial(x3dMaterial):
-							   NO_TEXIMAGE; // <- should never happen
+						buildNameFromX3dMaterial(x3dMaterial):
+							NO_TEXIMAGE; // <- should never happen
 			}
 
 			triangles = trianglesByTexImageName.get(texImageName);
@@ -631,27 +638,28 @@ public abstract class KmlGenericObject {
 					inputT.setOffset(BigInteger.ONE);
 					triangles.getInput().add(inputT);
 				}
-				
+
 				trianglesByTexImageName.put(texImageName, triangles);
 			}
-		
+
 			// --------------------------- geometry (variable part) ---------------------------
 			GeometryInfo ginfo = geometryInfos.get(surfaceId);
 			ginfo.convertToIndexedTriangles();
 			/*
-				// the following seems to be buggy, so don't do it for now
-				// generate normals, currently not used, but this is the recommended order
-				NormalGenerator ng = new NormalGenerator();
-				ng.generateNormals(ginfo);
-				// stripify: merge triangles together into bigger triangles when possible
-				Stripifier st = new Stripifier();
-				st.stripify(ginfo);
+		// the following seems to be buggy, so don't do it for now
+		// generate normals, currently not used, but this is the recommended order
+		NormalGenerator ng = new NormalGenerator();
+		ng.generateNormals(ginfo);
+		// stripify: merge triangles together into bigger triangles when possible
+		Stripifier st = new Stripifier();
+		st.stripify(ginfo);
 			 */
 			GeometryArray gArray = ginfo.getGeometryArray();
 			Point3d coordPoint = new Point3d();
 			for(int i = 0; i < gArray.getVertexCount(); i++){
 				gArray.getCoordinate(i, coordPoint);
-
+				System.out.println(coordPoint.x+" - "+ coordPoint.y+" - "+coordPoint.z);
+				System.out.println("----------------------------------------------------");
 				VertexInfo vertexInfo = getVertexInfoForXYZ(coordPoint.x, coordPoint.y, coordPoint.z);
 				if (vertexInfo == null || (surfaceTextured && vertexInfo.getTexCoords(surfaceId) == null)) {
 					// no node or wrong node found
@@ -659,7 +667,7 @@ public abstract class KmlGenericObject {
 					if (surfaceTextured) {
 						vertexInfo = getVertexInfoBestFitForXYZ(coordPoint.x, coordPoint.y, coordPoint.z, surfaceId);
 					}
-					else  {
+					else {
 						vertexInfo = getVertexInfoBestFitForXYZ(coordPoint.x, coordPoint.y, coordPoint.z);
 					}
 				}
@@ -669,7 +677,7 @@ public abstract class KmlGenericObject {
 					TexCoords texCoords = vertexInfo.getTexCoords(surfaceId);
 					if (texCoords != null) {
 						// trying to save some texture points
-						int indexOfT = texCoordsValues.indexOf(texCoords.getT()); 
+						int indexOfT = texCoordsValues.indexOf(texCoords.getT());
 						if (indexOfT > 0 && indexOfT%2 == 1 && // avoid coincidences
 								texCoordsValues.get(indexOfT - 1).equals(texCoords.getS())) {
 							triangles.getP().add(new BigInteger(String.valueOf((indexOfT - 1)/2)));
@@ -684,9 +692,9 @@ public abstract class KmlGenericObject {
 					}
 					else { // should never happen
 						triangles.getP().add(texCoordsCounter); // wrong data is better than triangles out of sync
-						Logger.getInstance().log(LogLevel.DEBUG, 
+						Logger.getInstance().log(LogLevel.DEBUG,
 								"texCoords not found for (" + coordPoint.x + ", " + coordPoint.y + ", "
-								+ coordPoint.z + "). TOLERANCE = " + TOLERANCE_AFTER_TRIANGULATION);
+										+ coordPoint.z + "). TOLERANCE = " + TOLERANCE_AFTER_TRIANGULATION);
 					}
 				}
 			}
@@ -699,7 +707,7 @@ public abstract class KmlGenericObject {
 			positionValues.add(new Double(reducePrecisionForXorY((vertexInfoIterator.getY() - originY)/100)));
 			positionValues.add(new Double(reducePrecisionForZ((vertexInfoIterator.getZ() - originZ)/100)));
 			vertexInfoIterator = vertexInfoIterator.getNextVertexInfo();
-		} 
+		}
 		positionArray.setCount(new BigInteger(String.valueOf(positionValues.size()))); // gotta love BigInteger!
 		texCoordsArray.setCount(new BigInteger(String.valueOf(texCoordsValues.size())));
 		positionAccessor.setCount(positionArray.getCount().divide(positionAccessor.getStride()));
@@ -725,7 +733,7 @@ public abstract class KmlGenericObject {
 
 		// this method's name is really like this...
 		List<Object> libraries = collada.getLibraryAnimationsOrLibraryAnimationClipsOrLibraryCameras();
-		
+
 		if (!libraryImages.getImage().isEmpty()) { // there may be buildings with no textures at all
 			libraries.add(libraryImages);
 		}
@@ -733,7 +741,7 @@ public abstract class KmlGenericObject {
 		libraries.add(libraryEffects);
 		libraries.add(libraryGeometries);
 		libraries.add(libraryVisualScenes);
-		
+
 		InstanceWithExtra instanceWithExtra = colladaFactory.createInstanceWithExtra();
 		instanceWithExtra.setUrl("#" + visualScene.getId());
 		COLLADA.Scene scene = colladaFactory.createCOLLADAScene();
@@ -742,7 +750,7 @@ public abstract class KmlGenericObject {
 
 		return collada;
 	}
-	
+
 	private String replaceExtensionWithSuffix (String imageName, String suffix) {
 		int indexOfExtension = imageName.lastIndexOf('.');
 		if (indexOfExtension != -1) {
@@ -750,11 +758,11 @@ public abstract class KmlGenericObject {
 		}
 		return imageName + suffix;
 	}
-	
+
 	protected HashMap<Object, String> getTexImageUris(){
 		return texImageUris;
 	}
-	
+
 	public void addGeometryInfo(long surfaceId, GeometryInfo geometryInfo){
 		geometryInfos.put(new Long(surfaceId), geometryInfo);
 	}
@@ -770,12 +778,12 @@ public abstract class KmlGenericObject {
 	protected void addX3dMaterial(long surfaceId, X3DMaterial x3dMaterial){
 		if (x3dMaterial == null) return;
 		if (x3dMaterial.isSetAmbientIntensity()
-			|| x3dMaterial.isSetShininess()
-			|| x3dMaterial.isSetTransparency()
-			|| x3dMaterial.isSetDiffuseColor()
-			|| x3dMaterial.isSetSpecularColor()
-			|| x3dMaterial.isSetEmissiveColor()) {
-			
+				|| x3dMaterial.isSetShininess()
+				|| x3dMaterial.isSetTransparency()
+				|| x3dMaterial.isSetDiffuseColor()
+				|| x3dMaterial.isSetSpecularColor()
+				|| x3dMaterial.isSetEmissiveColor()) {
+
 			if (x3dMaterials == null) {
 				x3dMaterials = new HashMap<Long, X3DMaterial>();
 			}
@@ -800,13 +808,14 @@ public abstract class KmlGenericObject {
 	protected void addTexImage(String texImageUri, BufferedImage texImage){
 		if (texImage != null) {
 			texImages.put(texImageUri, texImage);
+
 		}
 	}
 
 	protected void removeTexImage(String texImageUri){
 		texImages.remove(texImageUri);
 	}
-	
+
 	public HashMap<String, BufferedImage> getTexImages(){
 		return texImages;
 	}
@@ -818,7 +827,7 @@ public abstract class KmlGenericObject {
 		}
 		return texImage;
 	}
-	
+
 	/*
 	private void removeTexImage(String texImageUri){
 		texImages.remove(texImageUri);
@@ -845,7 +854,7 @@ public abstract class KmlGenericObject {
 		}
 		return texOrdImage;
 	}*/
-	
+
 	public void setVertexInfoForXYZ(long surfaceId, double x, double y, double z, TexCoords texCoordsForThisSurface){
 		vertexIdCounter = vertexIdCounter.add(BigInteger.ONE);
 		VertexInfo vertexInfo = new VertexInfo(vertexIdCounter, x, y, z);
@@ -892,7 +901,7 @@ public abstract class KmlGenericObject {
 			replaceOrAddValue(currentBasis, nodeToInsert);
 		}
 	}
-	
+
 	private Object getValue(double key, Node currentBasis) {
 		if (currentBasis == null) {
 			return null;
@@ -908,38 +917,38 @@ public abstract class KmlGenericObject {
 	}
 
 
-    public VertexInfo getVertexInfoBestFitForXYZ(double x, double y, double z, long surfaceId) {
+	public VertexInfo getVertexInfoBestFitForXYZ(double x, double y, double z, long surfaceId) {
 		VertexInfo result = null;
 		VertexInfo vertexInfoIterator = firstVertexInfo;
-    	double distancePow2 = Double.MAX_VALUE;
-    	double currentDistancePow2;
-    	while (vertexInfoIterator != null) {
-    		if (vertexInfoIterator.getTexCoords(surfaceId) != null) {
-    			currentDistancePow2 = Math.pow(x - (float)vertexInfoIterator.getX(), 2) + 
-				  					  Math.pow(y - (float)vertexInfoIterator.getY(), 2) +
-				  					  Math.pow(z - (float)vertexInfoIterator.getZ(), 2);
-    			if (currentDistancePow2 < distancePow2) {
-    				distancePow2 = currentDistancePow2;
-    				result = vertexInfoIterator;
-    			}
-    		}
+		double distancePow2 = Double.MAX_VALUE;
+		double currentDistancePow2;
+		while (vertexInfoIterator != null) {
+			if (vertexInfoIterator.getTexCoords(surfaceId) != null) {
+				currentDistancePow2 = Math.pow(x - (float)vertexInfoIterator.getX(), 2) + 
+						Math.pow(y - (float)vertexInfoIterator.getY(), 2) +
+						Math.pow(z - (float)vertexInfoIterator.getZ(), 2);
+				if (currentDistancePow2 < distancePow2) {
+					distancePow2 = currentDistancePow2;
+					result = vertexInfoIterator;
+				}
+			}
 			vertexInfoIterator = vertexInfoIterator.getNextVertexInfo();
 		}
 		if (result == null) {
 			result = getVertexInfoBestFitForXYZ(x, y, z);
 		}
 		return result;
-    }
+	}
 
-    public VertexInfo getVertexInfoBestFitForXYZ(double x, double y, double z) {
+	public VertexInfo getVertexInfoBestFitForXYZ(double x, double y, double z) {
 		VertexInfo result = null;
 		VertexInfo vertexInfoIterator = firstVertexInfo;
-    	double distancePow2 = Double.MAX_VALUE;
-    	double currentDistancePow2;
+		double distancePow2 = Double.MAX_VALUE;
+		double currentDistancePow2;
 		while (vertexInfoIterator != null) {
 			currentDistancePow2 = Math.pow(x - (float)vertexInfoIterator.getX(), 2) + 
-								  Math.pow(y - (float)vertexInfoIterator.getY(), 2) +
-								  Math.pow(z - (float)vertexInfoIterator.getZ(), 2);
+					Math.pow(y - (float)vertexInfoIterator.getY(), 2) +
+					Math.pow(z - (float)vertexInfoIterator.getZ(), 2);
 			if (currentDistancePow2 < distancePow2) {
 				distancePow2 = currentDistancePow2;
 				result = vertexInfoIterator;
@@ -947,7 +956,7 @@ public abstract class KmlGenericObject {
 			vertexInfoIterator = vertexInfoIterator.getNextVertexInfo();
 		}
 		return result;
-    }
+	}
 
 	private void replaceOrAddValue(Node currentBasis, Node nodeToInsert) {
 		if (nodeToInsert.value instanceof VertexInfo) {
@@ -965,7 +974,7 @@ public abstract class KmlGenericObject {
 			insertNode((Node)currentBasis.value, (Node)nodeToInsert.value);
 		}
 	}
-	
+
 	private void linkCurrentVertexInfoToLastVertexInfo (Node node) {
 		while (!(node.value instanceof VertexInfo)) {
 			node = (Node)node.value;
@@ -985,17 +994,17 @@ public abstract class KmlGenericObject {
 		}
 		return result;
 	}
-	
+
 	public void appendObject (KmlGenericObject objectToAppend) {
-		
+
 		VertexInfo vertexInfoIterator = objectToAppend.firstVertexInfo;
 		while (vertexInfoIterator != null) {
 			if (vertexInfoIterator.getAllTexCoords() == null) {
 				this.setVertexInfoForXYZ(-1, // dummy
-						 				 vertexInfoIterator.getX(),
-						 				 vertexInfoIterator.getY(),
-						 				 vertexInfoIterator.getZ(),
-						 				 null);
+						vertexInfoIterator.getX(),
+						vertexInfoIterator.getY(),
+						vertexInfoIterator.getZ(),
+						null);
 			}
 			else {
 				Set<Long> keySet = vertexInfoIterator.getAllTexCoords().keySet();
@@ -1003,10 +1012,10 @@ public abstract class KmlGenericObject {
 				while (iterator.hasNext()) {
 					Long surfaceId = iterator.next();
 					this.setVertexInfoForXYZ(surfaceId,
-											 vertexInfoIterator.getX(),
-											 vertexInfoIterator.getY(),
-											 vertexInfoIterator.getZ(),
-											 vertexInfoIterator.getTexCoords(surfaceId));
+							vertexInfoIterator.getX(),
+							vertexInfoIterator.getY(),
+							vertexInfoIterator.getZ(),
+							vertexInfoIterator.getTexCoords(surfaceId));
 				}
 			}
 			vertexInfoIterator = vertexInfoIterator.getNextVertexInfo();
@@ -1020,10 +1029,10 @@ public abstract class KmlGenericObject {
 			String imageUri = objectToAppend.texImageUris.get(surfaceId);
 			this.addTexImageUri(surfaceId, imageUri);
 			this.addTexImage(imageUri, objectToAppend.getTexImage(imageUri));
-//			this.addTexOrdImage(imageUri, objectToAppend.getTexOrdImage(imageUri));
+			//			this.addTexOrdImage(imageUri, objectToAppend.getTexOrdImage(imageUri));
 			this.addGeometryInfo(surfaceId, objectToAppend.geometryInfos.get(surfaceId));
 		}
-		
+
 		// adapt id accordingly
 		int indexOf_to_ = this.gmlId.indexOf("_to_");
 		String ownLowerLimit = "";
@@ -1036,7 +1045,7 @@ public abstract class KmlGenericObject {
 			ownLowerLimit = this.gmlId;
 			ownUpperLimit = ownLowerLimit;
 		}
-		
+
 		int btaIndexOf_to_ = objectToAppend.gmlId.indexOf("_to_");
 		String btaLowerLimit = "";
 		String btaUpperLimit = "";
@@ -1051,7 +1060,7 @@ public abstract class KmlGenericObject {
 
 		ownLowerLimit = ownLowerLimit.compareTo(btaLowerLimit)<0 ? ownLowerLimit: btaLowerLimit;
 		ownUpperLimit = ownUpperLimit.compareTo(btaUpperLimit)>0 ? ownUpperLimit: btaUpperLimit;
-		
+
 		this.setGmlId(String.valueOf(ownLowerLimit) + "_to_" + ownUpperLimit);
 	}
 
@@ -1062,13 +1071,13 @@ public abstract class KmlGenericObject {
 			// building has not enough textures or they are in an unknown image format 
 			return;
 		}
-		
+
 		switch (packingAlgorithm) {
-			case -1:
-				useInternalTAGenerator(imageScaleFactor, pots);
-				break;
-			default:
-				useExternalTAGenerator(packingAlgorithm, imageScaleFactor, pots);
+		case -1:
+			useInternalTAGenerator(imageScaleFactor, pots);
+			break;
+		default:
+			useExternalTAGenerator(packingAlgorithm, imageScaleFactor, pots);
 		}
 	}
 
@@ -1077,7 +1086,7 @@ public abstract class KmlGenericObject {
 		TextureAtlasGenerator taGenerator = new TextureAtlasGenerator();
 		TexImageInfo tiInfo = new TexImageInfo();
 		tiInfo.setTexImageURIs(texImageUris);
-		
+
 		HashMap<String, TexImage> tiInfoImages = new HashMap<String, TexImage>();
 
 		Set<String> texImagesSet = texImages.keySet();
@@ -1088,18 +1097,18 @@ public abstract class KmlGenericObject {
 			tiInfoImages.put(imageName, image);
 		}
 
-//		if (texOrdImages != null) {
-//			texImagesSet = texOrdImages.keySet();
-//			texImagesIterator = texImagesSet.iterator();
-//			while (texImagesIterator.hasNext()) {
-//				String imageName = texImagesIterator.next();
-//				TexImage image = new TexImage(texOrdImages.get(imageName));
-//				tiInfoImages.put(imageName, image);
-//			}
-//		}
-		
+		//		if (texOrdImages != null) {
+		//			texImagesSet = texOrdImages.keySet();
+		//			texImagesIterator = texImagesSet.iterator();
+		//			while (texImagesIterator.hasNext()) {
+		//				String imageName = texImagesIterator.next();
+		//				TexImage image = new TexImage(texOrdImages.get(imageName));
+		//				tiInfoImages.put(imageName, image);
+		//			}
+		//		}
+
 		tiInfo.setTexImages(tiInfoImages);
-		
+
 		// texture coordinates
 		HashMap<Object, String> tiInfoCoords = new HashMap<Object, String>();
 
@@ -1110,34 +1119,34 @@ public abstract class KmlGenericObject {
 			VertexInfo vertexInfoIterator = firstVertexInfo;
 			while (vertexInfoIterator != null) {
 				if (vertexInfoIterator.getAllTexCoords() != null &&
-					vertexInfoIterator.getAllTexCoords().containsKey(sgId)) {
+						vertexInfoIterator.getAllTexCoords().containsKey(sgId)) {
 					double s = vertexInfoIterator.getTexCoords(sgId).getS();
 					double t = vertexInfoIterator.getTexCoords(sgId).getT();
 					String tiInfoCoordsForSgId = tiInfoCoords.get(sgId);
 					tiInfoCoordsForSgId = (tiInfoCoordsForSgId == null) ?
-											"" :
-											tiInfoCoordsForSgId + " ";	
+							"" :
+								tiInfoCoordsForSgId + " ";	
 					tiInfoCoords.put(sgId, tiInfoCoordsForSgId + String.valueOf(s) + " " + String.valueOf(t));
 				}
 				vertexInfoIterator = vertexInfoIterator.getNextVertexInfo();
 			}
 		} 
-		
+
 		tiInfo.setTexCoordinates(tiInfoCoords);
-		
+
 		taGenerator.setUsePOTS(pots);
 		taGenerator.setScaleFactor(scaleFactor);
 		tiInfo = taGenerator.convert(tiInfo, packingAlgorithm);
-		
+
 		texImageUris = tiInfo.getTexImageURIs();
 		tiInfoImages = tiInfo.getTexImages(); 
 		tiInfoCoords = tiInfo.getTexCoordinates();
-			
+
 		texImages.clear();
-//		if (texOrdImages != null) {
-//			texOrdImages.clear();
-//		}
-		
+		//		if (texOrdImages != null) {
+		//			texOrdImages.clear();
+		//		}
+
 		texImagesSet = tiInfoImages.keySet();
 		texImagesIterator = texImagesSet.iterator();
 		while (texImagesIterator.hasNext()) {
@@ -1146,23 +1155,23 @@ public abstract class KmlGenericObject {
 			if (texImage.getBufferedImage() != null) {
 				texImages.put(texImageName, texImage.getBufferedImage());
 			}
-//			else if (texImage.getOrdImage() != null) {
-//				if (texOrdImages == null) {
-//					texOrdImages = new HashMap<String, OrdImage>();
-//				}
-//				texOrdImages.put(texImageName, texImage.getOrdImage());
-//			}
+			//			else if (texImage.getOrdImage() != null) {
+			//				if (texOrdImages == null) {
+			//					texOrdImages = new HashMap<String, OrdImage>();
+			//				}
+			//				texOrdImages.put(texImageName, texImage.getOrdImage());
+			//			}
 		}
-		
+
 		sgIdIterator = sgIdSet.iterator();
 		while (sgIdIterator.hasNext()) {
 			Long sgId = (Long) sgIdIterator.next();
 			StringTokenizer texCoordsTokenized = new StringTokenizer(tiInfoCoords.get(sgId), " ");
 			VertexInfo vertexInfoIterator = firstVertexInfo;
 			while (texCoordsTokenized.hasMoreElements() &&
-				   vertexInfoIterator != null) {
+					vertexInfoIterator != null) {
 				if (vertexInfoIterator.getAllTexCoords() != null && 
-					vertexInfoIterator.getAllTexCoords().containsKey(sgId)) {
+						vertexInfoIterator.getAllTexCoords().containsKey(sgId)) {
 					vertexInfoIterator.getTexCoords(sgId).setS(Double.parseDouble(texCoordsTokenized.nextToken()));
 					vertexInfoIterator.getTexCoords(sgId).setT(Double.parseDouble(texCoordsTokenized.nextToken()));
 				}
@@ -1170,7 +1179,7 @@ public abstract class KmlGenericObject {
 			}
 		} 
 	}
-	
+
 	private void useInternalTAGenerator(double scaleFactor, boolean pots) throws SQLException, IOException {
 
 		if (texImages.size() < 2) {
@@ -1189,20 +1198,20 @@ public abstract class KmlGenericObject {
 			BufferedImage imageToAdd = texImages.get(imageName);
 			int index = 0;
 			while (index < inobih.size() 
-				   && texImages.get(inobih.get(index)).getHeight() > imageToAdd.getHeight()) {
+					&& texImages.get(inobih.get(index)).getHeight() > imageToAdd.getHeight()) {
 				index++;
 			}
 			inobih.add(index, imageName);
 			totalWidth = totalWidth + imageToAdd.getWidth();
 		}
-		
+
 		// calculate size of texture atlas
 		final int TEX_ATLAS_MAX_WIDTH = (int)(totalWidth*scaleFactor/Math.sqrt(inobih.size()));
 		int accumulatedWidth = 0;
 		int maxWidth = 0;
 		int maxHeightForRow = 0;
 		int accumulatedHeight = 0;
-		
+
 		for (String imageName: inobih) {
 			BufferedImage imageToAdd = texImages.get(imageName);
 			if (accumulatedWidth + imageToAdd.getWidth()*scaleFactor > TEX_ATLAS_MAX_WIDTH) { // new row
@@ -1224,7 +1233,7 @@ public abstract class KmlGenericObject {
 
 		// check the first image as example, is it jpeg or png?
 		int type = (texImages.get(inobih.get(0)).getTransparency() == Transparency.OPAQUE) ?
-                	BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+				BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
 		// draw texture atlas
 		BufferedImage textureAtlas = new BufferedImage(maxWidth, accumulatedHeight, type);
 		Graphics2D g2d = textureAtlas.createGraphics();
@@ -1234,7 +1243,7 @@ public abstract class KmlGenericObject {
 		maxHeightForRow = 0;
 		accumulatedHeight = 0;
 		HashMap<String, Point> imageOffset = new HashMap<String, Point>();
-		
+
 		for (String imageName: inobih) {
 			BufferedImage imageToAdd = texImages.get(imageName);
 			if (accumulatedWidth + imageToAdd.getWidth()*scaleFactor > TEX_ATLAS_MAX_WIDTH) { // new row
@@ -1245,7 +1254,7 @@ public abstract class KmlGenericObject {
 			}
 			maxHeightForRow = Math.max(maxHeightForRow, (int)(imageToAdd.getHeight()*scaleFactor));
 			Point offsetPoint = new Point (accumulatedWidth,
-										   accumulatedHeight + maxHeightForRow - (int)(imageToAdd.getHeight()*scaleFactor));
+					accumulatedHeight + maxHeightForRow - (int)(imageToAdd.getHeight()*scaleFactor));
 			g2d.drawImage(imageToAdd, offsetPoint.x, offsetPoint.y, (int)(imageToAdd.getWidth()*scaleFactor), (int)(imageToAdd.getHeight()*scaleFactor), null);
 			imageOffset.put(imageName, offsetPoint);
 			accumulatedWidth = accumulatedWidth + (int)(imageToAdd.getWidth()*scaleFactor);
@@ -1268,10 +1277,10 @@ public abstract class KmlGenericObject {
 						wrappedSurfacesSet.add(surfaceId);
 						continue;
 					}
-					
+
 					double s = vertexInfoIterator.getTexCoords(surfaceId).getS();
 					double t = vertexInfoIterator.getTexCoords(surfaceId).getT();
- 					s = (imageOffset.get(imageName).x + (s * texImage.getWidth()*scaleFactor)) / textureAtlas.getWidth();
+					s = (imageOffset.get(imageName).x + (s * texImage.getWidth()*scaleFactor)) / textureAtlas.getWidth();
 					// graphics2D coordinates start at the top left point
 					// texture coordinates start at the bottom left point
 					t = ((textureAtlas.getHeight() - imageOffset.get(imageName).y - texImage.getHeight()*scaleFactor) + 
@@ -1285,8 +1294,8 @@ public abstract class KmlGenericObject {
 
 		// redirect all non-wrapping, known-formatted texture images to texture atlas
 		String textureAtlasName = "textureAtlas_BASIC_" + getGmlId().hashCode() + "_" +
-								  inobih.get(0).substring(inobih.get(0).lastIndexOf('.'));
-		
+				inobih.get(0).substring(inobih.get(0).lastIndexOf('.'));
+
 		Set<Object> surfaceIdSet = texImageUris.keySet();
 		Iterator<Object> surfaceIdIterator = surfaceIdSet.iterator();
 		while (surfaceIdIterator.hasNext()) {
@@ -1301,8 +1310,8 @@ public abstract class KmlGenericObject {
 		texImages.put(textureAtlasName, textureAtlas);
 		g2d.dispose();
 	}
-	
-	
+
+
 	public void resizeAllImagesByFactor (double factor) throws SQLException, IOException {
 		if (texImages.size() == 0) { // building has no textures at all
 			return;
@@ -1317,109 +1326,109 @@ public abstract class KmlGenericObject {
 				continue;
 			}
 			BufferedImage resizedImage = getScaledInstance(imageToResize,
-														   (int)(imageToResize.getWidth()*factor),
-														   (int)(imageToResize.getHeight()*factor),
-														   RenderingHints.VALUE_INTERPOLATION_BILINEAR,
-														   true);
+					(int)(imageToResize.getWidth()*factor),
+					(int)(imageToResize.getHeight()*factor),
+					RenderingHints.VALUE_INTERPOLATION_BILINEAR,
+					true);
 			texImages.put(imageName, resizedImage);
 		}
 
 	}
 
 
-    /**
-     * Convenience method that returns a scaled instance of the
-     * provided {@code BufferedImage}.
-     *
-     * @param img the original image to be scaled
-     * @param targetWidth the desired width of the scaled instance,
-     *    in pixels
-     * @param targetHeight the desired height of the scaled instance,
-     *    in pixels
-     * @param hint one of the rendering hints that corresponds to
-     *    {@code RenderingHints.KEY_INTERPOLATION} (e.g.
-     *    {@code RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR},
-     *    {@code RenderingHints.VALUE_INTERPOLATION_BILINEAR},
-     *    {@code RenderingHints.VALUE_INTERPOLATION_BICUBIC})
-     * @param higherQuality if true, this method will use a multi-step
-     *    scaling technique that provides higher quality than the usual
-     *    one-step technique (only useful in downscaling cases, where
-     *    {@code targetWidth} or {@code targetHeight} is
-     *    smaller than the original dimensions, and generally only when
-     *    the {@code BILINEAR} hint is specified)
-     * @return a scaled version of the original {@code BufferedImage}
-     */
-    private BufferedImage getScaledInstance(BufferedImage img,
-                                           int targetWidth,
-                                           int targetHeight,
-                                           Object hint,
-                                           boolean higherQuality) {
-    	
-        int type = (img.getTransparency() == Transparency.OPAQUE) ?
-            BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
-        BufferedImage ret = (BufferedImage)img;
-        int w, h;
-        if (higherQuality) {
-            // Use multi-step technique: start with original size, then
-            // scale down in multiple passes with drawImage()
-            // until the target size is reached
-            w = img.getWidth();
-            h = img.getHeight();
-        } 
-        else {
-            // Use one-step technique: scale directly from original
-            // size to target size with a single drawImage() call
-            w = targetWidth;
-            h = targetHeight;
-        }
-        
-        do {
-            if (higherQuality && w > targetWidth) {
-                w /= 2;
-                if (w < targetWidth) {
-                    w = targetWidth;
-                }
-            }
+	/**
+	 * Convenience method that returns a scaled instance of the
+	 * provided {@code BufferedImage}.
+	 *
+	 * @param img the original image to be scaled
+	 * @param targetWidth the desired width of the scaled instance,
+	 *    in pixels
+	 * @param targetHeight the desired height of the scaled instance,
+	 *    in pixels
+	 * @param hint one of the rendering hints that corresponds to
+	 *    {@code RenderingHints.KEY_INTERPOLATION} (e.g.
+	 *    {@code RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR},
+	 *    {@code RenderingHints.VALUE_INTERPOLATION_BILINEAR},
+	 *    {@code RenderingHints.VALUE_INTERPOLATION_BICUBIC})
+	 * @param higherQuality if true, this method will use a multi-step
+	 *    scaling technique that provides higher quality than the usual
+	 *    one-step technique (only useful in downscaling cases, where
+	 *    {@code targetWidth} or {@code targetHeight} is
+	 *    smaller than the original dimensions, and generally only when
+	 *    the {@code BILINEAR} hint is specified)
+	 * @return a scaled version of the original {@code BufferedImage}
+	 */
+	private BufferedImage getScaledInstance(BufferedImage img,
+			int targetWidth,
+			int targetHeight,
+			Object hint,
+			boolean higherQuality) {
 
-            if (higherQuality && h > targetHeight) {
-                h /= 2;
-                if (h < targetHeight) {
-                    h = targetHeight;
-                }
-            }
+		int type = (img.getTransparency() == Transparency.OPAQUE) ?
+				BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+		BufferedImage ret = (BufferedImage)img;
+		int w, h;
+		if (higherQuality) {
+			// Use multi-step technique: start with original size, then
+			// scale down in multiple passes with drawImage()
+			// until the target size is reached
+			w = img.getWidth();
+			h = img.getHeight();
+		} 
+		else {
+			// Use one-step technique: scale directly from original
+			// size to target size with a single drawImage() call
+			w = targetWidth;
+			h = targetHeight;
+		}
 
-            BufferedImage tmp = new BufferedImage(w, h, type);
-            Graphics2D g2 = tmp.createGraphics();
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, hint);
-            g2.drawImage(ret, 0, 0, w, h, null);
-            g2.dispose();
+		do {
+			if (higherQuality && w > targetWidth) {
+				w /= 2;
+				if (w < targetWidth) {
+					w = targetWidth;
+				}
+			}
 
-            ret = tmp;
-        }
-        while (w != targetWidth || h != targetHeight);
+			if (higherQuality && h > targetHeight) {
+				h /= 2;
+				if (h < targetHeight) {
+					h = targetHeight;
+				}
+			}
 
-        return ret;
-    }
+			BufferedImage tmp = new BufferedImage(w, h, type);
+			Graphics2D g2 = tmp.createGraphics();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, hint);
+			g2.drawImage(ret, 0, 0, w, h, null);
+			g2.dispose();
 
-    private String buildNameFromX3dMaterial(X3DMaterial x3dMaterial) {
-    	String name = NO_TEXIMAGE;
-    	if (x3dMaterial.isSetAmbientIntensity()) { name = name + "_ai_" + x3dMaterial.getAmbientIntensity();}
-    	if (x3dMaterial.isSetShininess()) { name = name + "_sh_" + x3dMaterial.getShininess();}
-    	if (x3dMaterial.isSetTransparency()) { name = name + "_tr_" + x3dMaterial.getTransparency();}
-    	if (x3dMaterial.isSetDiffuseColor()) { name = name + "_dc_r_" + x3dMaterial.getDiffuseColor().getRed()
-    														  + "_g_" + x3dMaterial.getDiffuseColor().getGreen()
-    														  + "_b_" + x3dMaterial.getDiffuseColor().getBlue();}
-    	if (x3dMaterial.isSetSpecularColor()) { name = name + "_sc_r_" + x3dMaterial.getSpecularColor().getRed()
-			  												   + "_g_" + x3dMaterial.getSpecularColor().getGreen()
-			  												   + "_b_" + x3dMaterial.getSpecularColor().getBlue();}
-    	if (x3dMaterial.isSetEmissiveColor()) { name = name + "_ec_r_" + x3dMaterial.getEmissiveColor().getRed()
-			  												   + "_g_" + x3dMaterial.getEmissiveColor().getGreen()
-			  												   + "_b_" + x3dMaterial.getEmissiveColor().getBlue();}
-    	return name;
-    }
+			ret = tmp;
+		}
+		while (w != targetWidth || h != targetHeight);
 
-    protected List<Point3d> setOrigins() {
-    	originZ = Double.MAX_VALUE;
+		return ret;
+	}
+
+	private String buildNameFromX3dMaterial(X3DMaterial x3dMaterial) {
+		String name = NO_TEXIMAGE;
+		if (x3dMaterial.isSetAmbientIntensity()) { name = name + "_ai_" + x3dMaterial.getAmbientIntensity();}
+		if (x3dMaterial.isSetShininess()) { name = name + "_sh_" + x3dMaterial.getShininess();}
+		if (x3dMaterial.isSetTransparency()) { name = name + "_tr_" + x3dMaterial.getTransparency();}
+		if (x3dMaterial.isSetDiffuseColor()) { name = name + "_dc_r_" + x3dMaterial.getDiffuseColor().getRed()
+				+ "_g_" + x3dMaterial.getDiffuseColor().getGreen()
+				+ "_b_" + x3dMaterial.getDiffuseColor().getBlue();}
+		if (x3dMaterial.isSetSpecularColor()) { name = name + "_sc_r_" + x3dMaterial.getSpecularColor().getRed()
+				+ "_g_" + x3dMaterial.getSpecularColor().getGreen()
+				+ "_b_" + x3dMaterial.getSpecularColor().getBlue();}
+		if (x3dMaterial.isSetEmissiveColor()) { name = name + "_ec_r_" + x3dMaterial.getEmissiveColor().getRed()
+				+ "_g_" + x3dMaterial.getEmissiveColor().getGreen()
+				+ "_b_" + x3dMaterial.getEmissiveColor().getBlue();}
+		return name;
+	}
+
+	protected List<Point3d> setOrigins() {
+		originZ = Double.MAX_VALUE;
 		List<Point3d> coords = new ArrayList<Point3d>();
 		VertexInfo vertexInfoIterator = firstVertexInfo;
 		while (vertexInfoIterator != null) {
@@ -1438,30 +1447,30 @@ public abstract class KmlGenericObject {
 			vertexInfoIterator = vertexInfoIterator.getNextVertexInfo();
 		}
 		return coords;
-    }
-    
-    protected static double reducePrecisionForXorY (double originalValue) {
+	}
+
+	protected static double reducePrecisionForXorY (double originalValue) {
 		double newValue = originalValue; // + 0.00000005d;
-//		if (decimalDigits != 0) {
-//			double factor = Math.pow(10, decimalDigits);
-			double factor = Math.pow(10, 7);
-			newValue = Math.rint(newValue*factor);
-			newValue = newValue/factor;
-//		}
+		//		if (decimalDigits != 0) {
+		//			double factor = Math.pow(10, decimalDigits);
+		double factor = Math.pow(10, 7);
+		newValue = Math.rint(newValue*factor);
+		newValue = newValue/factor;
+		//		}
 		return newValue;
 	}
 
-    protected static double reducePrecisionForZ (double originalValue) {
+	protected static double reducePrecisionForZ (double originalValue) {
 		double newValue = originalValue; // + 0.0005d;
-//		if (decimalDigits != 0) {
-//			double factor = Math.pow(10, decimalDigits);
-			double factor = Math.pow(10, 4);
-			newValue = Math.rint(newValue*factor);
-			newValue = newValue/factor;
-//		}
+		//		if (decimalDigits != 0) {
+		//			double factor = Math.pow(10, decimalDigits);
+		double factor = Math.pow(10, 4);
+		newValue = Math.rint(newValue*factor);
+		newValue = newValue/factor;
+		//		}
 		return newValue;
 	}
-	
+
 	protected List<PlacemarkType> createPlacemarksForFootprint(List<Map<String, Object>> result, KmlSplittingResult work) throws Exception {
 
 		ResultSet rs = null;
@@ -1486,7 +1495,7 @@ public abstract class KmlGenericObject {
 		PolygonType polygon = null;
 		PolygonType[] multiPolygon = null;
 		for (Map<String, Object> Row: result) {
-			
+
 
 			if (Row != null) {
 				eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
@@ -1498,12 +1507,12 @@ public abstract class KmlGenericObject {
 
 
 				//***********************************************************************
-				
+
 				@SuppressWarnings("unchecked")
 				List<Double> _Geometry = (List<Double>)Row.get("Geometry");
-				
+
 				org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
-			
+
 				for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
 
 					List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");							
@@ -1512,38 +1521,38 @@ public abstract class KmlGenericObject {
 							Target_Coordinates.get(0),
 							Target_Coordinates.get(2)
 							);
-				
+
 				}
-				
+
 				Polygon surface = new Polygon(
-	                    new org.postgis.LinearRing[] {
-	                        new org.postgis.LinearRing(
-	                            tmpPoint
-	                        )
-	                    }
-	                );
-				
-				
+						new org.postgis.LinearRing[] {
+								new org.postgis.LinearRing(
+										tmpPoint
+										)
+						}
+						);
+
+
 				//***********************************************************************
 
 				Geometry groundSurface = surface;
-				
+
 				switch (groundSurface.getType()) {
 				case Geometry.POLYGON:
 					Polygon polyGeom = (Polygon) groundSurface;
-										
+
 					for (int ring = 0; ring < polyGeom.numRings(); ring++){					
 						LinearRingType linearRing = kmlFactory.createLinearRingType();
 						BoundaryType boundary = kmlFactory.createBoundaryType();
 						boundary.setLinearRing(linearRing);
-						
+
 						double [] ordinatesArray = new double[polyGeom.getRing(ring).numPoints() * 2];
-						
+
 						for (int j=polyGeom.getRing(ring).numPoints()-1, k=0; j >= 0; j--, k+=2){
 							ordinatesArray[k] = polyGeom.getRing(ring).getPoint(j).x;
 							ordinatesArray[k+1] = polyGeom.getRing(ring).getPoint(j).y;
 						}
-						
+
 						// the first ring usually is the outer ring in a PostGIS-Polygon
 						// e.g. POLYGON((outerBoundary),(innerBoundary),(innerBoundary))
 						if (ring == 0){
@@ -1560,11 +1569,11 @@ public abstract class KmlGenericObject {
 						}
 					}				
 					break;
-					
+
 				case Geometry.MULTIPOLYGON:
 					MultiPolygon multiPolyGeom = (MultiPolygon) groundSurface;
 					multiPolygon = new PolygonType[multiPolyGeom.numPolygons()]; 
-					
+
 					for (int p = 0; p < multiPolyGeom.numPolygons(); p++){
 						Polygon subPolyGeom = multiPolyGeom.getPolygon(p);
 
@@ -1577,14 +1586,14 @@ public abstract class KmlGenericObject {
 							LinearRingType linearRing = kmlFactory.createLinearRingType();
 							BoundaryType boundary = kmlFactory.createBoundaryType();
 							boundary.setLinearRing(linearRing);
-							
+
 							double [] ordinatesArray = new double[subPolyGeom.getRing(ring).numPoints() * 2];
-							
+
 							for (int j=subPolyGeom.getRing(ring).numPoints()-1, k=0; j >= 0; j--, k+=2){
 								ordinatesArray[k] = subPolyGeom.getRing(ring).getPoint(j).x;
 								ordinatesArray[k+1] = subPolyGeom.getRing(ring).getPoint(j).y;
 							}
-							
+
 							// the first ring usually is the outer ring in a PostGIS-Polygon
 							// e.g. POLYGON((outerBoundary),(innerBoundary),(innerBoundary))
 							if (ring == 0){
@@ -1611,11 +1620,11 @@ public abstract class KmlGenericObject {
 					Logger.getInstance().warn("Unknown geometry for " + work.getGmlId());
 					continue;
 				}
-		
+
 				if (polygon != null){
 					multiGeometry.getAbstractGeometryGroup().add(kmlFactory.createPolygon(polygon));
 				}
-				
+
 				if (multiPolygon != null){
 					for (int p = 0; p < multiPolygon.length; p++){
 						multiGeometry.getAbstractGeometryGroup().add(kmlFactory.createPolygon(multiPolygon[p]));
@@ -1631,9 +1640,9 @@ public abstract class KmlGenericObject {
 	}
 
 	protected List<PlacemarkType> createPlacemarksForExtruded(List<Map<String, Object>> result,
-															KmlSplittingResult work,
-															double measuredHeight,
-															boolean reversePointOrder) throws Exception {
+			KmlSplittingResult work,
+			double measuredHeight,
+			boolean reversePointOrder) throws Exception {
 
 
 		List<PlacemarkType> placemarkList = new ArrayList<PlacemarkType>();
@@ -1654,9 +1663,9 @@ public abstract class KmlGenericObject {
 
 		PolygonType polygon = null;
 		PolygonType[] multiPolygon = null;
-		
+
 		for (Map<String, Object> Row: result) {
-			
+
 
 			if (Row != null) {
 				eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
@@ -1665,15 +1674,15 @@ public abstract class KmlGenericObject {
 				polygon.setTessellate(true);
 				polygon.setExtrude(true);
 				polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.RELATIVE_TO_GROUND));
-				
-				
+
+
 				//***********************************************************************
-				
+
 				@SuppressWarnings("unchecked")
 				List<Double> _Geometry = (List<Double>)Row.get("Geometry");
-				
+
 				org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
-			
+
 				for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
 
 					List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");							
@@ -1682,18 +1691,18 @@ public abstract class KmlGenericObject {
 							Target_Coordinates.get(0),
 							Target_Coordinates.get(2)
 							);
-				
+
 				}
-				
+
 				Polygon surface = new Polygon(
-	                    new org.postgis.LinearRing[] {
-	                        new org.postgis.LinearRing(
-	                            tmpPoint
-	                        )
-	                    }
-	                );
-				
-				
+						new org.postgis.LinearRing[] {
+								new org.postgis.LinearRing(
+										tmpPoint
+										)
+						}
+						);
+
+
 				//***********************************************************************
 
 				Geometry groundSurface = surface;
@@ -1702,13 +1711,13 @@ public abstract class KmlGenericObject {
 				case Geometry.POLYGON:
 					Polygon polyGeom = (Polygon) groundSurface;
 					for (int ring = 0; ring < polyGeom.numRings(); ring++){
-											
+
 						LinearRingType linearRing = kmlFactory.createLinearRingType();
 						BoundaryType boundary = kmlFactory.createBoundaryType();
 						boundary.setLinearRing(linearRing);
-						
+
 						double [] ordinatesArray = new double[polyGeom.getRing(ring).numPoints() * 2];
-						
+
 						if (reversePointOrder) {
 							for (int j=polyGeom.getRing(ring).numPoints()-1, k=0; j >= 0; j--, k+=2){
 								ordinatesArray[k] = polyGeom.getRing(ring).getPoint(j).x;
@@ -1721,7 +1730,7 @@ public abstract class KmlGenericObject {
 								ordinatesArray[k+1] = polyGeom.getRing(ring).getPoint(j).y;
 							}							
 						}
-						
+
 						// the first ring usually is the outer ring in a PostGIS-Polygon
 						// e.g. POLYGON((outerBoundary),(innerBoundary),(innerBoundary))
 						if (ring == 0){
@@ -1741,10 +1750,10 @@ public abstract class KmlGenericObject {
 				case Geometry.MULTIPOLYGON:
 					MultiPolygon multiPolyGeom = (MultiPolygon) groundSurface;
 					multiPolygon = new PolygonType[multiPolyGeom.numPolygons()]; 
-					
+
 					for (int p = 0; p < multiPolyGeom.numPolygons(); p++){
 						Polygon subPolyGeom = multiPolyGeom.getPolygon(p);
-						
+
 						multiPolygon[p] = kmlFactory.createPolygonType();
 						multiPolygon[p].setTessellate(true);
 						multiPolygon[p].setExtrude(true);
@@ -1754,14 +1763,14 @@ public abstract class KmlGenericObject {
 							LinearRingType linearRing = kmlFactory.createLinearRingType();
 							BoundaryType boundary = kmlFactory.createBoundaryType();
 							boundary.setLinearRing(linearRing);
-							
+
 							double [] ordinatesArray = new double[subPolyGeom.getRing(ring).numPoints() * 2];
-							
+
 							for (int j=subPolyGeom.getRing(ring).numPoints()-1, k=0; j >= 0; j--, k+=2){
 								ordinatesArray[k] = subPolyGeom.getRing(ring).getPoint(j).x;
 								ordinatesArray[k+1] = subPolyGeom.getRing(ring).getPoint(j).y;
 							}
-							
+
 							// the first ring usually is the outer ring in a PostGIS-Polygon
 							// e.g. POLYGON((outerBoundary),(innerBoundary),(innerBoundary))
 							if (ring == 0){
@@ -1792,7 +1801,7 @@ public abstract class KmlGenericObject {
 				if (polygon != null){
 					multiGeometry.getAbstractGeometryGroup().add(kmlFactory.createPolygon(polygon));
 				}
-				
+
 				if (multiPolygon != null){
 					for (int p = 0; p < multiPolygon.length; p++){
 						multiGeometry.getAbstractGeometryGroup().add(kmlFactory.createPolygon(multiPolygon[p]));
@@ -1805,12 +1814,12 @@ public abstract class KmlGenericObject {
 		}
 		return placemarkList;
 	}
-	
+
 	protected List<PlacemarkType> createPlacemarksForGeometry(List<Map<String, Object>> rs,
 			KmlSplittingResult work) throws Exception{
-		
+
 		return createPlacemarksForGeometry(rs, work, false, false);
-	
+
 	}
 
 	protected List<PlacemarkType> createPlacemarksForGeometry(List<Map<String, Object>> result,
@@ -1818,15 +1827,15 @@ public abstract class KmlGenericObject {
 			boolean includeGroundSurface,
 			boolean includeClosureSurface) throws Exception {
 
-		
+
 		HashMap<String, MultiGeometryType> multiGeometries = new HashMap<String, MultiGeometryType>();
 		MultiGeometryType multiGeometry = null;
 		PolygonType polygon = null;
 
 		double zOffset = 0;
-		
+
 		List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result , work);
-		
+
 		zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
 
 		for (Map<String, Object> Row: result) {
@@ -1841,12 +1850,12 @@ public abstract class KmlGenericObject {
 				continue;
 			}
 
-			
+
 			@SuppressWarnings("unchecked")
 			List<Double> _Geometry = (List<Double>)Row.get("Geometry");
-			
+
 			org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
-		
+
 			for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
 
 				List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "4326");							
@@ -1856,45 +1865,45 @@ public abstract class KmlGenericObject {
 						Target_Coordinates.get(2)
 						);
 			}
-			
+
 			Polygon surface = new Polygon(
-                    new org.postgis.LinearRing[] {
-                        new org.postgis.LinearRing(
-                            tmpPoint
-                        )
-                    }
-                );
-		
-			
-			
-					
+					new org.postgis.LinearRing[] {
+							new org.postgis.LinearRing(
+									tmpPoint
+									)
+					}
+					);
+
+
+
+
 			double[] ordinatesArray = new double[surface.numPoints()*3];
-			
+
 			for (int i = 0, j = 0; i < surface.numPoints(); i++, j+=3){
 				ordinatesArray[j] = surface.getPoint(i).x;
 				ordinatesArray[j+1] = surface.getPoint(i).y;
 				ordinatesArray[j+2] = surface.getPoint(i).z;
 			}
-			
-			
-			
+
+
+
 			eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
 
 			polygon = kmlFactory.createPolygonType();
-			
+
 			switch (config.getProject().getKmlExporter().getAltitudeMode()) {
-				
-				case ABSOLUTE:
-					polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.ABSOLUTE));
-					break;
-				case RELATIVE:
-					polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.RELATIVE_TO_GROUND));
-					break;
+
+			case ABSOLUTE:
+				polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.ABSOLUTE));
+				break;
+			case RELATIVE:
+				polygon.setAltitudeModeGroup(kmlFactory.createAltitudeMode(AltitudeModeEnumType.RELATIVE_TO_GROUND));
+				break;
 			}
 
-		
-			
-			
+
+
+
 			// just in case surfaceType == null
 			boolean probablyRoof = true;
 			double nx = 0;
@@ -1912,21 +1921,21 @@ public abstract class KmlGenericObject {
 				else {
 					polygon.getInnerBoundaryIs().add(boundary);
 				}
-			
+
 				int startNextRing = ((i+1) < surface.numRings()) ? 
 						(surface.getRing(i).numPoints()*3): // still holes to come
 							ordinatesArray.length; // default
-										
+
 						// order points clockwise
 						for (int j = cellCount; j < startNextRing; j+=3) {
 							linearRing.getCoordinates().add(String.valueOf(reducePrecisionForXorY(ordinatesArray[j]) + "," 
 									+ reducePrecisionForXorY(ordinatesArray[j+1]) + ","
 									+ reducePrecisionForZ(ordinatesArray[j+2] + zOffset)));
-						
 
-					//		probablyRoof = probablyRoof && (reducePrecisionForZ(ordinatesArray[j+2] - lowestZCoordinate) > 0);
+
+							//		probablyRoof = probablyRoof && (reducePrecisionForZ(ordinatesArray[j+2] - lowestZCoordinate) > 0);
 							// not touching the ground
-	
+
 							if (currentLod == 1) { // calculate normal
 								int current = j;
 								int next = j+3;
@@ -1936,7 +1945,7 @@ public abstract class KmlGenericObject {
 								nz = nz + ((ordinatesArray[current] - ordinatesArray[next]) * (ordinatesArray[current+1] + ordinatesArray[next+1]));
 							}
 						}	
-				cellCount += (surface.getRing(i).numPoints()*3);
+						cellCount += (surface.getRing(i).numPoints()*3);
 			}
 
 			if (currentLod == 1) { // calculate normal
@@ -1952,16 +1961,16 @@ public abstract class KmlGenericObject {
 			if (surfaceType == null) {
 				surfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 				switch (currentLod) {
-					case 1:
-						if (probablyRoof && (nz > 0.999)) {
-							surfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.ROOF_SURFACE).toString();
-						}
-						break;
-					case 2:
-						if (probablyRoof) {
-							surfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.ROOF_SURFACE).toString();
-						}
-						break;
+				case 1:
+					if (probablyRoof && (nz > 0.999)) {
+						surfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.ROOF_SURFACE).toString();
+					}
+					break;
+				case 2:
+					if (probablyRoof) {
+						surfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.ROOF_SURFACE).toString();
+					}
+					break;
 				}
 			}
 
@@ -1997,33 +2006,46 @@ public abstract class KmlGenericObject {
 		return placemarkList;
 	}
 
-	protected void fillGenericObjectForCollada(KmlSplittingResult work , List<Map<String, Object>> _SurfaceList , List<Map<String, Object>> _SurfaceDataList) throws SQLException {	
-
+	protected void fillGenericObjectForCollada(KmlSplittingResult work , List<Map<String, Object>> _SurfaceList ,
+			SurfaceAppearance _SurfaceAppearance,List<Map<String, Object>> _ParentSurfaceList) throws Exception {	
+		
 		String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
-
+		String filePath=GetImagePath();
 		int texImageCounter = 0;
-		PGgeometry pgBuildingGeometry = null;
 
-		//while (rs.next()) {
-			long surfaceRootId = 0;//rs.getLong(1);
-			for (String colladaQuery: Queries.COLLADA_GEOMETRY_AND_APPEARANCE_FROM_ROOT_ID) { // parent surfaces come first
-				PreparedStatement psQuery = null;
-				ResultSet rs2 = null;
+		try {
 
-				try {
-					psQuery = connection.prepareStatement(colladaQuery);
-					psQuery.setLong(1, surfaceRootId);
-					//	psQuery.setString(2, selectedTheme);
-					rs2 = psQuery.executeQuery();
-	
-					while (rs2.next()) {
-						String theme = rs2.getString("theme");
-						pgBuildingGeometry = (PGgeometry)rs2.getObject(1);
-						// surfaceId is the key to all Hashmaps in object
-						long surfaceId = rs2.getLong("id");
-						long parentId = rs2.getLong("parent_id");
-	
-						if (pgBuildingGeometry == null) { // root or parent
+			if(work.getGmlId().equals("BLDG_0003000a000af8d5"))
+			{
+				int countertmp1=0;
+				for(Map<String, Object> rs:_ParentSurfaceList){
+					long parentid= (Long)rs.get("pid");
+					String id = (String)rs.get("id");
+					Map<String, Object> tmpHash = _SurfaceAppearance.GetSurfaceDataByID("#"+id);
+					String AppreanceType = (String)tmpHash.get("type");
+					if(AppreanceType.equals("X3D_MATERIAL"))
+					{
+						X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
+						fillX3dMaterialValues(x3dMaterial, rs);
+						// x3dMaterial will only added if not all x3dMaterial members are null
+						addX3dMaterial(parentid, x3dMaterial);
+						countertmp1++;
+						
+					}
+				}
+				
+				for (Map<String, Object> Row: _SurfaceList)  {
+
+					Map<String, Object> _AppResult = _SurfaceAppearance.GetSurfaceDataByID("#"+String.valueOf(Row.get("id")));
+					long surfaceId = Long.parseLong(Row.get("id").toString().replace("GEOM_", ""));
+					Long parentId = Long.parseLong(Row.get("pid").toString());
+					//	String theme = rs2.getString("theme");
+					//	pgBuildingGeometry = (PGgeometry)rs2.getObject(1);
+					// surfaceId is the key to all Hashmaps in object
+					//	long surfaceId = rs2.getLong("id");
+					//	long parentId = rs2.getLong("parent_id");
+
+					/*	if (pgBuildingGeometry == null) { // root or parent
 							if (selectedTheme.equalsIgnoreCase(theme)) {
 								X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
 								fillX3dMaterialValues(x3dMaterial, rs2);
@@ -2036,147 +2058,156 @@ public abstract class KmlGenericObject {
 								}
 							}
 							continue; 
+						}*/
+
+					// from here on it is a surfaceMember
+					eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
+
+					String texImageUri = null;
+					//						OrdImage texImage = null;
+					InputStream texImage = null;
+					//						byte buf[] = null;
+					StringTokenizer texCoordsTokenized = null;
+
+
+					if (_AppResult.get("type")==null) {
+
+						if(getX3dMaterial(parentId) != null)  {
+								addX3dMaterial(surfaceId, getX3dMaterial(parentId));
+								countertmp1++;
+								
+						}						
+						else{
+								addX3dMaterial(surfaceId, defaultX3dMaterial);
+								countertmp1++;
+								
 						}
-	
-						// from here on it is a surfaceMember
-						eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
-	
-						String texImageUri = null;
-//						OrdImage texImage = null;
-						InputStream texImage = null;
-//						byte buf[] = null;
-						StringTokenizer texCoordsTokenized = null;
-	
-					/*	if (selectedTheme.equals(CityKmlExporter.THEME_NONE)) {
-							addX3dMaterial(surfaceId, defaultX3dMaterial);
-						}
-						else if	(!selectedTheme.equalsIgnoreCase(theme) && // no surface data for this surface and theme
-								getX3dMaterial(parentId) != null) { // material for parent surface known
-							addX3dMaterial(surfaceId, getX3dMaterial(parentId));
-						}
-						else {*/
-							texImageUri = rs2.getString("tex_image_uri");
-//							texImage = (OrdImage)rs2.getORAData("tex_image", OrdImage.getORADataFactory());
-							String texCoords = rs2.getString("texture_coordinates");
-	
-							if (texImageUri != null && texImageUri.trim().length() != 0
-									&&  texCoords != null && texCoords.trim().length() != 0
-									/* && texImage != null */) {
-	
-								int fileSeparatorIndex = Math.max(texImageUri.lastIndexOf("\\"), texImageUri.lastIndexOf("/")); 
-								texImageUri = "_" + texImageUri.substring(fileSeparatorIndex + 1);
-	
-								addTexImageUri(surfaceId, texImageUri);
-//								if (getTexOrdImage(texImageUri) == null) { // not already marked as wrapping texture
-								if (getTexImage(texImageUri) == null) { // not already read in
-									PreparedStatement psQuery3 = null;
-									ResultSet rs3 = null;
-									try {
-										psQuery3 = connection.prepareStatement(Queries.GET_TEXIMAGE_FROM_SURFACE_DATA_ID);
-										psQuery3.setLong(1, rs2.getLong("surface_data_id"));
-										rs3 = psQuery3.executeQuery();
-										while (rs3.next()) {
-/*
-											// read large object (OID) data type from database
-											// Get the Large Object Manager to perform operations with
-											LargeObjectManager lobj = ((org.postgresql.PGConnection)connection).getLargeObjectAPI();
+					}
 
-											// Open the large object for reading
-											long oid = rs3.getLong("tex_image");
-											if (oid == 0) {
-												Logger.getInstance().error("Database error while reading library object: " + texImageUri);
-											}
-											LargeObject obj = lobj.open(oid, LargeObjectManager.READ);
+					else {
 
-											// Read the data
-											buf = new byte[obj.size()];
-											obj.read(buf, 0, obj.size());
-*/
-											// read bytea data type from database
-											texImage = rs3.getBinaryStream("tex_image");
-										}
-									}
-									finally {
-										if (rs3 != null)
-											try { rs3.close(); } catch (SQLException e) {}
-										if (psQuery3 != null)
-											try { psQuery3.close(); } catch (SQLException e) {}
-									}
+						texImageUri = _AppResult.get("imageuri").toString();
+						//							texImage = (OrdImage)rs2.getORAData("tex_image", OrdImage.getORADataFactory());
+						String texCoords = _AppResult.get("coord").toString();
 
-									BufferedImage bufferedImage = null;
-									try {
-//										texImage = new ByteArrayInputStream(buf); // for Large Objects
-										
-//										bufferedImage = ImageIO.read(texImage.getDataInStream());
-										bufferedImage = ImageIO.read(texImage);
-									}
-									catch (IOException ioe) {}
+						if (texImageUri != null && texImageUri.trim().length() != 0
+								&&  texCoords != null && texCoords.trim().length() != 0
+								/* && texImage != null */) {
+							countertmp1++;
+							
 
-									if (bufferedImage != null) { // image in JPEG, PNG or another usual format
-										addTexImage(texImageUri, bufferedImage);
-									}
-//									else {
-//										addTexOrdImage(texImageUri, texImage);
-//									}
+							int fileSeparatorIndex = Math.max(texImageUri.lastIndexOf("\\"), texImageUri.lastIndexOf("/")); 
+							texImageUri = "_" + texImageUri.substring(fileSeparatorIndex + 1);
 
-									texImageCounter++;
-									if (texImageCounter > 20) {
-										eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));
-										texImageCounter = 0;
-									}
+							addTexImageUri(surfaceId, texImageUri);
+							//								if (getTexOrdImage(texImageUri) == null) { // not already marked as wrapping texture
+							if (getTexImage(texImageUri) == null) { // not already read in
+
+								texImage = new BufferedInputStream(new FileInputStream(filePath+"\\"+_AppResult.get("imageuri").toString()));
+								BufferedImage bufferedImage = null;
+
+								try {
+									//										texImage = new ByteArrayInputStream(buf); // for Large Objects
+
+									//										bufferedImage = ImageIO.read(texImage.getDataInStream());
+									bufferedImage = ImageIO.read(texImage);
 								}
-	
-								texCoords = texCoords.replaceAll(";", " "); // substitute of ; for internal ring
-								texCoordsTokenized = new StringTokenizer(texCoords.trim(), " ");
-							}
-							else {
-								X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
-								fillX3dMaterialValues(x3dMaterial, rs2);
-								// x3dMaterial will only added if not all x3dMaterial members are null
-								addX3dMaterial(surfaceId, x3dMaterial);
-								if (getX3dMaterial(surfaceId) == null) {
-									// untextured surface and no x3dMaterial -> default x3dMaterial (gray)
-									addX3dMaterial(surfaceId, defaultX3dMaterial);
+								catch (IOException ioe) {}
+
+								if (bufferedImage != null) { // image in JPEG, PNG or another usual format
+									addTexImage(texImageUri, bufferedImage);
+								}
+								//									else {
+								//										addTexOrdImage(texImageUri, texImage);
+								//									}
+
+								texImageCounter++;
+								if (texImageCounter > 20) {
+									eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));
+									texImageCounter = 0;
 								}
 							}
-						//}
-	
-						Polygon surface = (Polygon)pgBuildingGeometry.getGeometry();
-						double[] ordinatesArray = new double[surface.numPoints()*3];
-						for (int i = 0, j = 0; i < surface.numPoints(); i++, j+=3){
-							ordinatesArray[j] = surface.getPoint(i).x;
-							ordinatesArray[j+1] = surface.getPoint(i).y;
-							ordinatesArray[j+2] = surface.getPoint(i).z;
-						}
-	
-						GeometryInfo gi = new GeometryInfo(GeometryInfo.POLYGON_ARRAY);
-						int contourCount = surface.numRings();
-						int cellCount = 0;
-						// last point of polygons in gml is identical to first and useless for GeometryInfo
-						double[] giOrdinatesArray = new double[ordinatesArray.length - (contourCount*3)];
-	
-						int[] stripCountArray = new int[contourCount];
-						int[] countourCountArray = {contourCount};
-	
-						for (int currentContour = 1; currentContour <= contourCount; currentContour++) {
-							int startOfCurrentRing = cellCount;
-							cellCount += (surface.getRing(currentContour-1).numPoints()*3);
-							int startOfNextRing = (currentContour == contourCount) ? 
-									ordinatesArray.length: // last
-										cellCount; // still holes to come
-	
-							for (int j = startOfCurrentRing; j < startOfNextRing - 3; j+=3) {
-	
-								giOrdinatesArray[(j-(currentContour-1)*3)] = ordinatesArray[j] * 100; // trick for very close coordinates
-								giOrdinatesArray[(j-(currentContour-1)*3)+1] = ordinatesArray[j+1] * 100;
-								giOrdinatesArray[(j-(currentContour-1)*3)+2] = ordinatesArray[j+2] * 100;
-	
-								TexCoords texCoordsForThisSurface = null;
-								if (texCoordsTokenized != null && texCoordsTokenized.hasMoreTokens()) {
-									double s = Double.parseDouble(texCoordsTokenized.nextToken());
-									double t = Double.parseDouble(texCoordsTokenized.nextToken());
 
-/*									if (s > 1.1 || s < -0.1 || t < -0.1 || t > 1.1) { // texture wrapping -- it conflicts with texture atlas
+							texCoords = texCoords.replaceAll(";", " "); // substitute of ; for internal ring
+							texCoordsTokenized = new StringTokenizer(texCoords.trim(), " ");
+						}
+						else {
+							X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
+							fillX3dMaterialValues(x3dMaterial, _AppResult);
+							countertmp1++;
+							
+							// x3dMaterial will only added if not all x3dMaterial members are null
+							addX3dMaterial(surfaceId, x3dMaterial);
+							if (getX3dMaterial(surfaceId) == null) {
+								// untextured surface and no x3dMaterial -> default x3dMaterial (gray)
+								addX3dMaterial(surfaceId, defaultX3dMaterial);
+								countertmp1++;
+								
+							}
+						}
+					}
+
+					@SuppressWarnings("unchecked")
+					List<Double> _Geometry = (List<Double>)Row.get("Geometry");
+
+					org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
+
+					for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
+
+						List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "3068");							
+						tmpPoint[j] = new org.postgis.Point(
+								Target_Coordinates.get(1),
+								Target_Coordinates.get(0),
+								Target_Coordinates.get(2)
+								);
+
+					}
+
+					Polygon surface = new Polygon(
+							new org.postgis.LinearRing[] {
+									new org.postgis.LinearRing(
+											tmpPoint
+											)
+							}
+							);
+
+					double[] ordinatesArray = new double[surface.numPoints()*3];
+					for (int i = 0, j = 0; i < surface.numPoints(); i++, j+=3){
+						ordinatesArray[j] = surface.getPoint(i).x;
+						ordinatesArray[j+1] = surface.getPoint(i).y;
+						ordinatesArray[j+2] = surface.getPoint(i).z;
+					}
+
+
+
+					GeometryInfo gi = new GeometryInfo(GeometryInfo.POLYGON_ARRAY);
+					int contourCount = surface.numRings();
+					int cellCount = 0;
+					// last point of polygons in gml is identical to first and useless for GeometryInfo
+					double[] giOrdinatesArray = new double[ordinatesArray.length - (contourCount*3)];
+
+					int[] stripCountArray = new int[contourCount];
+					int[] countourCountArray = {contourCount};
+
+					for (int currentContour = 1; currentContour <= contourCount; currentContour++) {
+						int startOfCurrentRing = cellCount;
+						cellCount += (surface.getRing(currentContour-1).numPoints()*3);
+						int startOfNextRing = (currentContour == contourCount) ? 
+								ordinatesArray.length: // last
+									cellCount; // still holes to come
+
+						for (int j = startOfCurrentRing; j < startOfNextRing - 3; j+=3) {
+
+							giOrdinatesArray[(j-(currentContour-1)*3)] = ordinatesArray[j] * 100; // trick for very close coordinates
+							giOrdinatesArray[(j-(currentContour-1)*3)+1] = ordinatesArray[j+1] * 100;
+							giOrdinatesArray[(j-(currentContour-1)*3)+2] = ordinatesArray[j+2] * 100;
+
+							TexCoords texCoordsForThisSurface = null;
+							if (texCoordsTokenized != null && texCoordsTokenized.hasMoreTokens()) {
+								double s = Double.parseDouble(texCoordsTokenized.nextToken());
+								double t = Double.parseDouble(texCoordsTokenized.nextToken());
+
+								/*									if (s > 1.1 || s < -0.1 || t < -0.1 || t > 1.1) { // texture wrapping -- it conflicts with texture atlas
 										removeTexImage(texImageUri);
 										BufferedImage bufferedImage = null;
 										try {
@@ -2185,45 +2216,66 @@ public abstract class KmlGenericObject {
 										addTexImage(texImageUri, bufferedImage);
 //										addTexOrdImage(texImageUri, texImage);
 									}
-*/
-									texCoordsForThisSurface = new TexCoords(s, t);
-								}
-								setVertexInfoForXYZ(surfaceId,
-										giOrdinatesArray[(j-(currentContour-1)*3)],
-										giOrdinatesArray[(j-(currentContour-1)*3)+1],
-										giOrdinatesArray[(j-(currentContour-1)*3)+2],
-										texCoordsForThisSurface);
+								 */
+								texCoordsForThisSurface = new TexCoords(s, t);
 							}
-							stripCountArray[currentContour-1] = (startOfNextRing -3 - startOfCurrentRing)/3;
-							if (texCoordsTokenized != null  && texCoordsTokenized.hasMoreTokens()) {
-								texCoordsTokenized.nextToken(); // geometryInfo ignores last point in a polygon
-								texCoordsTokenized.nextToken(); // keep texture coordinates in sync
-							}
+							setVertexInfoForXYZ(surfaceId,
+									giOrdinatesArray[(j-(currentContour-1)*3)],
+									giOrdinatesArray[(j-(currentContour-1)*3)+1],
+									giOrdinatesArray[(j-(currentContour-1)*3)+2],
+									texCoordsForThisSurface);
 						}
-						gi.setCoordinates(giOrdinatesArray);
-						gi.setContourCounts(countourCountArray);
-						gi.setStripCounts(stripCountArray);
-						addGeometryInfo(surfaceId, gi);
+						stripCountArray[currentContour-1] = (startOfNextRing -3 - startOfCurrentRing)/3;
+						if (texCoordsTokenized != null  && texCoordsTokenized.hasMoreTokens()) {
+							texCoordsTokenized.nextToken(); // geometryInfo ignores last point in a polygon
+							texCoordsTokenized.nextToken(); // keep texture coordinates in sync
+						}
 					}
-				}
-				catch (SQLException sqlEx) {
-					Logger.getInstance().error("SQL error while querying city object: " + sqlEx.getMessage());
-				}
-				finally {
-					if (rs2 != null)
-						try { rs2.close(); } catch (SQLException e) {}
-					if (psQuery != null)
-						try { psQuery.close(); } catch (SQLException e) {}
-				}
+
+					/*String tmpString = "";
+					for(double tmp:giOrdinatesArray){
+						
+						tmpString += tmp + " ";
+					}
+					System.out.println("***"+tmpString);
+					tmpString = "";
+					for(double tmp:countourCountArray){
+						
+						tmpString += tmp + " ";
+					}
+					System.out.println("***"+tmpString);
+					tmpString = "";
+					for(double tmp:stripCountArray){
+						
+						tmpString += tmp + " ";
+					}
+					System.out.println("***"+tmpString);
+					System.out.println("----------------------------------------------------");*/
+					
+					gi.setCoordinates(giOrdinatesArray);
+					gi.setContourCounts(countourCountArray);
+					gi.setStripCounts(stripCountArray);
+					addGeometryInfo(surfaceId, gi);
+					
+				}System.out.println(countertmp1++);
 			}
-	//	}
+		}
+		catch (Exception Ex) {
+			Logger.getInstance().error("The error while querying city object: " + Ex.toString());
+		}
+		finally {
+
+		}
+
+		//	}
 
 		// count rest images
 		eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));
 	}
 
-	public PlacemarkType createPlacemarkForColladaModel() throws SQLException {
-		
+	public PlacemarkType createPlacemarkForColladaModel(KmlSplittingResult work) throws Exception {
+
+		//System.out.println("Collada Placemark");
 		PlacemarkType placemark = kmlFactory.createPlacemarkType();
 		placemark.setName(getGmlId());
 		placemark.setId(DisplayForm.COLLADA_PLACEMARK_ID + placemark.getName());
@@ -2257,17 +2309,17 @@ public abstract class KmlGenericObject {
 			break;
 		}
 
-		location.setLatitude(getLocationY());
-		location.setLongitude(getLocationX());
+		location.setLatitude(getLocationX());
+		location.setLongitude(getLocationY());
 		location.setAltitude(getLocationZ() + reducePrecisionForZ(getZOffset()));
 		model.setLocation(location);
 
 		// correct heading value
 		double lat1 = Math.toRadians(getLocationY());
 		// undo trick for very close coordinates
-		double[] dummy = convertPointCoordinatesToWGS84(new double[] {getOriginX()/100, getOriginY()/100 - 20, getOriginZ()/100});
-		double lat2 = Math.toRadians(dummy[1]);
-		double dLon = Math.toRadians(dummy[0] - getLocationX());
+		List<Double> dummy = ProjConvertor.transformPoint(getOriginX()/100, getOriginY()/100 - 20, getOriginZ()/100, work.getTargetSrs(), "4326");
+		double lat2 = Math.toRadians(dummy.get(1));
+		double dLon = Math.toRadians(dummy.get(0) - getLocationY());
 		double y = Math.sin(dLon) * Math.cos(lat2);
 		double x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
 		double bearing = Math.toDegrees(Math.atan2(y, x));
@@ -2320,8 +2372,8 @@ public abstract class KmlGenericObject {
 
 		try {
 			getGeometriesStmt = connection.prepareStatement(getHighlightingQuery(),
-															ResultSet.TYPE_SCROLL_INSENSITIVE,
-															ResultSet.CONCUR_READ_ONLY);
+					ResultSet.TYPE_SCROLL_INSENSITIVE,
+					ResultSet.CONCUR_READ_ONLY);
 
 			for (int i = 1; i <= getGeometriesStmt.getParameterMetaData().getParameterCount(); i++) {
 				getGeometriesStmt.setLong(i, work.getId());
@@ -2339,7 +2391,7 @@ public abstract class KmlGenericObject {
 				PGgeometry unconverted = (PGgeometry)rs.getObject(1);
 				Polygon unconvertedSurface = (Polygon)unconverted.getGeometry();
 				double[] ordinatesArray = new double[unconvertedSurface.numPoints()*3];
-			
+
 				for (int i = 0, j = 0; i < unconvertedSurface.numPoints(); i++, j+=3){
 					ordinatesArray[j] = unconvertedSurface.getPoint(i).x;
 					ordinatesArray[j+1] = unconvertedSurface.getPoint(i).y;
@@ -2354,7 +2406,7 @@ public abstract class KmlGenericObject {
 							(unconvertedSurface.getRing(startContour1).numPoints()*3); // holes are irrelevant for normal calculation
 				// last point of polygons in gml is identical to first and useless for GeometryInfo
 				endContour1 = endContour1 - 3;
-				
+
 				double nx = 0;
 				double ny = 0;
 				double nz = 0;
@@ -2384,7 +2436,7 @@ public abstract class KmlGenericObject {
 
 				// now convert to WGS84
 				Polygon surface = (Polygon)convertToWGS84(unconvertedSurface);
-				
+
 				for (int i = 0, j = 0; i < surface.numPoints(); i++, j+=3){
 					ordinatesArray[j] = surface.getPoint(i).x;
 					ordinatesArray[j+1] = surface.getPoint(i).y;
@@ -2401,7 +2453,7 @@ public abstract class KmlGenericObject {
 					break;
 				}
 				multiGeometry.getAbstractGeometryGroup().add(kmlFactory.createPolygon(polygon));
-				
+
 				for (int i = 0; i < surface.numRings(); i++){
 					LinearRingType linearRing = kmlFactory.createLinearRingType();
 					BoundaryType boundary = kmlFactory.createBoundaryType();
@@ -2412,11 +2464,11 @@ public abstract class KmlGenericObject {
 					else {
 						polygon.getInnerBoundaryIs().add(boundary);
 					}
-					
+
 					int startNextRing = ((i+1) < surface.numRings()) ? 
-						(surface.getRing(i).numPoints()*3): // still holes to come
-							ordinatesArray.length; // default
-							
+							(surface.getRing(i).numPoints()*3): // still holes to come
+								ordinatesArray.length; // default
+
 							// order points clockwise
 							for (int j = cellCount; j < startNextRing; j+=3) {
 								linearRing.getCoordinates().add(String.valueOf(reducePrecisionForXorY(ordinatesArray[j]) + "," 
@@ -2495,33 +2547,38 @@ public abstract class KmlGenericObject {
 		catch (Exception e) { } // invalid balloons are silently discarded
 	}
 
-	protected void fillX3dMaterialValues (X3DMaterial x3dMaterial, ResultSet rs) throws SQLException {
+	protected void fillX3dMaterialValues (X3DMaterial x3dMaterial, Map<String, Object> rs) throws SQLException {
 
-		double ambientIntensity = rs.getDouble("x3d_ambient_intensity");
-		if (!rs.wasNull()) {
+		Double ambientIntensity = (Double)rs.get("x3d_ambient_intensity");
+		if (!ambientIntensity.isNaN()) {
 			x3dMaterial.setAmbientIntensity(ambientIntensity);
 		}
-		double shininess = rs.getDouble("x3d_shininess");
-		if (!rs.wasNull()) {
+		
+		Double shininess = (Double)rs.get("x3d_shininess");
+		if (!shininess.isNaN()) {
 			x3dMaterial.setShininess(shininess);
 		}
-		double transparency = rs.getDouble("x3d_transparency");
-		if (!rs.wasNull()) {
+		
+		Double transparency = (Double)rs.get("x3d_transparency");
+		if (!transparency.isNaN()) {
 			x3dMaterial.setTransparency(transparency);
 		}
-		Color color = getX3dColorFromString(rs.getString("x3d_diffuse_color"));
+		
+		Color color = getX3dColorFromString((String)rs.get("x3d_diffuse_color"));
 		if (color != null) {
 			x3dMaterial.setDiffuseColor(color);
 		}
-		color = getX3dColorFromString(rs.getString("x3d_specular_color"));
+		
+		color = getX3dColorFromString((String)rs.get("x3d_specular_color"));
 		if (color != null) {
 			x3dMaterial.setSpecularColor(color);
 		}
-		color = getX3dColorFromString(rs.getString("x3d_emissive_color"));
+		
+		color = getX3dColorFromString((String)rs.get("x3d_emissive_color"));
 		if (color != null) {
 			x3dMaterial.setEmissiveColor(color);
 		}
-		x3dMaterial.setIsSmooth(rs.getInt("x3d_is_smooth") == 1);
+		x3dMaterial.setIsSmooth((int)rs.get("x3d_is_smooth") == 1);
 	}
 
 	private Color getX3dColorFromString(String colorString) {
@@ -2578,7 +2635,7 @@ public abstract class KmlGenericObject {
 
 		return zOffset;
 	}
-	
+
 
 	protected double getZOffsetFromGEService (List<Point3d> candidates, String _TargetSrs ) {
 
@@ -2612,7 +2669,7 @@ public abstract class KmlGenericObject {
 				Logger.getInstance().info("Getting zOffset from Google's elevation API with " + candidates.size() + " points.");
 
 				zOffset = elevationServiceHandler.getZOffset(coords);
-				
+
 				List<Map<String, Object>> FileInputValue = new ArrayList<Map<String, Object>>();
 				Map<String, Object> _Node = new HashMap<String,Object>();
 				_Node.put("zOffset", zOffset);
@@ -2620,7 +2677,7 @@ public abstract class KmlGenericObject {
 				FileHandler.CreateXML(importFiles.get(0),FileInputValue);
 			}
 			else {
-				
+
 				zOffset = (Double)FileHandler.ReadXML(importFiles.get(0), "zOffset").get("zOffset");
 
 			}
@@ -2636,24 +2693,34 @@ public abstract class KmlGenericObject {
 
 		return zOffset;
 	}
+
 	
 	
+	public String GetImagePath()
+	{
+		Internal intConfig = config.getInternal();		
+		directoryScanner = new DirectoryScanner(true);
+		directoryScanner.addFilenameFilter(new CityGMLFilenameFilter());		
+		List<File> importFiles = directoryScanner.getFiles(intConfig.getImportFiles());
+		return importFiles.get(0).getParent();
+	}
+
 	@SuppressWarnings("unchecked")
 	protected List<Point3d> getLowestPointsCoordinates(List<Map<String, Object>> result, KmlSplittingResult work) throws Exception {
-		
+
 		double currentlyLowestZCoordinate = Double.MAX_VALUE;
-		
+
 		List<Point3d> coords = new ArrayList<Point3d>();
 		List<Double> ordinates = new ArrayList<Double>();
-		
-		
+
+
 		for(Map<String,Object> _row :result)
 		{
 			List<Double> PointList = (List<Double>)_row.get("Geometry");
 			//ordinates.addAll(ProjConvertor.TransformProjection(PointList.get(0), PointList.get(1), PointList.get(2), work.getTargetSrs() , "4326"));
 			ordinates.addAll(PointList);
 		}
-		
+
 		// we are only interested in the z coordinate
 		for (int j = 2; j < ordinates.size(); j+=3) {
 			if (ordinates.get(j) < currentlyLowestZCoordinate) {
@@ -2669,88 +2736,88 @@ public abstract class KmlGenericObject {
 				}
 			}
 		}
-		
+
 		for (Point3d point3d: coords) {
 			point3d.x = point3d.x * 100; // trick for very close coordinates
 			point3d.y = point3d.y * 100;
 			point3d.z = point3d.z * 100;
 		}
 
-		
+
 		return coords;
 	}
-	
+
 
 	protected double[] convertPointCoordinatesToWGS84(double[] coords) throws SQLException {
 
 		double[] pointCoords = null; 
-		
+
 		StringBuilder geomEWKT = new StringBuilder("");
 		String coordComma = "";
-		
+
 		geomEWKT.append("SRID=").append(dbSrs.getSrid()).append(";");
-		
+
 		if (coords.length == 3){
 			geomEWKT.append("POINT(")
-					.append(coords[0]).append(" ")
-					.append(coords[1]).append(" ")
-					.append(coords[2]);
+			.append(coords[0]).append(" ")
+			.append(coords[1]).append(" ")
+			.append(coords[2]);
 		}
 		else {
 			geomEWKT.append("LINESTRING(");
-			
+
 			for (int i = 0; i < coords.length; i += 3){
 				geomEWKT.append(coordComma)
 				.append(coords[0]).append(" ")
 				.append(coords[1]).append(" ")
 				.append(coords[2]);
-				
+
 				coordComma = ",";
 			}
 		}
-			
+
 		geomEWKT.append(")");
-								
+
 		Geometry geom = PGgeometry.geomFromString(geomEWKT.toString());
 		Geometry convertedPointGeom = convertToWGS84(geom);
-		
+
 		if (convertedPointGeom != null) {
 			pointCoords = new double[3];
 			pointCoords[0] = convertedPointGeom.getFirstPoint().x;
 			pointCoords[1] = convertedPointGeom.getFirstPoint().y;
 			pointCoords[2] = convertedPointGeom.getFirstPoint().z;
 		}
-		
+
 		return pointCoords;
 	}
-		
+
 
 	protected Geometry convertToWGS84(Geometry geometry) throws SQLException {
 
 		double[] originalCoords = new double[(geometry.numPoints()*3)];
-	
+
 		for (int i = 0, j = 0; i < geometry.numPoints(); i++, j+=3){
 			originalCoords[j] = geometry.getPoint(i).x;
 			originalCoords[j+1] = geometry.getPoint(i).y;
 			originalCoords[j+2] = geometry.getPoint(i).z;
 		}
-		
+
 		Geometry convertedPointGeom = null;
 		PreparedStatement convertStmt = null;
 		ResultSet rs2 = null;
 		try {
 			convertStmt = (dbSrs.is3D() && geometry.getDimension() == 3) ?
-					  	  connection.prepareStatement(Queries.TRANSFORM_GEOMETRY_TO_WGS84_3D):
-					  	  connection.prepareStatement(Queries.TRANSFORM_GEOMETRY_TO_WGS84);
-			// now convert to WGS84
-			PGgeometry unconverted = new PGgeometry(geometry);
-			convertStmt.setObject(1, unconverted);
-			rs2 = convertStmt.executeQuery();
-			while (rs2.next()) {
-				// ColumnName is ST_Transform(Geometry, 4326)
-				PGgeometry converted = (PGgeometry)rs2.getObject(1); 
-				convertedPointGeom = converted.getGeometry();
-			}
+					connection.prepareStatement(Queries.TRANSFORM_GEOMETRY_TO_WGS84_3D):
+						connection.prepareStatement(Queries.TRANSFORM_GEOMETRY_TO_WGS84);
+					// now convert to WGS84
+					PGgeometry unconverted = new PGgeometry(geometry);
+					convertStmt.setObject(1, unconverted);
+					rs2 = convertStmt.executeQuery();
+					while (rs2.next()) {
+						// ColumnName is ST_Transform(Geometry, 4326)
+						PGgeometry converted = (PGgeometry)rs2.getObject(1); 
+						convertedPointGeom = converted.getGeometry();
+					}
 		}
 		catch (Exception e) {
 			Logger.getInstance().warn("Exception when converting geometry to WGS84");
@@ -2774,8 +2841,8 @@ public abstract class KmlGenericObject {
 	}
 
 
-//	debug methods
-/*
+	//	debug methods
+	/*
 //	private List<PlacemarkType> createPlacemarkForEachSurfaceGeometry(OracleResultSet rs,
 	private List<PlacemarkType> createPlacemarkForEachSurfaceGeometry(ResultSet rs,
 			String gmlId,
@@ -2816,7 +2883,7 @@ public abstract class KmlGenericObject {
 //			}
 			Geometry originalSurface = pgBuildingGeometry.getGeometry();
 			double[] originalOrdinatesArray = new double[originalSurface.numPoints()*3];
-			
+
 			for (int i = 0, j = 0; i < originalSurface.numPoints(); i++, j+=3){
 				originalOrdinatesArray[j] = originalSurface.getPoint(i).x;
 				originalOrdinatesArray[j+1] = originalSurface.getPoint(i).y;
@@ -2828,7 +2895,7 @@ public abstract class KmlGenericObject {
 //			double[] originalOrdinatesArrayWGS84 = originalSurfaceWGS84.getOrdinatesArray();
 			Polygon originalSurfaceWGS84 = (Polygon)convertToWGS84(originalSurface);
 			double[] originalOrdinatesArrayWGS84 = new double[originalSurfaceWGS84.numPoints()*3];
-			
+
 			for (int i = 0, j = 0; i < originalSurfaceWGS84.numPoints(); i++, j+=3){
 				originalOrdinatesArrayWGS84[j] = originalSurfaceWGS84.getPoint(i).x;
 				originalOrdinatesArrayWGS84[j+1] = originalSurfaceWGS84.getPoint(i).y;
@@ -2895,7 +2962,7 @@ public abstract class KmlGenericObject {
 						}
 
 			}
-			
+
 			for (int i = 0; i < originalSurfaceWGS84.numRings(); i++){
 				LinearRingType linearRing = kmlFactory.createLinearRingType();
 				BoundaryType boundary = kmlFactory.createBoundaryType();
@@ -2906,24 +2973,24 @@ public abstract class KmlGenericObject {
 				else {
 					polygon.getInnerBoundaryIs().add(boundary);
 				}
-				
+
 				int startNextRing = ((i+1) < originalSurfaceWGS84.numRings()) ? 
 					(originalSurfaceWGS84.getRing(i).numPoints()*3): // still holes to come
 						originalOrdinatesArrayWGS84.length; // default
 
 						int cellCount = 0;
-						
+
 						// order points clockwise
 						for (int j = cellCount; j < startNextRing; ) {
 							linearRing.getCoordinates().add(String.valueOf(reducePrecisionForXorY(originalOrdinatesArrayWGS84[j]) + "," 
 									+ reducePrecisionForXorY(originalOrdinatesArrayWGS84[j+1]) + ","
 									+ reducePrecisionForZ(originalOrdinatesArrayWGS84[j+2])));
 							cellCount += (originalSurfaceWGS84.getRing(i).numPoints()*3);
-							
+
 							probablyRoof = probablyRoof && (reducePrecisionForZ(originalOrdinatesArrayWGS84[j+2] - lowestZCoordinate) > 0);
 							// not touching the ground
 						}
-						
+
 						if (surfaceType == null) {
 							String likelySurfaceType = (probablyRoof && currentLod < 3) ?
 									TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.ROOF_SURFACE).toString().toString() :
@@ -2986,16 +3053,16 @@ public abstract class KmlGenericObject {
 //				double[] ordinatesArray = originalSurface.getOrdinatesArray();
 //				Polygon originalSurface = (Polygon)pgBuildingGeometry.getGeometry();
 //				double[] ordinatesArray = new double[originalSurface.numPoints()*3];
-				
+
 				Polygon originalSurface = (Polygon)pgBuildingGeometry.getGeometry();
 				double[] ordinatesArray = new double[originalSurface.numPoints()*3];
-				
+
 				for (int i = 0, j = 0; i < originalSurface.numPoints(); i++, j+=3){
 					ordinatesArray[j] = originalSurface.getPoint(i).x;
 					ordinatesArray[j+1] = originalSurface.getPoint(i).y;
 					ordinatesArray[j+2] = originalSurface.getPoint(i).z;
 				}
-				
+
 				if (ordinatesArray == null) {
 					continue;
 				}
@@ -3010,7 +3077,7 @@ public abstract class KmlGenericObject {
 				// last point of polygons in gml is identical to first and useless for GeometryInfo
 				endContour1 = endContour1 - 3;
 
-				
+
 				int contourCount = originalSurface.numRings();
 				// remove normal-irrelevant points
 //				int startContour1 = originalSurface.getElemInfo()[0] - 1;
@@ -3021,8 +3088,8 @@ public abstract class KmlGenericObject {
 							(originalSurface.getRing(startContour1).numPoints()*3); // holes are irrelevant for normal calculation
 				// last point of polygons in gml is identical to first and useless for GeometryInfo
 				endContour1 = endContour1 - 3;
-				
-				
+
+
 				double nx = 0;
 				double ny = 0;
 				double nz = 0;
@@ -3058,7 +3125,7 @@ public abstract class KmlGenericObject {
 				Geometry hlSurfaceWGS84 = convertToWGS84(originalSurface);
 				Polygon highlightingSurfaceWGS84 = (Polygon)hlSurfaceWGS84;
 				double[] highlightingOrdinatesArrayWGS84 = new double[highlightingSurfaceWGS84.numPoints()*3];
-				
+
 				for (int i = 0, j = 0; i < highlightingSurfaceWGS84.numPoints(); i++, j+=3){
 					highlightingOrdinatesArrayWGS84[j] = highlightingSurfaceWGS84.getPoint(i).x;
 					highlightingOrdinatesArrayWGS84[j+1] = highlightingSurfaceWGS84.getPoint(i).y;
@@ -3112,7 +3179,7 @@ public abstract class KmlGenericObject {
 							}
 
 				}
-				
+
 				for (int i = 0; i < highlightingSurfaceWGS84.numRings(); i++){
 					LinearRingType highlightingLinearRing = kmlFactory.createLinearRingType();
 					BoundaryType highlightingBoundary = kmlFactory.createBoundaryType();
@@ -3123,13 +3190,13 @@ public abstract class KmlGenericObject {
 					else {
 						highlightingPolygon.getInnerBoundaryIs().add(highlightingBoundary);
 					}
-					
+
 					int startNextRing = ((i+1) < highlightingSurfaceWGS84.numRings()) ? 
 						(highlightingSurfaceWGS84.getRing(i).numPoints()*3): // still holes to come
 							highlightingOrdinatesArrayWGS84.length; // default
 
 							int cellCount = 0;
-							
+
 							// order points clockwise
 							for (int j = cellCount; j < startNextRing; ) {
 								highlightingLinearRing.getCoordinates().add(String.valueOf(reducePrecisionForXorY(highlightingOrdinatesArrayWGS84[j]) + "," 
@@ -3159,18 +3226,18 @@ public abstract class KmlGenericObject {
 	protected Balloon getBalloonSetings () {
 		return null;
 	}
-*/
+	 */
 	private int roundUpPots(int t)
 	{
-	    t--;
-	    t |= t >> 1;
-	    t |= t >> 2;
-	    t |= t >> 4;
-	    t |= t >> 8;
-	    t |= t >> 16;
-	    t |= t >> 32;
-	    t++;
-	    return t;
+		t--;
+		t |= t >> 1;
+			t |= t >> 2;
+			t |= t >> 4;
+		t |= t >> 8;
+				t |= t >> 16;
+				t |= t >> 32;
+			t++;
+			return t;
 	}
 
 	protected class Node{
@@ -3183,7 +3250,7 @@ public abstract class KmlGenericObject {
 			this.key = key;
 			this.value = value;
 		}
-		
+
 		protected void setLeftArc(Node leftArc) {
 			this.leftArc = leftArc;
 		}
@@ -3217,6 +3284,6 @@ public abstract class KmlGenericObject {
 			super(key, value);
 		}
 	}
-	
-	
+
+
 }

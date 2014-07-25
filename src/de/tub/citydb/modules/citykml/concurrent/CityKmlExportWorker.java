@@ -278,7 +278,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 				if (objectGroupCounter.get(cityObjectType) != 0) {  // group is not empty
 					KmlGenericObject currentObjectGroup = objectGroup.get(cityObjectType);
 					if (currentObjectGroup == null || currentObjectGroup.getGmlId() == null) continue;
-					sendGroupToFile(currentObjectGroup);
+					sendGroupToFile(currentObjectGroup,work);
 					currentObjectGroup = null;
 					objectGroup.put(cityObjectType, currentObjectGroup);
 					objectGroupCounter.put(cityObjectType, 0);
@@ -437,41 +437,41 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 			singleObject.read(work);
 			
 			
-			if (!work.isCityObjectGroup() &&  work.getDisplayForm().getForm() == DisplayForm.COLLADA && singleObject.getGmlId() != null) { // object is filled
+			if (!work.isCityObjectGroup() && 
+					work.getDisplayForm().getForm() == DisplayForm.COLLADA &&
+					singleObject.getGmlId() != null) { // object is filled
 
-				// correction for some CityGML Types exported together
-				if (featureClass == CityGMLClass.PLANT_COVER) featureClass = CityGMLClass.SOLITARY_VEGETATION_OBJECT;
-				
-				if (featureClass == CityGMLClass.WATER_CLOSURE_SURFACE ||
-						featureClass == CityGMLClass.WATER_GROUND_SURFACE ||
-						featureClass == CityGMLClass.WATER_SURFACE) featureClass = CityGMLClass.WATER_BODY;
-				
-					if (featureClass == CityGMLClass.TRAFFIC_AREA ||
-						featureClass == CityGMLClass.AUXILIARY_TRAFFIC_AREA ||
-						featureClass == CityGMLClass.TRACK ||
-						featureClass == CityGMLClass.RAILWAY ||
-						featureClass == CityGMLClass.ROAD ||
-						featureClass == CityGMLClass.SQUARE) featureClass = CityGMLClass.TRANSPORTATION_COMPLEX;
+					// correction for some CityGML Types exported together
+					if (featureClass == CityGMLClass.PLANT_COVER) featureClass = CityGMLClass.SOLITARY_VEGETATION_OBJECT;
 					
-				KmlGenericObject currentObjectGroup = objectGroup.get(featureClass);
-				if (currentObjectGroup == null) {
-					currentObjectGroup = singleObject;
-					objectGroup.put(featureClass, currentObjectGroup);
-				}
-				else {
-					currentObjectGroup.appendObject(singleObject);
-				}
+					if (featureClass == CityGMLClass.WATER_CLOSURE_SURFACE ||
+							featureClass == CityGMLClass.WATER_GROUND_SURFACE ||
+							featureClass == CityGMLClass.WATER_SURFACE) featureClass = CityGMLClass.WATER_BODY;
+					
+						if (featureClass == CityGMLClass.TRAFFIC_AREA ||
+							featureClass == CityGMLClass.AUXILIARY_TRAFFIC_AREA ||
+							featureClass == CityGMLClass.TRACK ||
+							featureClass == CityGMLClass.RAILWAY ||
+							featureClass == CityGMLClass.ROAD ||
+							featureClass == CityGMLClass.SQUARE) featureClass = CityGMLClass.TRANSPORTATION_COMPLEX;
+						
+					KmlGenericObject currentObjectGroup = objectGroup.get(featureClass);
+					if (currentObjectGroup == null) {
+						currentObjectGroup = singleObject;
+						objectGroup.put(featureClass, currentObjectGroup);
+					}
+					else {
+						currentObjectGroup.appendObject(singleObject);
+					}
 
-				objectGroupCounter.put(featureClass, objectGroupCounter.get(featureClass).intValue() + 1);
-				if (objectGroupCounter.get(featureClass).intValue() == objectGroupSize.get(featureClass).intValue()) {
-					sendGroupToFile(currentObjectGroup);
-					currentObjectGroup = null;
-					objectGroup.put(featureClass, currentObjectGroup);
-					objectGroupCounter.put(featureClass, 0);
+					objectGroupCounter.put(featureClass, objectGroupCounter.get(featureClass).intValue() + 1);
+					if (objectGroupCounter.get(featureClass).intValue() == objectGroupSize.get(featureClass).intValue()) {
+						sendGroupToFile(currentObjectGroup,work);
+						currentObjectGroup = null;
+						objectGroup.put(featureClass, currentObjectGroup);
+						objectGroupCounter.put(featureClass, 0);
+					}
 				}
-				
-				
-			}
 		}
 		finally {
 			runLock.unlock();
@@ -480,7 +480,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 
 	
 	
-	private void sendGroupToFile(KmlGenericObject objectGroup) {
+	private void sendGroupToFile(KmlGenericObject objectGroup,KmlSplittingResult work) {
 		try {
 			double imageScaleFactor = 1;
 			ColladaOptions colladaOptions = objectGroup.getColladaOptions();
@@ -504,7 +504,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 			colladaBundle.setCollada(objectGroup.generateColladaTree());
 			colladaBundle.setTexImages(objectGroup.getTexImages());
 //			colladaBundle.setTexOrdImages(objectGroup.getTexOrdImages());
-			colladaBundle.setPlacemark(objectGroup.createPlacemarkForColladaModel());
+			colladaBundle.setPlacemark(objectGroup.createPlacemarkForColladaModel(work));
 			colladaBundle.setGmlId(objectGroup.getGmlId());
 
 			kmlExporterManager.print(colladaBundle,

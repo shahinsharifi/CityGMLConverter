@@ -273,13 +273,12 @@ public class Transportation extends KmlGenericObject{
 	}
 
 	public PlacemarkType createPlacemarkForColladaModel() throws SQLException {
-		// undo trick for very close coordinates
-		double[] originInWGS84 = convertPointCoordinatesToWGS84(new double[] {getOriginX()/100, getOriginY()/100, getOriginZ()/100});
+		/*	double[] originInWGS84 = convertPointCoordinatesToWGS84(new double[] {getOriginX()/100, getOriginY()/100, getOriginZ()/100});
 		setLocationX(reducePrecisionForXorY(originInWGS84[0]));
 		setLocationY(reducePrecisionForXorY(originInWGS84[1]));
 		setLocationZ(reducePrecisionForZ(originInWGS84[2]));
-
-		return super.createPlacemarkForColladaModel();
+		return super.createPlacemarkForColladaModel();*/
+		return null;
 	}
 
 	private List<PlacemarkType> createPlacemarksForLoD0Network(ResultSet rs,

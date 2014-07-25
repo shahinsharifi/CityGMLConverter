@@ -1903,23 +1903,25 @@ public abstract class KmlGenericObject {
 	protected void fillGenericObjectForCollada(ResultSet rs) throws SQLException {	
 
 		String selectedTheme = config.getProject().getKmlExporter().getAppearanceTheme();
-
+		int countertmp1=0;
+		
 		int texImageCounter = 0;
 		PGgeometry pgBuildingGeometry = null;
 
 		while (rs.next()) {
 			long surfaceRootId = rs.getLong(1);
-			
+			if(surfaceRootId==1930 ||surfaceRootId==1931 ||surfaceRootId==1932 )
+			{
 			for (String colladaQuery: Queries.COLLADA_GEOMETRY_AND_APPEARANCE_FROM_ROOT_ID) { // parent surfaces come first
 				PreparedStatement psQuery = null;
 				ResultSet rs2 = null;
-
+				
 				try {
 					psQuery = connection.prepareStatement(colladaQuery);
 					psQuery.setLong(1, surfaceRootId);
 					//	psQuery.setString(2, selectedTheme);
 					rs2 = psQuery.executeQuery();
-	
+					
 					while (rs2.next()) {
 						
 						String theme = rs2.getString("theme");
@@ -1934,10 +1936,13 @@ public abstract class KmlGenericObject {
 								fillX3dMaterialValues(x3dMaterial, rs2);
 								// x3dMaterial will only added if not all x3dMaterial members are null
 								addX3dMaterial(surfaceId, x3dMaterial);
+								countertmp1++;
+								
 							}
 							else if (theme == null) { // no theme for this parent surface
 								if (getX3dMaterial(parentId) != null) { // material for parent's parent known
 									addX3dMaterial(surfaceId, getX3dMaterial(parentId));
+									countertmp1++;
 								}
 							}
 							continue; 
@@ -1954,12 +1959,15 @@ public abstract class KmlGenericObject {
 	
 						if (selectedTheme.equals(KmlExporter.THEME_NONE)) {
 							addX3dMaterial(surfaceId, defaultX3dMaterial);
+							countertmp1++;
 						}
 						else if	(!selectedTheme.equalsIgnoreCase(theme) && // no surface data for this surface and theme
 								getX3dMaterial(parentId) != null) { // material for parent surface known
 							addX3dMaterial(surfaceId, getX3dMaterial(parentId));
+							countertmp1++;
 						}
 						else {
+							countertmp1++;
 							texImageUri = rs2.getString("tex_image_uri");
 //							texImage = (OrdImage)rs2.getORAData("tex_image", OrdImage.getORADataFactory());
 							String texCoords = rs2.getString("texture_coordinates");
@@ -1978,8 +1986,10 @@ public abstract class KmlGenericObject {
 									ResultSet rs3 = null;
 									try {
 										psQuery3 = connection.prepareStatement(Queries.GET_TEXIMAGE_FROM_SURFACE_DATA_ID);
-										psQuery3.setLong(1, rs2.getLong("surface_data_id"));
+										long surface_data_id = rs2.getLong("surface_data_id");
+										psQuery3.setLong(1, surface_data_id);
 										rs3 = psQuery3.executeQuery();
+										
 										while (rs3.next()) {
 /*
 											// read large object (OID) data type from database
@@ -2036,6 +2046,7 @@ public abstract class KmlGenericObject {
 								texCoordsTokenized = new StringTokenizer(texCoords.trim(), " ");
 							}
 							else {
+								countertmp1++;
 								X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
 								fillX3dMaterialValues(x3dMaterial, rs2);
 								// x3dMaterial will only added if not all x3dMaterial members are null
@@ -2043,6 +2054,7 @@ public abstract class KmlGenericObject {
 								if (getX3dMaterial(surfaceId) == null) {
 									// untextured surface and no x3dMaterial -> default x3dMaterial (gray)
 									addX3dMaterial(surfaceId, defaultX3dMaterial);
+									countertmp1++;
 								}
 							}
 						}
@@ -2054,7 +2066,7 @@ public abstract class KmlGenericObject {
 							ordinatesArray[j+1] = surface.getPoint(i).y;
 							ordinatesArray[j+2] = surface.getPoint(i).z;
 						}
-	
+						
 						GeometryInfo gi = new GeometryInfo(GeometryInfo.POLYGON_ARRAY);
 						int contourCount = surface.numRings();
 						int cellCount = 0;
@@ -2106,6 +2118,27 @@ public abstract class KmlGenericObject {
 								texCoordsTokenized.nextToken(); // keep texture coordinates in sync
 							}
 						}
+						
+						/*String tmpString = "";
+						for(double tmp:giOrdinatesArray){
+							
+							tmpString += tmp + " ";
+						}
+						System.out.println("***"+tmpString);
+						tmpString = "";
+						for(double tmp:countourCountArray){
+							
+							tmpString += tmp + " ";
+						}
+						System.out.println("***"+tmpString);
+						tmpString = "";
+						for(double tmp:stripCountArray){
+							
+							tmpString += tmp + " ";
+						}
+						System.out.println("***"+tmpString);
+						System.out.println("----------------------------------------------------");*/
+						
 						gi.setCoordinates(giOrdinatesArray);
 						gi.setContourCounts(countourCountArray);
 						gi.setStripCounts(stripCountArray);
@@ -2122,7 +2155,9 @@ public abstract class KmlGenericObject {
 						try { psQuery.close(); } catch (SQLException e) {}
 				}
 			}
+			}
 		}
+		System.out.println(countertmp1);
 
 		// count rest images
 		eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));
@@ -2203,7 +2238,7 @@ public abstract class KmlGenericObject {
 
 
 	protected List<PlacemarkType> createPlacemarksForHighlighting(KmlSplittingResult work) throws SQLException {
-
+		
 		List<PlacemarkType> placemarkList= new ArrayList<PlacemarkType>();
 
 		PlacemarkType placemark = kmlFactory.createPlacemarkType();

@@ -335,7 +335,7 @@ public class Building extends KmlGenericObject{
 						zOffset = getZOffsetFromGEService(work.getId(), anchorCandidates);
 					}
 					setZOffset(zOffset);
-
+					//System.out.println(zOffset);
 					ColladaOptions colladaOptions = getColladaOptions();
 					setIgnoreSurfaceOrientation(colladaOptions.isIgnoreSurfaceOrientation());
 					try {
