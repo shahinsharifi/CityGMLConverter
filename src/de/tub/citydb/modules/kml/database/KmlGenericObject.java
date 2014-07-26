@@ -643,7 +643,7 @@ public abstract class KmlGenericObject {
 			Point3d coordPoint = new Point3d();
 			for(int i = 0; i < gArray.getVertexCount(); i++){
 				gArray.getCoordinate(i, coordPoint);
-				System.out.println("("+surfaceId+")"+i);
+				
 				VertexInfo vertexInfo = getVertexInfoForXYZ(coordPoint.x, coordPoint.y, coordPoint.z);
 				if (vertexInfo == null || (surfaceTextured && vertexInfo.getTexCoords(surfaceId) == null)) {
 					// no node or wrong node found
@@ -681,7 +681,7 @@ public abstract class KmlGenericObject {
 								+ coordPoint.z + "). TOLERANCE = " + TOLERANCE_AFTER_TRIANGULATION);
 					}
 				}
-			}System.out.println("*************************************");
+			}
 		}
 
 		VertexInfo vertexInfoIterator = firstVertexInfo;
@@ -1910,8 +1910,8 @@ public abstract class KmlGenericObject {
 
 		while (rs.next()) {
 			long surfaceRootId = rs.getLong(1);
-			if(surfaceRootId==72 ||surfaceRootId==73 ||surfaceRootId==74 )
-			{
+		//	if(surfaceRootId==72 ||surfaceRootId==73 ||surfaceRootId==74 )
+			//{
 			for (String colladaQuery: Queries.COLLADA_GEOMETRY_AND_APPEARANCE_FROM_ROOT_ID) { // parent surfaces come first
 				PreparedStatement psQuery = null;
 				ResultSet rs2 = null;
@@ -2154,7 +2154,7 @@ public abstract class KmlGenericObject {
 					if (psQuery != null)
 						try { psQuery.close(); } catch (SQLException e) {}
 				}
-			}
+			//}
 			}
 		}
 		
@@ -2449,18 +2449,24 @@ public abstract class KmlGenericObject {
 		double transparency = rs.getDouble("x3d_transparency");
 		if (!rs.wasNull()) {
 			x3dMaterial.setTransparency(transparency);
+			
 		}
 		Color color = getX3dColorFromString(rs.getString("x3d_diffuse_color"));
 		if (color != null) {
 			x3dMaterial.setDiffuseColor(color);
+			System.out.println(color.getRed()+","+color.getGreen()+","+color.getBlue());
 		}
+	
+		
 		color = getX3dColorFromString(rs.getString("x3d_specular_color"));
 		if (color != null) {
 			x3dMaterial.setSpecularColor(color);
+			System.out.println(color.getRed()+","+color.getGreen()+","+color.getBlue());
 		}
 		color = getX3dColorFromString(rs.getString("x3d_emissive_color"));
 		if (color != null) {
 			x3dMaterial.setEmissiveColor(color);
+			System.out.println(color.getRed()+","+color.getGreen()+","+color.getBlue());
 		}
 		x3dMaterial.setIsSmooth(rs.getInt("x3d_is_smooth") == 1);
 	}
