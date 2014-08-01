@@ -2032,7 +2032,6 @@ public abstract class KmlGenericObject {
 						{
 							X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
 							fillX3dMaterialValues(x3dMaterial, tmpHash);
-							System.out.println("parent:"+parentid+"-"+tmpHash.get("x3d_diffuse_color").toString());
 							addX3dMaterial(parentid, x3dMaterial);
 
 						}
@@ -2254,7 +2253,6 @@ public abstract class KmlGenericObject {
 
 	public PlacemarkType createPlacemarkForColladaModel(KmlSplittingResult work) throws Exception {
 
-		//System.out.println("Collada Placemark");
 		PlacemarkType placemark = kmlFactory.createPlacemarkType();
 		placemark.setName(getGmlId());
 		placemark.setId(DisplayForm.COLLADA_PLACEMARK_ID + placemark.getName());
@@ -2552,20 +2550,18 @@ public abstract class KmlGenericObject {
 		Color color = (Color)rs.get("x3d_diffuse_color");
 		if (color != null) {
 			x3dMaterial.setDiffuseColor(color);
-			System.out.println(color.getRed()+","+color.getGreen()+","+color.getBlue());
-		}
+	}
 		
 		color = (Color)rs.get("x3d_specular_color");
 		if (color != null) {
 			x3dMaterial.setSpecularColor(color);
-			System.out.println(color.getRed()+","+color.getGreen()+","+color.getBlue());
+			
 		}
 	
 		
 		color = (Color)rs.get("x3d_emissive_color");
 		if (color != null) {
 			x3dMaterial.setEmissiveColor(color);
-			System.out.println(color.getRed()+","+color.getGreen()+","+color.getBlue());
 		}
 
 		
