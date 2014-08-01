@@ -273,6 +273,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 	private DefaultMutableTreeNode cityObjectGroup;
 
 	private JButton exportButton = new JButton("");
+	private JButton BboxCalcButton = new JButton("");
 
 
 
@@ -413,6 +414,9 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 		boundingBoxPanel.add(bboxComponent, GuiUtil.setConstraints(0,0,1.0,0.0,GridBagConstraints.HORIZONTAL,2,lmargin,0,BORDER_THICKNESS));
 		
+		JPanel BboxCalcButtonPanel = new JPanel();
+		BboxCalcButtonPanel.add(BboxCalcButton);
+		boundingBoxPanel.add(BboxCalcButtonPanel, GuiUtil.setConstraints(0,1,1.0,0.0,GridBagConstraints.HORIZONTAL,2,lmargin,0,BORDER_THICKNESS));
 		
 		tilingButtonGroup.add(noTilingRadioButton);
 		noTilingRadioButton.setIconTextGap(10);
@@ -448,6 +452,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		filterContentPanel.add(tilingParentPanel);
 		filterContentPanel.add(Box.createRigidArea(new Dimension(0, BORDER_THICKNESS)));
 
+		
 		filterPanel = new JPanel();
 		filterPanel.setLayout(new BorderLayout());
 		filterPanel.setBorder(BorderFactory.createTitledBorder(""));
@@ -577,6 +582,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 		JPanel exportButtonPanel = new JPanel();
 		exportButtonPanel.add(exportButton);
+		
+		
 
 
 
