@@ -50,6 +50,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -117,6 +118,7 @@ import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.api.event.EventHandler;
 import de.tub.citydb.api.event.global.DatabaseConnectionStateEvent;
 import de.tub.citydb.api.event.global.GlobalEvents;
+import de.tub.citydb.api.gui.BoundingBoxCorner;
 import de.tub.citydb.api.log.LogLevel;
 import de.tub.citydb.api.registry.ObjectRegistry;
 import de.tub.citydb.config.Config;
@@ -151,6 +153,7 @@ import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorker;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorkerFactory;
 import de.tub.citydb.modules.citykml.controller.CityKmlImporter;
 import de.tub.citydb.modules.citykml.gui.components.bbox.BoundingBoxPanelImpl;
+import de.tub.citydb.modules.citykml.util.BoundingBox;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.modules.common.event.InterruptEnum;
@@ -662,6 +665,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		featureClassesLabel.setText(Internal.I18N.getString("filter.border.featureClass"));
 
 		exportButton.setText(Internal.I18N.getString("export.button.export"));
+		BboxCalcButton.setText(Internal.I18N.getString("CityKmlExport.button.export"));
 	}
 
 	private void clearGui() {
@@ -1046,6 +1050,30 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				thread.start();
 			}
 		});
+		
+		
+		
+		
+		BboxCalcButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Thread thread = new Thread() {
+					public void run() {
+						
+						try {
+						
+							doCalculation();
+						
+						} catch (Exception e) {
+							Logger.getInstance().error(e.toString());
+						}
+					}
+				};
+				thread.setDaemon(true);
+				thread.start();
+			}
+		});
+		
+		
 
 		browseButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -1195,6 +1223,43 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 	}
 
+	
+	
+	private void doCalculation() throws Exception{
+
+		try {
+		
+			setSettings();
+			ExportFilterConfig filter = config.getProject().getCityKmlExporter().getFilter();
+			Internal intConfig = config.getInternal();		
+
+				
+			DirectoryScanner directoryScanner = new DirectoryScanner(true);
+			directoryScanner.addFilenameFilter(new CityGMLFilenameFilter());		
+			List<File> importFiles = directoryScanner.getFiles(intConfig.getImportFiles());
+			File _mfile = importFiles.get(0);
+
+			if(_mfile != null)
+			{
+				int boundingBoxSrs = filter.getComplexFilter().getTiledBoundingBox().getSrs().getSrid();
+				String TargetSrs = (boundingBoxSrs != 4326 && !srsField.getText().equals("")) ? srsField.getText() : "4326";
+				LOG.info("Calculating the bounding box (EPSG:"+TargetSrs+") ...");
+				bboxComponent.setBoundingBox(BoundingBox.BboxCalculator(jaxbBuilder, _mfile, srsField.getText(), TargetSrs));
+				
+			}
+		
+		}
+		catch(Exception ex)
+		{
+
+		}
+		finally
+		{
+			LOG.info("Calculating the bounding box is finished.");
+		}
+	}
+
+	
 	private void doExport() throws Exception {
 
 		
@@ -1294,8 +1359,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			tileAmount = tileAmount * activeDisplayFormsAmount;
 
 			mainView.setStatusText(Internal.I18N.getString("main.status.kmlExport.label"));
-			Logger.getInstance().info("Initializing database export...");
-
+			
 			final ExportStatusDialog exportDialog = new ExportStatusDialog(mainView, 
 					Internal.I18N.getString("kmlExport.dialog.window"),
 					Internal.I18N.getString("export.dialog.msg"),
@@ -1396,7 +1460,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		gmlIdText.setEnabled(singleBuildingRadioButton.isSelected());
 
 		bboxComponent.setEnabled(boundingBoxRadioButton.isSelected());
-
+		BboxCalcButton.setEnabled(boundingBoxRadioButton.isSelected());
+		
 		DefaultTreeCheckingModel model = (DefaultTreeCheckingModel)fcTree.getCheckingModel();
 		model.setPathEnabled(new TreePath(cityObject), boundingBoxRadioButton.isSelected());
 		model.setPathEnabled(new TreePath(new Object[]{cityObject, building}), boundingBoxRadioButton.isSelected());

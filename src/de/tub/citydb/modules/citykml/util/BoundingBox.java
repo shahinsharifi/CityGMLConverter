@@ -30,8 +30,22 @@
 package de.tub.citydb.modules.citykml.util;
 
 
+import java.io.File;
 import java.util.List;
 
+import javax.xml.namespace.QName;
+
+import org.citygml4j.builder.jaxb.JAXBBuilder;
+import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
+import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
+import org.citygml4j.model.citygml.CityGML;
+import org.citygml4j.model.citygml.CityGMLClass;
+import org.citygml4j.model.citygml.core.AbstractCityObject;
+import org.citygml4j.model.citygml.core.CityModel;
+import org.citygml4j.xml.io.CityGMLInputFactory;
+import org.citygml4j.xml.io.reader.CityGMLInputFilter;
+import org.citygml4j.xml.io.reader.CityGMLReadException;
+import org.citygml4j.xml.io.reader.FeatureReadMode;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -48,7 +62,9 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Polygon;
 
+import de.tub.citydb.api.gui.BoundingBoxCorner;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
 
 
 
@@ -65,6 +81,7 @@ public class BoundingBox {
 	    nativeBounds = new ReferencedEnvelope(MinX, MaxX, MinY, MaxY, nativeCrs);
 	    
 	}
+	
 	
 	
 	public boolean Contains(Envelope bounds)
@@ -130,5 +147,101 @@ public class BoundingBox {
 	}
 	
 	
+	public static de.tub.citydb.api.gui.BoundingBox BboxCalculator(JAXBBuilder jaxbBuilder, File sourceFile,String sourceSrs,String targetSrs) throws Exception
+	{	
+		
+		double Xmin = 0,
+			   Xmax = 0,
+			   Ymin = 0,
+			   Ymax = 0;
+
+		boolean IsFirstTime = true;
+		
+		de.tub.citydb.api.gui.BoundingBox bounds = new de.tub.citydb.api.gui.BoundingBox();
+		
+		
+		try {
+			
+			
+			
+			CityGMLInputFactory in = null;			
+			in = jaxbBuilder.createCityGMLInputFactory();
+			in.setProperty(CityGMLInputFactory.FEATURE_READ_MODE, FeatureReadMode.SPLIT_PER_COLLECTION_MEMBER);
+			in.setProperty(CityGMLInputFactory.FAIL_ON_MISSING_ADE_SCHEMA, false);
+			in.setProperty(CityGMLInputFactory.PARSE_SCHEMA, false);
+			in.setProperty(CityGMLInputFactory.SPLIT_AT_FEATURE_PROPERTY, new QName("generalizesTo"));
+			in.setProperty(CityGMLInputFactory.EXCLUDE_FROM_SPLITTING, CityModel.class);
+			
+	
+	
+			// prepare feature filter
+	
+			CityGMLInputFilter inputFilter = new CityGMLInputFilter() {
+				public boolean accept(CityGMLClass type) {
+					return true;
+				}
+			};
+	
+			
+	
+			JAXBChunkReader _ChunkReader = (JAXBChunkReader)in.createFilteredCityGMLReader(in.createCityGMLReader(sourceFile), inputFilter);	
+		
+			while (_ChunkReader.hasNextChunk()) {
+
+
+				CityGMLChunk chunk = _ChunkReader.nextChunk();
+
+				CityGML _CityGML = chunk.unmarshal();
+				
+				
+				
+				if (CityGMLClass.ABSTRACT_CITY_OBJECT.isInstance(_CityGML.getCityGMLClass())) {
+					
+					
+					AbstractCityObject cityObject = (AbstractCityObject)_CityGML;
+					
+					org.citygml4j.model.gml.geometry.primitives.Envelope envelope = 
+							cityObject.getBoundedBy().getEnvelope().convert3d();
+					
+					
+					if(IsFirstTime)
+					{
+						Xmin =  envelope.getLowerCorner().toList3d().get(0);
+						Xmax =  envelope.getUpperCorner().toList3d().get(0);
+						Ymin =  envelope.getLowerCorner().toList3d().get(1);
+						Ymax =  envelope.getUpperCorner().toList3d().get(1);
+						IsFirstTime = false;
+					
+					}
+					else {
+				
+						Xmin = (Xmin < envelope.getLowerCorner().toList3d().get(0)) ? Xmin : envelope.getLowerCorner().toList3d().get(0);
+						Xmax = (Xmax > envelope.getUpperCorner().toList3d().get(0)) ? Xmax : envelope.getUpperCorner().toList3d().get(0);
+						Ymin = (Ymin < envelope.getLowerCorner().toList3d().get(1)) ? Ymin : envelope.getLowerCorner().toList3d().get(1);
+						Ymax = (Ymax > envelope.getUpperCorner().toList3d().get(1)) ? Ymax : envelope.getUpperCorner().toList3d().get(1);					
+					
+					}
+					
+					
+					
+				}
+				
+			}
+			List<Double> LowerCorner =  ProjConvertor.transformPoint(Xmin, Ymin, 0, sourceSrs, targetSrs);
+			List<Double> UpperCorner =  ProjConvertor.transformPoint(Xmax, Ymax, 0, sourceSrs, targetSrs);
+			
+			bounds.setLowerLeftCorner(new BoundingBoxCorner(LowerCorner.get(1), LowerCorner.get(0)));
+			bounds.setUpperRightCorner(new BoundingBoxCorner(UpperCorner.get(1),UpperCorner.get(0)));
+	
+			
+		} catch (CityGMLReadException e) {
+			Logger.getInstance().error("Failed to initialize CityGML parser. Aborting.");
+			
+		}
+		
+		
+		return bounds;
+	
+	}
 	
 }

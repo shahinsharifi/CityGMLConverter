@@ -292,7 +292,7 @@ public class KmlSplitter {
 					
 					if (_CityGML.getCityGMLClass() == CityGMLClass.APPEARANCE) {
 						
-						System.out.println(_CityGML.getCityGMLClass());
+						
 
 					} else if (CityGMLClass.ABSTRACT_CITY_OBJECT.isInstance(_CityGML.getCityGMLClass())) {
 						
