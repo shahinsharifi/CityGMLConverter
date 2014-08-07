@@ -1227,8 +1227,14 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 	
 	private void doCalculation() throws Exception{
 
-		try {
+		if (srsField.getText().equals("")) {
+			mainView.errorMessage(Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData"), 
+					Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.epsg"));
+			return;
+		}
 		
+		try {
+
 			setSettings();
 			ExportFilterConfig filter = config.getProject().getCityKmlExporter().getFilter();
 			Internal intConfig = config.getInternal();		
@@ -1273,10 +1279,22 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			ExportFilterConfig filter = config.getProject().getCityKmlExporter().getFilter();
 			//			Database db = config.getProject().getDatabase();
 
-			// check all input values...
+			// check all input values...	
+			if (config.getInternal().getImportFiles().length==0) {
+				mainView.errorMessage(Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData"), 
+						Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.import"));
+				return;
+			}
+			
 			if (config.getInternal().getExportFileName().trim().equals("")) {
-				mainView.errorMessage(Internal.I18N.getString("kmlExport.dialog.error.incompleteData"), 
-						Internal.I18N.getString("kmlExport.dialog.error.incompleteData.dataset"));
+				mainView.errorMessage(Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData"), 
+						Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.export"));
+				return;
+			}
+			
+			if (srsField.getText().equals("")) {
+				mainView.errorMessage(Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData"), 
+						Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.epsg"));
 				return;
 			}
 

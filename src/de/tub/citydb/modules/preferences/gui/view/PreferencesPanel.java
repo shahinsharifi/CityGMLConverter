@@ -65,6 +65,7 @@ import de.tub.citydb.gui.preferences.NullComponent;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citygml.exporter.CityGMLExportPlugin;
 import de.tub.citydb.modules.citygml.importer.CityGMLImportPlugin;
+import de.tub.citydb.modules.citykml.CityKMLExportPlugin;
 import de.tub.citydb.modules.database.DatabasePlugin;
 import de.tub.citydb.modules.kml.KMLExportPlugin;
 import de.tub.citydb.modules.preferences.gui.preferences.GeneralPreferences;
@@ -142,6 +143,7 @@ public class PreferencesPanel extends JPanel implements TreeSelectionListener {
 		PreferencesTreeNode initialNode = rootNode.add(pluginService.getInternalPlugin(CityGMLImportPlugin.class).getPreferences().getPreferencesEntry());
 		rootNode.add(pluginService.getInternalPlugin(CityGMLExportPlugin.class).getPreferences().getPreferencesEntry());
 		rootNode.add(pluginService.getInternalPlugin(KMLExportPlugin.class).getPreferences().getPreferencesEntry());
+		rootNode.add(pluginService.getInternalPlugin(CityKMLExportPlugin.class).getPreferences().getPreferencesEntry());
 
 		for (PreferencesExtension extension : pluginService.getExternalPreferencesExtensions())
 			rootNode.add(extension.getPreferences().getPreferencesEntry());	

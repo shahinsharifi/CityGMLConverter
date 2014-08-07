@@ -492,9 +492,10 @@ public class ImpExp {
 			pluginService.registerInternalPlugin(new CityGMLImportPlugin(jaxbBuilder, config, mainView));		
 			pluginService.registerInternalPlugin(new CityGMLExportPlugin(jaxbBuilder, config, mainView));		
 			pluginService.registerInternalPlugin(new KMLExportPlugin(kmlContext, colladaContext, config, mainView));
+			pluginService.registerInternalPlugin(new CityKMLExportPlugin(jaxbBuilder,kmlContext, colladaContext, config, mainView));
 			pluginService.registerInternalPlugin(databasePlugin);
 			pluginService.registerInternalPlugin(new PreferencesPlugin(pluginService, config, mainView));
-			pluginService.registerInternalPlugin(new CityKMLExportPlugin(jaxbBuilder,kmlContext, colladaContext, config, mainView));
+			
 			
 
 			// initialize internal plugins
