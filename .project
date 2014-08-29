@@ -14,4 +14,11 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>base</name>
+			<type>2</type>
+			<location>C:/Users/ssharifi/workspace/CityGMLConverter/build/base</location>
+		</link>
+	</linkedResources>
 </projectDescription>

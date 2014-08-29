@@ -202,7 +202,7 @@ public class SurfaceGeometry {
 							return _pointList;
 						}
 
-						
+						SetSurfaceID(polygon.getId());
 						pointList.add(points);
 						int ringNo = 0;
 
@@ -250,7 +250,8 @@ public class SurfaceGeometry {
 											LOG.error(msg.toString());
 											return _pointList;
 										}
-
+										
+										SetSurfaceID(polygon.getId());
 										pointList.add(interiorPoints);
 										ringNo++;
 
@@ -272,7 +273,7 @@ public class SurfaceGeometry {
 
 
 						}
-						SetSurfaceID(polygon.getId());
+					
 						_pointList.addAll(pointList);
 
 

@@ -29,8 +29,11 @@
  */
 package de.tub.citydb.modules.citykml.content2;
 
+import java.util.List;
+
 import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
+import org.citygml4j.model.citygml.appearance.AppearanceProperty;
 
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 
@@ -42,14 +45,16 @@ public class KmlSplittingResult {
 	private String TargetSrs;
 	private DisplayForm displayForm;
 	private CityGMLClass cityObjectType;
+	private List<AppearanceProperty> appearanceList;
 
-	public KmlSplittingResult(String GmlID,CityGML _work , CityGMLClass cityObjectType, DisplayForm displayForm ,String _TargetSrs) {
+	public KmlSplittingResult(String GmlID,CityGML _work , CityGMLClass cityObjectType, DisplayForm displayForm ,String _TargetSrs, List<AppearanceProperty> appearanceList) {
 		this.setId(id);
 		this.setGmlId(GmlID);
 		this.setCityGmlClass(_work);
 		this.setTargetSrs(_TargetSrs);
 		this.setCityObjectType(cityObjectType);
 		this.setDisplayForm(displayForm);
+		this.setAppearanceList(appearanceList);
 	}
 
 	public long getId() {
@@ -87,7 +92,13 @@ public class KmlSplittingResult {
 		this.TargetSrs = _TargetSrs;
 	}
 	
-	
+	public List<AppearanceProperty> getAppearanceList() {
+		return appearanceList;
+	}
+
+	public void setAppearanceList(List<AppearanceProperty> appearanceList) {
+		this.appearanceList = appearanceList;
+	}
 	
 	public void setDisplayForm(DisplayForm displayForm) {
 		this.displayForm = displayForm;

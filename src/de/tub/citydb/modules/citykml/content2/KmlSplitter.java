@@ -35,24 +35,32 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import javax.xml.namespace.QName;
 
+import org.citygml4j.CityGMLContext;
+import org.citygml4j.builder.CityGMLBuilder;
 import org.citygml4j.builder.jaxb.JAXBBuilder;
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
 import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
 import org.citygml4j.model.citygml.appearance.Appearance;
+import org.citygml4j.model.citygml.appearance.AppearanceProperty;
 import org.citygml4j.model.citygml.building.AbstractBuilding;
+import org.citygml4j.model.citygml.cityobjectgroup.CityObjectGroupMember;
 import org.citygml4j.model.citygml.core.AbstractCityObject;
 import org.citygml4j.model.citygml.core.CityModel;
+import org.citygml4j.model.citygml.core.CityObjectMember;
 import org.citygml4j.model.gml.geometry.primitives.Envelope;
+import org.citygml4j.util.xlink.XLinkResolver;
 import org.citygml4j.xml.io.CityGMLInputFactory;
 import org.citygml4j.xml.io.reader.CityGMLInputFilter;
 import org.citygml4j.xml.io.reader.CityGMLReadException;
+import org.citygml4j.xml.io.reader.CityGMLReader;
 import org.citygml4j.xml.io.reader.FeatureReadMode;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -276,53 +284,70 @@ public class KmlSplitter {
 					}
 				};
 
+				
+				
+				
+				
+				CityGMLContext ctx = new CityGMLContext();
+				CityGMLBuilder builder = ctx.createCityGMLBuilder();
+				in = builder.createCityGMLInputFactory();
+				CityGMLReader reader = in.createCityGMLReader(file);
+				CityModel cityModel = (CityModel)reader.nextFeature();
+				reader.close();
 
-
-				JAXBChunkReader _ChunkReader = (JAXBChunkReader)in.createFilteredCityGMLReader(in.createCityGMLReader(file), inputFilter);	
-
-
-				//	LOG.info("Writing placemarks into target file, Please wait ...");
-
-				while (_ChunkReader.hasNextChunk()) {
-
-
-					CityGMLChunk chunk = _ChunkReader.nextChunk();
-
-					CityGML _CityGML = chunk.unmarshal();
+				//JAXBChunkReader _ChunkReader = (JAXBChunkReader)in.createFilteredCityGMLReader(in.createCityGMLReader(file), inputFilter);	
+			
+				for (CityObjectMember member : cityModel.getCityObjectMember()) {
 					
-					if (_CityGML.getCityGMLClass() == CityGMLClass.APPEARANCE) {
+					if (member.isSetCityObject()) {
 						
-						
-
-					} else if (CityGMLClass.ABSTRACT_CITY_OBJECT.isInstance(_CityGML.getCityGMLClass())) {
-						
+						AbstractCityObject cityObject = member.getCityObject();
+						CityGML _CityGML = cityObject;
 						CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
-
-						AbstractCityObject cityObject = (AbstractCityObject)_CityGML;
+						
 
 						// bounding box filter
 						// first of all compute bounding box for cityobject since we need it anyways
 
-						Envelope envelope = cityObject.getBoundedBy().getEnvelope().convert3d();
-						ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(
-								envelope.getLowerCorner().toList3d().get(0),
-								envelope.getUpperCorner().toList3d().get(0),	
-								envelope.getLowerCorner().toList3d().get(1),							
-								envelope.getUpperCorner().toList3d().get(1),
-								CRS.decode("EPSG:" + this.TargetSrs, true));
-
-
-						if(envelope != null && _bounds.ContainCentroid(_refEnvelope,TargetSrs))						
-						{													
-							KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs);										
-							dbWorkerPool.addWork(splitter);					
-						}
+						Envelope envelope = null;
+						if(cityObject.getBoundedBy() != null)
+							envelope = cityObject.getBoundedBy().getEnvelope().convert3d();
 						
-					
+						List<AppearanceProperty> tmpAppearanceList = new ArrayList<AppearanceProperty>();
+						
+						if(cityObject.isSetAppearance())
+							tmpAppearanceList.addAll(cityObject.getAppearance());
+						else 
+							tmpAppearanceList.addAll(cityModel.getAppearanceMember());
+						
+						
+						
+						
+						if(envelope!=null)
+						{	
+							ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(
+									envelope.getLowerCorner().toList3d().get(0),
+									envelope.getUpperCorner().toList3d().get(0),	
+									envelope.getLowerCorner().toList3d().get(1),							
+									envelope.getUpperCorner().toList3d().get(1),
+									CRS.decode("EPSG:" + this.TargetSrs, true));
+						
+							if(_bounds.ContainCentroid(_refEnvelope,TargetSrs))						
+							{													
+								KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs,tmpAppearanceList);										
+								dbWorkerPool.addWork(splitter);					
+							}
+							
+						}
+						else {
+							KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs,tmpAppearanceList);										
+							dbWorkerPool.addWork(splitter);
+						}
 					}
-
-					
 				}
+
+
+				
 
 
 			} catch (Exception e) {

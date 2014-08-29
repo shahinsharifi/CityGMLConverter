@@ -249,7 +249,7 @@ public class CityFurniture extends KmlGenericObject{
     }
     
     protected void fillGenericObjectForCollada(ResultSet rs) throws SQLException {
-    
+    /*
 		if (transformation == null) { // no implicit geometry
 		//	super.fillGenericObjectForCollada(rs);
 			return;
@@ -323,7 +323,7 @@ public class CityFurniture extends KmlGenericObject{
 	
 							if (texImageUri != null && texImageUri.trim().length() != 0
 									&&  texCoords != null && texCoords.trim().length() != 0
-									/* && texImage != null */) {
+									 && texImage != null ) {
 	
 								int fileSeparatorIndex = Math.max(texImageUri.lastIndexOf("\\"), texImageUri.lastIndexOf("/")); 
 								texImageUri = ".." + File.separator + "_" + texImageUri.substring(fileSeparatorIndex + 1);
@@ -338,7 +338,7 @@ public class CityFurniture extends KmlGenericObject{
 										psQuery3.setLong(1, rs2.getLong("surface_data_id"));
 										rs3 = psQuery3.executeQuery();
 										while (rs3.next()) {
-/*
+
 											// read large object (OID) data type from database
 											// Get the Large Object Manager to perform operations with
 											LargeObjectManager lobj = ((org.postgresql.PGConnection)connection).getLargeObjectAPI();
@@ -353,7 +353,7 @@ public class CityFurniture extends KmlGenericObject{
 											// Read the data
 											buf = new byte[obj.size()];
 											obj.read(buf, 0, obj.size());
-*/
+
 											// read bytea data type from database
 											texImage = rs3.getBinaryStream("tex_image");
 										}
@@ -448,7 +448,7 @@ public class CityFurniture extends KmlGenericObject{
 								if (texCoordsTokenized != null) {
 									double s = Double.parseDouble(texCoordsTokenized.nextToken());
 									double t = Double.parseDouble(texCoordsTokenized.nextToken());
-/*									if (s > 1.1 || s < -0.1 || t < -0.1 || t > 1.1) { // texture wrapping -- it conflicts with texture atlas
+									if (s > 1.1 || s < -0.1 || t < -0.1 || t > 1.1) { // texture wrapping -- it conflicts with texture atlas
 										removeTexImage(texImageUri);
 										BufferedImage bufferedImage = null;
 										try {
@@ -457,7 +457,7 @@ public class CityFurniture extends KmlGenericObject{
 										addTexImage(texImageUri, bufferedImage);
 //										addTexOrdImage(texImageUri, texImage);
 									}
-*/
+
 									texCoordsForThisSurface = new TexCoords(s, t);
 								}
 								setVertexInfoForXYZ(surfaceId,
@@ -491,7 +491,7 @@ public class CityFurniture extends KmlGenericObject{
 		}
 
 		// count rest images
-		eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));
+		eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));*/
 	}
 
 	protected List<PlacemarkType> createPlacemarksForHighlighting(KmlSplittingResult work) throws SQLException {

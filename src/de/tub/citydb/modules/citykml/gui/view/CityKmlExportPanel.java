@@ -1257,7 +1257,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		}
 		catch(Exception ex)
 		{
-
+			LOG.error(ex.toString());
 		}
 		finally
 		{

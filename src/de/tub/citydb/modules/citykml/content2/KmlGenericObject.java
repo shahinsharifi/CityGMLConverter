@@ -180,7 +180,7 @@ public abstract class KmlGenericObject {
 
 	private final static String NO_TEXIMAGE = "default";
 
-	private HashMap<Long, GeometryInfo> geometryInfos = new HashMap<Long, GeometryInfo>();
+	private HashMap<String, GeometryInfo> geometryInfos = new HashMap<String, GeometryInfo>();
 	// coordinates include texCoordinates, which geometryInfo does not
 	// texCoordinates in geometryInfo would be float --> precision loss
 	private NodeZ coordinateTree;
@@ -193,7 +193,7 @@ public abstract class KmlGenericObject {
 	// key is imageUri
 	//	private HashMap<String, OrdImage> texOrdImages = null;
 	// key is surfaceId, surfaceId is originally a Long
-	private HashMap<Long, X3DMaterial> x3dMaterials = null;
+	private HashMap<String, X3DMaterial> x3dMaterials = null;
 
 	private long id;
 	private String gmlId;
@@ -472,10 +472,10 @@ public abstract class KmlGenericObject {
 		HashMap<String, Triangles> trianglesByTexImageName = new HashMap<String, Triangles>();
 
 		// geometryInfos contains all surfaces, textured or not
-		Set<Long> keySet = geometryInfos.keySet();
-		Iterator<Long> iterator = keySet.iterator();
+		Set<String> keySet = geometryInfos.keySet();
+		Iterator<String> iterator = keySet.iterator();
 		while (iterator.hasNext()) {
-			Long surfaceId = iterator.next();
+			String surfaceId = iterator.next();
 			
 			String texImageName = texImageUris.get(surfaceId);
 			X3DMaterial x3dMaterial = getX3dMaterial(surfaceId);
@@ -763,19 +763,19 @@ public abstract class KmlGenericObject {
 		return texImageUris;
 	}
 
-	public void addGeometryInfo(long surfaceId, GeometryInfo geometryInfo){
-		geometryInfos.put(new Long(surfaceId), geometryInfo);
+	public void addGeometryInfo(String surfaceId, GeometryInfo geometryInfo){
+		geometryInfos.put(surfaceId, geometryInfo);
 	}
 
 	protected int getGeometryAmount(){
 		return geometryInfos.size();
 	}
 
-	public GeometryInfo getGeometryInfo(long surfaceId){
-		return geometryInfos.get(new Long(surfaceId));
+	public GeometryInfo getGeometryInfo(String surfaceId){
+		return geometryInfos.get(surfaceId);
 	}
 
-	protected void addX3dMaterial(long surfaceId, X3DMaterial x3dMaterial){
+	protected void addX3dMaterial(String surfaceId, X3DMaterial x3dMaterial){
 		if (x3dMaterial == null) return;
 		if (x3dMaterial.isSetAmbientIntensity()
 				|| x3dMaterial.isSetShininess()
@@ -785,23 +785,23 @@ public abstract class KmlGenericObject {
 				|| x3dMaterial.isSetEmissiveColor()) {
 
 			if (x3dMaterials == null) {
-				x3dMaterials = new HashMap<Long, X3DMaterial>();
+				x3dMaterials = new HashMap<String, X3DMaterial>();
 			}
-			x3dMaterials.put(new Long(surfaceId), x3dMaterial);
+			x3dMaterials.put(surfaceId, x3dMaterial);
 		}
 	}
 
-	protected X3DMaterial getX3dMaterial(long surfaceId) {
+	protected X3DMaterial getX3dMaterial(String surfaceId) {
 		X3DMaterial x3dMaterial = null;
 		if (x3dMaterials != null) {
-			x3dMaterial = x3dMaterials.get(new Long(surfaceId));
+			x3dMaterial = x3dMaterials.get(surfaceId);
 		}
 		return x3dMaterial;
 	}
 
-	protected void addTexImageUri(long surfaceId, String texImageUri){
+	protected void addTexImageUri(String surfaceId, String texImageUri){
 		if (texImageUri != null) {
-			texImageUris.put(new Long(surfaceId), texImageUri);
+			texImageUris.put(surfaceId, texImageUri);
 		}
 	}
 
@@ -855,7 +855,7 @@ public abstract class KmlGenericObject {
 		return texOrdImage;
 	}*/
 
-	public void setVertexInfoForXYZ(long surfaceId, double x, double y, double z, TexCoords texCoordsForThisSurface){
+	public void setVertexInfoForXYZ(String surfaceId, double x, double y, double z, TexCoords texCoordsForThisSurface){
 		vertexIdCounter = vertexIdCounter.add(BigInteger.ONE);
 		VertexInfo vertexInfo = new VertexInfo(vertexIdCounter, x, y, z);
 		vertexInfo.addTexCoords(surfaceId, texCoordsForThisSurface);
@@ -917,7 +917,7 @@ public abstract class KmlGenericObject {
 	}
 
 
-	public VertexInfo getVertexInfoBestFitForXYZ(double x, double y, double z, long surfaceId) {
+	public VertexInfo getVertexInfoBestFitForXYZ(double x, double y, double z, String surfaceId) {
 		VertexInfo result = null;
 		VertexInfo vertexInfoIterator = firstVertexInfo;
 		double distancePow2 = Double.MAX_VALUE;
@@ -1000,17 +1000,17 @@ public abstract class KmlGenericObject {
 		VertexInfo vertexInfoIterator = objectToAppend.firstVertexInfo;
 		while (vertexInfoIterator != null) {
 			if (vertexInfoIterator.getAllTexCoords() == null) {
-				this.setVertexInfoForXYZ(-1, // dummy
+				this.setVertexInfoForXYZ("-1", // dummy
 						vertexInfoIterator.getX(),
 						vertexInfoIterator.getY(),
 						vertexInfoIterator.getZ(),
 						null);
 			}
 			else {
-				Set<Long> keySet = vertexInfoIterator.getAllTexCoords().keySet();
-				Iterator<Long> iterator = keySet.iterator();
+				Set<String> keySet = vertexInfoIterator.getAllTexCoords().keySet();
+				Iterator<String> iterator = keySet.iterator();
 				while (iterator.hasNext()) {
-					Long surfaceId = iterator.next();
+					String surfaceId = iterator.next();
 					this.setVertexInfoForXYZ(surfaceId,
 							vertexInfoIterator.getX(),
 							vertexInfoIterator.getY(),
@@ -1021,10 +1021,10 @@ public abstract class KmlGenericObject {
 			vertexInfoIterator = vertexInfoIterator.getNextVertexInfo();
 		} 
 
-		Set<Long> keySet = objectToAppend.geometryInfos.keySet();
-		Iterator<Long> iterator = keySet.iterator();
+		Set<String> keySet = objectToAppend.geometryInfos.keySet();
+		Iterator<String> iterator = keySet.iterator();
 		while (iterator.hasNext()) {
-			Long surfaceId = iterator.next();
+			String surfaceId = iterator.next();
 			this.addX3dMaterial(surfaceId, objectToAppend.getX3dMaterial(surfaceId));
 			String imageUri = objectToAppend.texImageUris.get(surfaceId);
 			this.addTexImageUri(surfaceId, imageUri);
@@ -1115,7 +1115,7 @@ public abstract class KmlGenericObject {
 		Set<Object> sgIdSet = texImageUris.keySet();
 		Iterator<Object> sgIdIterator = sgIdSet.iterator();
 		while (sgIdIterator.hasNext()) {
-			Long sgId = (Long) sgIdIterator.next();
+			String sgId = (String) sgIdIterator.next();
 			VertexInfo vertexInfoIterator = firstVertexInfo;
 			while (vertexInfoIterator != null) {
 				if (vertexInfoIterator.getAllTexCoords() != null &&
@@ -1165,7 +1165,7 @@ public abstract class KmlGenericObject {
 
 		sgIdIterator = sgIdSet.iterator();
 		while (sgIdIterator.hasNext()) {
-			Long sgId = (Long) sgIdIterator.next();
+			String sgId = (String) sgIdIterator.next();
 			StringTokenizer texCoordsTokenized = new StringTokenizer(tiInfoCoords.get(sgId), " ");
 			VertexInfo vertexInfoIterator = firstVertexInfo;
 			while (texCoordsTokenized.hasMoreElements() &&
@@ -1261,15 +1261,15 @@ public abstract class KmlGenericObject {
 		}
 
 
-		HashSet<Long> wrappedSurfacesSet = new HashSet<Long>();
+		HashSet<String> wrappedSurfacesSet = new HashSet<String>();
 		// transform texture coordinates
 		VertexInfo vertexInfoIterator = firstVertexInfo;
 		while (vertexInfoIterator != null) {
 			if (vertexInfoIterator.getAllTexCoords() != null) {
-				Set<Long> surfaceIdSet = vertexInfoIterator.getAllTexCoords().keySet();
-				Iterator<Long> surfaceIdIterator = surfaceIdSet.iterator();
+				Set<String> surfaceIdSet = vertexInfoIterator.getAllTexCoords().keySet();
+				Iterator<String> surfaceIdIterator = surfaceIdSet.iterator();
 				while (surfaceIdIterator.hasNext()) {
-					Long surfaceId = surfaceIdIterator.next();
+					String surfaceId = surfaceIdIterator.next();
 					String imageName = texImageUris.get(surfaceId);
 					BufferedImage texImage = texImages.get(imageName);
 
@@ -2018,12 +2018,12 @@ public abstract class KmlGenericObject {
 			//if(work.getGmlId().equals("BLDG_0003000e0097f52c"))
 			//{
 
-				for(Map<String, Object> rs:_ParentSurfaceList){
-					
-					long parentid= (Long)rs.get("pid");
-					String id = (String)rs.get("id");
-				
-					Map<String, Object> tmpHash = _SurfaceAppearance.GetSurfaceDataByID("#"+id);
+				for(Map<String, Object> Row:_ParentSurfaceList){
+
+					String parentid= String.valueOf(Row.get("pid"));
+					String id = String.valueOf(Row.get("id"));
+
+					Map<String, Object> tmpHash = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+id , work.getAppearanceList());
 					String AppreanceType = (String)tmpHash.get("type");
 					
 					if(AppreanceType != null){
@@ -2040,10 +2040,13 @@ public abstract class KmlGenericObject {
 
 				for (Map<String, Object> Row: _SurfaceList)  {
 
-					Map<String, Object> _AppResult = _SurfaceAppearance.GetSurfaceDataByID("#"+String.valueOf(Row.get("id")));
-					long surfaceId = Long.parseLong(Row.get("id").toString().replace("GEOM_", ""));
-					Long parentId = Long.parseLong(Row.get("pid").toString());
-			
+					
+
+					Map<String, Object> _AppResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+String.valueOf(Row.get("id")), work.getAppearanceList());
+					String surfaceId = String.valueOf(Row.get("id"));
+					String parentId = String.valueOf(Row.get("pid"));
+					
+					
 
 					// from here on it is a surfaceMember
 					eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
@@ -2086,7 +2089,7 @@ public abstract class KmlGenericObject {
 
 
 						texImageUri = _AppResult.get("imageuri").toString();
-						//							texImage = (OrdImage)rs2.getORAData("tex_image", OrdImage.getORADataFactory());
+						
 						String texCoords = _AppResult.get("coord").toString();
 
 						if (texImageUri != null && texImageUri.trim().length() != 0
@@ -2102,6 +2105,7 @@ public abstract class KmlGenericObject {
 							if (getTexImage(texImageUri) == null) { // not already read in
 
 								texImage = new BufferedInputStream(new FileInputStream(filePath+"\\"+_AppResult.get("imageuri").toString()));
+								
 								BufferedImage bufferedImage = null;
 
 								try {
@@ -2150,7 +2154,7 @@ public abstract class KmlGenericObject {
 
 					for (int i = 1,j = 0; i < _Geometry.size(); j++, i = i+3) {				
 
-						List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), "3068");							
+						List<Double> Target_Coordinates = ProjConvertor.transformPoint(_Geometry.get(i-1),_Geometry.get(i),_Geometry.get(i+1), work.getTargetSrs(), work.getTargetSrs());							
 						tmpPoint[j] = new org.postgis.Point(
 								Target_Coordinates.get(1),
 								Target_Coordinates.get(0),

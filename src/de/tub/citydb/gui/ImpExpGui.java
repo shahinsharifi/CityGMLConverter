@@ -236,8 +236,7 @@ public final class ImpExpGui extends JFrame implements ViewController, EventHand
 		databasePlugin = pluginService.getInternalPlugin(DatabasePlugin.class);
 		views.add(pluginService.getInternalPlugin(CityGMLImportPlugin.class).getView());
 		views.add(pluginService.getInternalPlugin(CityGMLExportPlugin.class).getView());
-		views.add(pluginService.getInternalPlugin(KMLExportPlugin.class).getView());
-		
+		views.add(pluginService.getInternalPlugin(KMLExportPlugin.class).getView());	
 		views.add(pluginService.getInternalPlugin(CityKMLExportPlugin.class).getView());//Added By Shahin Sharifi
 
 		for (ViewExtension viewExtension : pluginService.getExternalViewExtensions())

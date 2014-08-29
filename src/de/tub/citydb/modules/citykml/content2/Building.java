@@ -713,6 +713,8 @@ public class Building extends KmlGenericObject{
 						if (multiSurfaceProperty != null) {
 
 							if (multiSurfaceProperty.isSetMultiSurface()) {
+								
+
 
 								_BuildingParentSurfaces.put("pid", ParentCounter);
 								String _Pid = multiSurfaceProperty.getMultiSurface().getId();
@@ -730,13 +732,14 @@ public class Building extends KmlGenericObject{
 								for(List<Double> _Geometry : _pointList){
 
 									Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
+										
 									_BuildingSurfaces.put("pid", ParentCounter);
 									_BuildingSurfaces.put("id", _Surface.GetSurfaceID().get(counter));
 									_BuildingSurfaces.put("type", _SurfaceType);		    				
 									_BuildingSurfaces.put("Geometry", _Geometry);    							    					
 									_SurfaceList.add(_BuildingSurfaces);
 									counter++;
-
+									
 								}
 							} 
 						}

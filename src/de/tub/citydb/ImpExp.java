@@ -260,6 +260,7 @@ public class ImpExp {
 		for (ConfigExtension<? extends PluginConfig> plugin : pluginService.getExternalConfigExtensions()) {
 			try {
 				projectConfigClasses.add(plugin.getClass().getMethod("getConfig", new Class<?>[]{}).getReturnType());
+				
 			} catch (SecurityException e) {
 				LOG.error("Failed to instantiate config for plugin '" + plugin.getClass().getCanonicalName() + "'.");
 				LOG.error("Please check the following error message: " + e.getMessage());
@@ -492,7 +493,7 @@ public class ImpExp {
 			pluginService.registerInternalPlugin(new CityGMLImportPlugin(jaxbBuilder, config, mainView));		
 			pluginService.registerInternalPlugin(new CityGMLExportPlugin(jaxbBuilder, config, mainView));		
 			pluginService.registerInternalPlugin(new KMLExportPlugin(kmlContext, colladaContext, config, mainView));
-			pluginService.registerInternalPlugin(new CityKMLExportPlugin(jaxbBuilder,kmlContext, colladaContext, config, mainView));
+			pluginService.registerInternalPlugin(new CityKMLExportPlugin(jaxbBuilder,kmlContext, colladaContext, config, mainView));// added by shahin
 			pluginService.registerInternalPlugin(databasePlugin);
 			pluginService.registerInternalPlugin(new PreferencesPlugin(pluginService, config, mainView));
 			

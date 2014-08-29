@@ -17,7 +17,7 @@
  * GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program. If not, see 
+ * License aString with this program. If not, see 
  * <http://www.gnu.org/licenses/>.
  * 
  * The development of the 3D City Database Importer/Exporter has 
@@ -41,7 +41,7 @@ public class VertexInfo {
 	private double x;
 	private double y;
 	private double z;
-	private HashMap<Long, TexCoords> texCoords;
+	private HashMap<String, TexCoords> texCoords;
 	private VertexInfo nextVertexInfo = null;
 
 	
@@ -52,37 +52,37 @@ public class VertexInfo {
 		setZ(z);
 	}
 /*
-	protected VertexInfo (BigInteger vertexId, long surfaceId, double s, double t) {
+	protected VertexInfo (BigInteger vertexId, String surfaceId, double s, double t) {
 		setVertexId(vertexId);
 		if (texCoords == null) {
-			texCoords = new HashMap<Long, TexCoords>();
+			texCoords = new HashMap<String, TexCoords>();
 		}
-		texCoords.put(new Long(surfaceId), new TexCoords(s, t));
+		texCoords.put(new String(surfaceId), new TexCoords(s, t));
 	}
 */
 	protected VertexInfo (BigInteger vertexId) {
 		setVertexId(vertexId);
 	}
 
-	protected void addTexCoords (long surfaceId, TexCoords texCoordsForThisSurface) {
+	protected void addTexCoords (String surfaceId, TexCoords texCoordsForThisSurface) {
 		if (texCoordsForThisSurface == null) {
 			return;
 		}
 		if (texCoords == null) {
-			texCoords = new HashMap<Long, TexCoords>();
+			texCoords = new HashMap<String, TexCoords>();
 		}
-		texCoords.put(new Long(surfaceId), texCoordsForThisSurface);
+		texCoords.put(new String(surfaceId), texCoordsForThisSurface);
 	}
 
-	protected TexCoords getTexCoords (long surfaceId) {
+	protected TexCoords getTexCoords (String surfaceId) {
 		TexCoords value = null;
 		if (texCoords != null) {
-			value = texCoords.get(new Long(surfaceId));
+			value = texCoords.get(new String(surfaceId));
 		}
 		return value;
 	}
 
-	protected HashMap<Long, TexCoords> getAllTexCoords () {
+	protected HashMap<String, TexCoords> getAllTexCoords () {
 		return texCoords;
 	}
 
@@ -91,12 +91,12 @@ public class VertexInfo {
 			return;
 		}
 		if (texCoords == null) {
-			texCoords = new HashMap<Long, TexCoords>();
+			texCoords = new HashMap<String, TexCoords>();
 		}
-		Set<Long> keySet = anotherVertexInfo.texCoords.keySet();
-		Iterator<Long> iterator = keySet.iterator();
+		Set<String> keySet = anotherVertexInfo.texCoords.keySet();
+		Iterator<String> iterator = keySet.iterator();
 		while (iterator.hasNext()) {
-			Long surfaceId = iterator.next();
+			String surfaceId = iterator.next();
 			texCoords.put(surfaceId, anotherVertexInfo.getTexCoords(surfaceId));
 		}
 	}
