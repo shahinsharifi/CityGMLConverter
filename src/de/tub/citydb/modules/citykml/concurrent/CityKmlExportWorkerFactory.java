@@ -45,8 +45,8 @@ import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.database.DatabaseConnectionPool;
-import de.tub.citydb.modules.citykml.content2.ColladaBundle;
-import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
+import de.tub.citydb.modules.citykml.content.ColladaBundle;
+import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
 
 public class CityKmlExportWorkerFactory implements WorkerFactory<KmlSplittingResult> {
 	private final JAXBContext jaxbKmlContext;

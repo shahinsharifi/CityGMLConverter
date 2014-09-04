@@ -85,6 +85,9 @@ import net.opengis.kml._2.ViewRefreshModeEnumType;
 
 
 
+
+
+
 import org.citygml4j.builder.jaxb.JAXBBuilder;
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
@@ -132,18 +135,18 @@ import de.tub.citydb.modules.common.event.StatusDialogTitle;
 import de.tub.citydb.modules.common.filter.ExportFilter;
 import de.tub.citydb.modules.common.filter.FilterMode;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlExportWorkerFactory;
-import de.tub.citydb.modules.citykml.content2.Building;
-import de.tub.citydb.modules.citykml.content2.CityFurniture;
-import de.tub.citydb.modules.citykml.content2.CityObjectGroup;
-import de.tub.citydb.modules.citykml.content2.GenericCityObject;
-import de.tub.citydb.modules.citykml.content2.KmlSplitter;
-import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
-import de.tub.citydb.modules.citykml.content2.LandUse;
-import de.tub.citydb.modules.citykml.content2.PlantCover;
-import de.tub.citydb.modules.citykml.content2.Relief;
-import de.tub.citydb.modules.citykml.content2.SolitaryVegetationObject;
-import de.tub.citydb.modules.citykml.content2.Transportation;
-import de.tub.citydb.modules.citykml.content2.WaterBody;
+import de.tub.citydb.modules.citykml.content.Building;
+import de.tub.citydb.modules.citykml.content.CityFurniture;
+import de.tub.citydb.modules.citykml.content.CityObjectGroup;
+import de.tub.citydb.modules.citykml.content.GenericCityObject;
+import de.tub.citydb.modules.citykml.content.KmlSplitter;
+import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
+import de.tub.citydb.modules.citykml.content.LandUse;
+import de.tub.citydb.modules.citykml.content.PlantCover;
+import de.tub.citydb.modules.citykml.content.Relief;
+import de.tub.citydb.modules.citykml.content.SolitaryVegetationObject;
+import de.tub.citydb.modules.citykml.content.Transportation;
+import de.tub.citydb.modules.citykml.content.WaterBody;
 import de.tub.citydb.modules.kml.concurrent.KmlExportWorkerFactory;
 import de.tub.citydb.modules.kml.util.CityObject4JSON;
 import de.tub.citydb.modules.kml.util.KMLHeaderWriter;

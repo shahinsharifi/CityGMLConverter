@@ -73,7 +73,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import de.tub.citydb.api.gui.BoundingBoxCorner;
 import de.tub.citydb.config.project.global.Logging;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
+import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
 
 
 

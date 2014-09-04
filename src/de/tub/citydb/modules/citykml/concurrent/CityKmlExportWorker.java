@@ -56,22 +56,22 @@ import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citykml.content2.BalloonTemplateHandlerImpl;
-import de.tub.citydb.modules.citykml.content2.Building;
-import de.tub.citydb.modules.citykml.content2.CityFurniture;
-import de.tub.citydb.modules.citykml.content2.CityObjectGroup;
-import de.tub.citydb.modules.citykml.content2.ColladaBundle;
-import de.tub.citydb.modules.citykml.content2.ElevationServiceHandler;
-import de.tub.citydb.modules.citykml.content2.GenericCityObject;
-import de.tub.citydb.modules.citykml.content2.KmlExporterManager;
-import de.tub.citydb.modules.citykml.content2.KmlGenericObject;
-import de.tub.citydb.modules.citykml.content2.KmlSplittingResult;
-import de.tub.citydb.modules.citykml.content2.LandUse;
-import de.tub.citydb.modules.citykml.content2.PlantCover;
-import de.tub.citydb.modules.citykml.content2.Relief;
-import de.tub.citydb.modules.citykml.content2.SolitaryVegetationObject;
-import de.tub.citydb.modules.citykml.content2.Transportation;
-import de.tub.citydb.modules.citykml.content2.WaterBody;
+import de.tub.citydb.modules.citykml.content.BalloonTemplateHandlerImpl;
+import de.tub.citydb.modules.citykml.content.Building;
+import de.tub.citydb.modules.citykml.content.CityFurniture;
+import de.tub.citydb.modules.citykml.content.CityObjectGroup;
+import de.tub.citydb.modules.citykml.content.ColladaBundle;
+import de.tub.citydb.modules.citykml.content.ElevationServiceHandler;
+import de.tub.citydb.modules.citykml.content.GenericCityObject;
+import de.tub.citydb.modules.citykml.content.KmlExporterManager;
+import de.tub.citydb.modules.citykml.content.KmlGenericObject;
+import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
+import de.tub.citydb.modules.citykml.content.LandUse;
+import de.tub.citydb.modules.citykml.content.PlantCover;
+import de.tub.citydb.modules.citykml.content.Relief;
+import de.tub.citydb.modules.citykml.content.SolitaryVegetationObject;
+import de.tub.citydb.modules.citykml.content.Transportation;
+import de.tub.citydb.modules.citykml.content.WaterBody;
 
 public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 
