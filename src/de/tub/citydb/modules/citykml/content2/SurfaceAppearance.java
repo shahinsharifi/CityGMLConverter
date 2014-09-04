@@ -195,6 +195,7 @@ public class SurfaceAppearance {
 	public Map<String, Object> GetAppearanceBySurfaceID(String _SurfaceID , List<AppearanceProperty> _AppearanceList)
 	{
 		Map<String, Object> _SurfaceData = new HashMap<String, Object>();
+		
 
 		for(AppearanceProperty _Property: _AppearanceList)
 		{
@@ -202,7 +203,7 @@ public class SurfaceAppearance {
 			for(SurfaceDataProperty _SurfaceDataMember: _Appearance.getSurfaceDataMember())
 			{
 				AbstractSurfaceData _AbstractSurfaceData = _SurfaceDataMember.getSurfaceData();
-				// String typeOfMember = _AbstractSurfaceData.getCityGMLClass().name();
+		
 				if(_AbstractSurfaceData.getCityGMLClass().name().equals("X3D_MATERIAL")){
 					X3DMaterial _X3D = (X3DMaterial)_AbstractSurfaceData;
 					if(_X3D.getTarget().toString().matches(".*\\b" + _SurfaceID + "\\b.*"))
@@ -238,40 +239,45 @@ public class SurfaceAppearance {
 							_SurfaceData.put("x3d_specular_color", null);
 							_SurfaceData.put("x3d_emissive_color", null);
 							_SurfaceData.put("x3d_is_smooth", null);
+							
 							if (targetURI != null && targetURI.length() != 0) {
 								if (target.isSetTextureParameterization()) {
 									AbstractTextureParameterization texPara = target.getTextureParameterization();
 									String texParamGmlId = texPara.getId();
 									switch (texPara.getCityGMLClass()) {
-									case TEX_COORD_GEN:
-										TexCoordGen texCoordGen = (TexCoordGen)texPara;
-										if (texCoordGen.isSetWorldToTexture()) {
-											Matrix worldToTexture = texCoordGen.getWorldToTexture().getMatrix();	
-											String worldToTextureString = Util.collection2string(worldToTexture.toRowPackedList(), " ");	
-										}break;
-									case TEX_COORD_LIST:
-										TexCoordList texCoordList = (TexCoordList)texPara;	
-										if (texCoordList.isSetTextureCoordinates()) {
-											HashSet<String> rings = new HashSet<String>(texCoordList.getTextureCoordinates().size());	
-											for (TextureCoordinates texCoord : texCoordList.getTextureCoordinates()) {
-												String ring = texCoord.getRing();
-												if (ring != null && ring.length() != 0 && texCoord.isSetValue()) {
-													String coords = Util.collection2string(texCoord.getValue(), " ");
-													_SurfaceData.put("target", targetURI);
-													_SurfaceData.put("coord", coords);
+									
+										case TEX_COORD_GEN:
+											TexCoordGen texCoordGen = (TexCoordGen)texPara;
+											if (texCoordGen.isSetWorldToTexture()) {
+												Matrix worldToTexture = texCoordGen.getWorldToTexture().getMatrix();	
+												String worldToTextureString = Util.collection2string(worldToTexture.toRowPackedList(), " ");	
+											}
+											break;
+											
+										case TEX_COORD_LIST:
+											TexCoordList texCoordList = (TexCoordList)texPara;	
+											if (texCoordList.isSetTextureCoordinates()) {
+												HashSet<String> rings = new HashSet<String>(texCoordList.getTextureCoordinates().size());	
+												for (TextureCoordinates texCoord : texCoordList.getTextureCoordinates()) {
+													String ring = texCoord.getRing();
+													if (ring != null && ring.length() != 0 && texCoord.isSetValue()) {
+														String coords = Util.collection2string(texCoord.getValue(), " ");
+														_SurfaceData.put("target", targetURI);
+														_SurfaceData.put("coord", coords);
+													}
 												}
 											}
+											break;
 										}
-										break;
-									}
-								} else {
+								} 
+								else
+								{
 									String href = target.getHref();
 								}
 							}
 							break;
 						}
 					}
-				}else {
 				}
 			}
 		}

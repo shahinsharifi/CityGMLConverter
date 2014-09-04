@@ -322,7 +322,6 @@ public class KmlSplitter {
 						
 						
 						
-						
 						if(envelope!=null)
 						{	
 							ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(

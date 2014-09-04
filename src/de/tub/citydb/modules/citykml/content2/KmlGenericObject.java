@@ -1839,6 +1839,11 @@ public abstract class KmlGenericObject {
 		zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
 
 		for (Map<String, Object> Row: result) {
+			
+			
+			String _SurfaceData = Row.get("id").toString();
+			if(_SurfaceData.equals("PolyID58906_886_364949_26381"))
+				Logger.getInstance().debug("Opening");
 
 			String surfaceType = (String)Row.get("type");
 			if (surfaceType != null && !surfaceType.endsWith("Surface")) {

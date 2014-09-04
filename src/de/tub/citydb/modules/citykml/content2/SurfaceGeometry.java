@@ -64,8 +64,8 @@ import org.citygml4j.model.gml.geometry.primitives.Triangle;
 import org.citygml4j.model.gml.geometry.primitives.TrianglePatchArrayProperty;
 import org.citygml4j.model.gml.geometry.primitives.TriangulatedSurface;
 import org.citygml4j.util.gmlid.DefaultGMLIdManager;
-
 import org.postgis.PGgeometry;
+
 import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.database.TableEnum;
 import de.tub.citydb.database.TypeAttributeValueEnum;
@@ -293,6 +293,8 @@ public class SurfaceGeometry {
 		// ok, handle complexes, composites and aggregates
 		// orientableSurface
 		else if (surfaceGeometryType == GMLClass.ORIENTABLE_SURFACE) {
+			
+			
 	
 			OrientableSurface orientableSurface = (OrientableSurface)surfaceGeometry;
 
@@ -333,7 +335,7 @@ public class SurfaceGeometry {
 					String href = surfaceProperty.getHref();
 
 					if (href != null && href.length() != 0) {
-
+						 Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 					}
 
 					mapping = href.replaceAll("^#", "");
@@ -413,7 +415,7 @@ public class SurfaceGeometry {
 
 					if (href != null && href.length() != 0) {
 
-
+						Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 						targetURI = href.replaceAll("^#", "");
 
 						// do mapping
@@ -516,7 +518,7 @@ public class SurfaceGeometry {
 						String href = surfaceProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-
+							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 						}
 					}
 				}
@@ -617,7 +619,7 @@ public class SurfaceGeometry {
 					String href = exteriorSurface.getHref();
 
 					if (href != null && href.length() != 0) {
-
+						Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 					}
 				}
 			}
@@ -653,7 +655,7 @@ public class SurfaceGeometry {
 						String href = solidProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-
+							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 						}
 					}
 				}
@@ -680,7 +682,7 @@ public class SurfaceGeometry {
 						String href = polygonProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-
+							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 						}
 					}
 				}
@@ -722,7 +724,8 @@ public class SurfaceGeometry {
 						String href = surfaceProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-
+							
+							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 						}
 					}
 				}
@@ -774,7 +777,7 @@ public class SurfaceGeometry {
 						String href = solidProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-
+							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 						}
 					}
 				}
@@ -807,7 +810,7 @@ public class SurfaceGeometry {
 						String href = geometricPrimitiveProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-
+							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
 						}
 					}
 				}
