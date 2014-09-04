@@ -206,7 +206,9 @@ public class SurfaceAppearance {
 		
 				if(_AbstractSurfaceData.getCityGMLClass().name().equals("X3D_MATERIAL")){
 					X3DMaterial _X3D = (X3DMaterial)_AbstractSurfaceData;
-					if(_X3D.getTarget().toString().matches(".*\\b" + _SurfaceID + "\\b.*"))
+					
+					
+					if(_SurfaceID.equals(_X3D.getTarget().get(0)) || _X3D.getTarget().toString().matches(".*\\b" + _SurfaceID + "\\b.*"))
 					{
 						_SurfaceData.put("id", _X3D.getId());
 						_SurfaceData.put("imageuri", null);

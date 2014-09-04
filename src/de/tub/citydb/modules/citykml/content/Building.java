@@ -148,7 +148,7 @@ public class Building extends KmlGenericObject{
 
 	public static final String STYLE_BASIS_NAME = ""; // "Building"
 	//private List<List<Double>> _pointList = new ArrayList<List<Double>>();
-	private List<Map<String, Object>> _ParentSurfaceList = new ArrayList<Map<String,Object>>();
+	private List<BuildingSurface> _ParentSurfaceList = new ArrayList<BuildingSurface>();
 
 	public Building(Connection connection,
 			KmlExporterManager kmlExporterManager,
@@ -256,7 +256,7 @@ public class Building extends KmlGenericObject{
 
 			AbstractBuilding _building = (AbstractBuilding)work.getCityGmlClass();
 			SurfaceAppearance _SurfaceAppear = new SurfaceAppearance(_building);
-			List<Map<String, Object>> _surfaceList = GetBuildingGeometries(_building);
+			List<BuildingSurface> _surfaceList = GetBuildingGeometries(_building);
 
 			if (_surfaceList.size()!=0) { // result not empty
 
@@ -350,7 +350,7 @@ public class Building extends KmlGenericObject{
 	}
 
 	// overloaded for just one line, but this is safest
-	protected List<PlacemarkType> createPlacemarksForHighlighting(List<Map<String, Object>> result, KmlSplittingResult work) throws SQLException {
+	protected List<PlacemarkType> createPlacemarksForHighlighting(List<BuildingSurface> result, KmlSplittingResult work) throws SQLException {
 
 
 		int buildingPartId = 1;
@@ -499,10 +499,10 @@ public class Building extends KmlGenericObject{
 
 
 
-	public List<Map<String, Object>> GetBuildingGeometries(AbstractBuilding _building) throws Exception
+	public List<BuildingSurface> GetBuildingGeometries(AbstractBuilding _building) throws Exception
 	{
-		List<Map<String, Object>> _SurfaceList = new ArrayList<Map<String,Object>>();
-		SurfaceGeometry _Surface = new SurfaceGeometry();		
+		List<BuildingSurface> _SurfaceList = new ArrayList<BuildingSurface>();
+		SurfaceGeometry surfaceGeom = new SurfaceGeometry();		
 		String _SurfaceType = "undefined";
 
 
@@ -530,18 +530,19 @@ public class Building extends KmlGenericObject{
 			if (solidProperty != null) {
 				if (solidProperty.isSetSolid()) {
 
-					_Surface.ClearPointList();				
-					List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(solidProperty.getSolid(), false);
+					surfaceGeom.ClearPointList();				
+					List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(solidProperty.getSolid(), false);
 
+					int counter = 0;
 					for(List<Double> _Geometry : _pointList){
 
-						Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-						_SurfaceType = _Surface.DetectSurfaceType(_Geometry); 					
-						_BuildingSurfaces.put("id", _Surface.GetSurfaceID());
-						_BuildingSurfaces.put("type", _SurfaceType);    				
-						_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-						_SurfaceList.add(_BuildingSurfaces);
-
+						BuildingSurface BSurface = new BuildingSurface();   					
+						_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+						BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+						BSurface.setType(_SurfaceType);    				
+						BSurface.setGeometry(_Geometry);    					   					
+						_SurfaceList.add(BSurface);
+						counter++;
 					}
 
 				} 
@@ -579,18 +580,20 @@ public class Building extends KmlGenericObject{
 
 				if (multiSurfaceProperty.isSetMultiSurface()) {
 
-					_Surface.ClearPointList();				
-					List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);    				
+					surfaceGeom.ClearPointList();				
+					List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);    				
 
+					int counter = 0;
 					for(List<Double> _Geometry : _pointList){    					
 
-						Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();    					
-						_SurfaceType = _Surface.DetectSurfaceType(_Geometry);  
-						_BuildingSurfaces.put("id", _Surface.GetSurfaceID());
-						_BuildingSurfaces.put("type", _SurfaceType);    				
-						_BuildingSurfaces.put("Geometry", _Geometry);    					    					
-						_SurfaceList.add(_BuildingSurfaces);
-
+						
+						BuildingSurface BSurface = new BuildingSurface();   					
+						_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+						BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+						BSurface.setType(_SurfaceType);    				
+						BSurface.setGeometry(_Geometry);    					   					
+						_SurfaceList.add(BSurface);
+						counter++;
 					}
 
 				}
@@ -623,23 +626,19 @@ public class Building extends KmlGenericObject{
 			if (multiCurveProperty != null)
 			{
 
-				_Surface.ClearPointList();
+				surfaceGeom.ClearPointList();
+				List<List<Double>> _pointList  = surfaceGeom.getMultiCurve(multiCurveProperty);
 
-				List<List<Double>> _pointList  = _Surface.getMultiCurve(multiCurveProperty);
-
-
+				int counter = 0;
 				for(List<Double> _Geometry : _pointList){
 
-					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
-
-					_BuildingSurfaces.put("id", _Surface.GetSurfaceID());
-
-					_BuildingSurfaces.put("type", _SurfaceType);
-
-					_BuildingSurfaces.put("Geometry", _Geometry);    					
-
-					_SurfaceList.add(_BuildingSurfaces);
-
+					BuildingSurface BSurface = new BuildingSurface();   					
+					_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+					BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+					BSurface.setType(_SurfaceType);    				
+					BSurface.setGeometry(_Geometry);    					   					
+					_SurfaceList.add(BSurface);
+					counter++;
 				}
 
 			}			
@@ -668,22 +667,20 @@ public class Building extends KmlGenericObject{
 
 			if (multiCurveProperty != null)
 			{
-				_Surface.ClearPointList();
+				surfaceGeom.ClearPointList();
 
-				List<List<Double>> _pointList  = _Surface.getMultiCurve(multiCurveProperty);
+				List<List<Double>> _pointList  = surfaceGeom.getMultiCurve(multiCurveProperty);
 
+				int counter = 0;
 				for(List<Double> _Geometry : _pointList){
 
-					Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
-
-					_BuildingSurfaces.put("id", _Surface.GetSurfaceID());
-
-					_BuildingSurfaces.put("type", _SurfaceType);
-
-					_BuildingSurfaces.put("Geometry", _Geometry);    					
-
-					_SurfaceList.add(_BuildingSurfaces);
-
+					BuildingSurface BSurface = new BuildingSurface();   					
+					_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+					BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+					BSurface.setType(_SurfaceType);    				
+					BSurface.setGeometry(_Geometry);    					   					
+					_SurfaceList.add(BSurface);
+					counter ++;
 				}
 
 			}
@@ -697,7 +694,7 @@ public class Building extends KmlGenericObject{
 			long ParentCounter = 1;
 			for (BoundarySurfaceProperty boundarySurfaceProperty : _building.getBoundedBySurface()) {
 				AbstractBoundarySurface boundarySurface = boundarySurfaceProperty.getBoundarySurface();
-				Map<String, Object> _BuildingParentSurfaces = new HashMap<String, Object>();
+
 				if (boundarySurface != null) {
 
 					for (int lod = 2; lod < 5; lod++) {
@@ -722,28 +719,31 @@ public class Building extends KmlGenericObject{
 
 
 								if(multiSurfaceProperty.getMultiSurface().isSetId()){
-									_BuildingParentSurfaces.put("pid", ParentCounter);
-									String _Pid = multiSurfaceProperty.getMultiSurface().getId();
-									_BuildingParentSurfaces.put("id", _Pid);
-									_BuildingParentSurfaces.put("Geometry", null);
-									_ParentSurfaceList.add(_BuildingParentSurfaces);
+								
+									BuildingSurface BPSurface = new BuildingSurface();   
+									BPSurface.setPId(ParentCounter);
+									BPSurface.setId(multiSurfaceProperty.getMultiSurface().getId());
+									BPSurface.setType(null);    				
+									BPSurface.setGeometry(null); 
+									_ParentSurfaceList.add(BPSurface);
 								}
 
-								_Surface.ClearPointList();
-								_Surface.ClearIdList();
+								surfaceGeom.ClearPointList();
+								surfaceGeom.ClearIdList();
 								_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();			    												
-								List<List<Double>> _pointList  = _Surface.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
+								List<List<Double>> _pointList  = surfaceGeom.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 
 								int counter = 0;
 								for(List<Double> _Geometry : _pointList){
 
-									Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();
-
-									_BuildingSurfaces.put("pid", ParentCounter);
-									_BuildingSurfaces.put("id", _Surface.GetSurfaceID().get(counter));
-									_BuildingSurfaces.put("type", _SurfaceType);		    				
-									_BuildingSurfaces.put("Geometry", _Geometry);    							    					
-									_SurfaceList.add(_BuildingSurfaces);
+																		
+									BuildingSurface BSurface = new BuildingSurface();   
+									BSurface.setPId(ParentCounter);
+									BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+									BSurface.setType(_SurfaceType);    				
+									BSurface.setGeometry(_Geometry);    					   					
+									_SurfaceList.add(BSurface);
+									
 									counter++;
 
 								}
@@ -778,19 +778,20 @@ public class Building extends KmlGenericObject{
 									if (multiSurfaceProperty != null) {
 										if (multiSurfaceProperty.isSetMultiSurface()) {
 											
-											_Surface.ClearPointList();				
-											List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
+											surfaceGeom.ClearPointList();				
+											List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 
 											int counter = 0;
 											for(List<Double> _Geometry : _pointList){
 
 
-												Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-												_BuildingSurfaces.put("id", _Surface.GetSurfaceID().get(counter));			
-												_BuildingSurfaces.put("type", _SurfaceType);    				
-												_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-												_SurfaceList.add(_BuildingSurfaces);
+												BuildingSurface BSurface = new BuildingSurface();   
+												BSurface.setPId(ParentCounter);
+												BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+												BSurface.setType(_SurfaceType);    				
+												BSurface.setGeometry(_Geometry);    					   					
+												_SurfaceList.add(BSurface);
 												counter++;
 											}
 
@@ -843,17 +844,20 @@ public class Building extends KmlGenericObject{
 						if (geometryProperty != null) {
 							if (geometryProperty.isSetGeometry()) {
 
-								_Surface.ClearPointList();				
-								List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
+								surfaceGeom.ClearPointList();				
+								List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
 								_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
+								
+								int counter = 0;
 								for(List<Double> _Geometry : _pointList){
 
-									Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-									_BuildingSurfaces.put("id", _Surface.GetSurfaceID());
-									_BuildingSurfaces.put("type", _SurfaceType);    				
-									_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-									_SurfaceList.add(_BuildingSurfaces);
-
+									BuildingSurface BSurface = new BuildingSurface();   					
+									_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+									BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+									BSurface.setType(_SurfaceType);    				
+									BSurface.setGeometry(_Geometry);    					   					
+									_SurfaceList.add(BSurface);
+									counter ++;
 								}
 							}
 						}
@@ -880,17 +884,20 @@ public class Building extends KmlGenericObject{
 
 						if (geometryProperty.isSetGeometry()) {
 
-							_Surface.ClearPointList();				
-							List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
+							surfaceGeom.ClearPointList();				
+							List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
 							_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
+							
+							int counter = 0;
 							for(List<Double> _Geometry : _pointList){
 
-								Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-								_BuildingSurfaces.put("id", _Surface.GetSurfaceID());	
-								_BuildingSurfaces.put("type", _SurfaceType);    				
-								_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-								_SurfaceList.add(_BuildingSurfaces);
-
+								BuildingSurface BSurface = new BuildingSurface();   					
+								_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+								BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+								BSurface.setType(_SurfaceType);    				
+								BSurface.setGeometry(_Geometry);    					   					
+								_SurfaceList.add(BSurface);
+								counter ++;
 							}
 						}
 					}
@@ -928,18 +935,22 @@ public class Building extends KmlGenericObject{
 
 						if (solidProperty.isSetSolid()) {
 
-							_Surface.ClearPointList();				
-							List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(solidProperty.getSolid(), false);
+							surfaceGeom.ClearPointList();				
+							List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(solidProperty.getSolid(), false);
 							_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
+							
+							int counter = 0;
 							for(List<Double> _Geometry : _pointList){
 
-								Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-								_BuildingSurfaces.put("id", _Surface.GetSurfaceID());
-								_BuildingSurfaces.put("type", _SurfaceType);    				
-								_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-								_SurfaceList.add(_BuildingSurfaces);
-
+								BuildingSurface BSurface = new BuildingSurface();   					
+								_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+								BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+								BSurface.setType(_SurfaceType);    				
+								BSurface.setGeometry(_Geometry);    					   					
+								_SurfaceList.add(BSurface);
+								counter ++;
 							}
+						
 						} 
 
 					} else if (room.isSetLod4MultiSurface()) {
@@ -948,17 +959,20 @@ public class Building extends KmlGenericObject{
 
 						if (multiSurfacePropery.isSetMultiSurface()) {
 
-							_Surface.ClearPointList();				
-							List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(multiSurfacePropery.getMultiSurface(), false);
+							surfaceGeom.ClearPointList();				
+							List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(multiSurfacePropery.getMultiSurface(), false);
 							_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
+							
+							int counter = 0;
 							for(List<Double> _Geometry : _pointList){
 
-								Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-								_BuildingSurfaces.put("id", _Surface.GetSurfaceID());		
-								_BuildingSurfaces.put("type", _SurfaceType);    				
-								_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-								_SurfaceList.add(_BuildingSurfaces);
-
+								BuildingSurface BSurface = new BuildingSurface();   					
+								_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+								BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+								BSurface.setType(_SurfaceType);    				
+								BSurface.setGeometry(_Geometry);    					   					
+								_SurfaceList.add(BSurface);
+								counter ++;
 							}
 						}
 					} 
@@ -990,18 +1004,20 @@ public class Building extends KmlGenericObject{
 									if (multiSurfaceProperty != null) {
 										if (multiSurfaceProperty.isSetMultiSurface()) {
 
-											_Surface.ClearPointList();
+											surfaceGeom.ClearPointList();
 											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();			    				
-											List<List<Double>> _pointList  = _Surface.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
+											List<List<Double>> _pointList  = surfaceGeom.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 
+											int counter = 0;
 											for(List<Double> _Geometry : _pointList){
 
-												Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();		    					
-												_BuildingSurfaces.put("id", _Surface.GetSurfaceID());
-												_BuildingSurfaces.put("type", _SurfaceType);		    				
-												_BuildingSurfaces.put("Geometry", _Geometry);    							    					
-												_SurfaceList.add(_BuildingSurfaces);	    					
-
+												BuildingSurface BSurface = new BuildingSurface();   					
+												_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+												BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+												BSurface.setType(_SurfaceType);    				
+												BSurface.setGeometry(_Geometry);    					   					
+												_SurfaceList.add(BSurface);
+												counter ++;
 											}
 
 										} 
@@ -1034,8 +1050,8 @@ public class Building extends KmlGenericObject{
 												if (multiSurfaceProperty != null) {
 													if (multiSurfaceProperty.isSetMultiSurface()) {
 														
-														_Surface.ClearPointList();				
-														List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
+														surfaceGeom.ClearPointList();				
+														List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 														_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 
 														int counter = 0;
@@ -1043,11 +1059,13 @@ public class Building extends KmlGenericObject{
 
 
 
-															Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-															_BuildingSurfaces.put("id", _Surface.GetSurfaceID().get(counter));			
-															_BuildingSurfaces.put("type", _SurfaceType);    				
-															_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-															_SurfaceList.add(_BuildingSurfaces);
+															BuildingSurface BSurface = new BuildingSurface();   
+															BSurface.setPId(null);
+															BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+															BSurface.setType(_SurfaceType);    				
+															BSurface.setGeometry(_Geometry);    					   					
+															_SurfaceList.add(BSurface);
+
 															counter++;
 														}
 
@@ -1080,18 +1098,20 @@ public class Building extends KmlGenericObject{
 
 										if (geometryProperty.isSetGeometry()) {
 
-											_Surface.ClearPointList();				
-											List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
+											surfaceGeom.ClearPointList();				
+											List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
 											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 
+											int counter = 0;
 											for(List<Double> _Geometry : _pointList){
 
-												Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-												_BuildingSurfaces.put("id", _Surface.GetSurfaceID());			
-												_BuildingSurfaces.put("type", _SurfaceType);    				
-												_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-												_SurfaceList.add(_BuildingSurfaces);
-
+												BuildingSurface BSurface = new BuildingSurface();   					
+												_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+												BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+												BSurface.setType(_SurfaceType);    				
+												BSurface.setGeometry(_Geometry);    					   					
+												_SurfaceList.add(BSurface);
+												counter ++;
 											}
 										}
 									}
@@ -1118,18 +1138,20 @@ public class Building extends KmlGenericObject{
 
 										if (geometryProperty.isSetGeometry()) {
 
-											_Surface.ClearPointList();				
-											List<List<Double>> _pointList = _Surface.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
+											surfaceGeom.ClearPointList();				
+											List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
 											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 
+											int counter = 0;
 											for(List<Double> _Geometry : _pointList){
 
-												Map<String, Object> _BuildingSurfaces = new HashMap<String, Object>();   					
-												_BuildingSurfaces.put("id", _Surface.GetSurfaceID());
-												_BuildingSurfaces.put("type", _SurfaceType);    				
-												_BuildingSurfaces.put("Geometry", _Geometry);    					   					
-												_SurfaceList.add(_BuildingSurfaces);
-
+												BuildingSurface BSurface = new BuildingSurface();   					
+												_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+												BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
+												BSurface.setType(_SurfaceType);    				
+												BSurface.setGeometry(_Geometry);    					   					
+												_SurfaceList.add(BSurface);
+												counter ++;
 											}
 										}
 									}

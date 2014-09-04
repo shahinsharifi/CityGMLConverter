@@ -1476,7 +1476,7 @@ public abstract class KmlGenericObject {
 		return newValue;
 	}
 
-	protected List<PlacemarkType> createPlacemarksForFootprint(List<Map<String, Object>> result, KmlSplittingResult work) throws Exception {
+	protected List<PlacemarkType> createPlacemarksForFootprint(List<BuildingSurface> result, KmlSplittingResult work) throws Exception {
 
 		ResultSet rs = null;
 		List<PlacemarkType> placemarkList = new ArrayList<PlacemarkType>();
@@ -1499,7 +1499,7 @@ public abstract class KmlGenericObject {
 
 		PolygonType polygon = null;
 		PolygonType[] multiPolygon = null;
-		for (Map<String, Object> Row: result) {
+		for (BuildingSurface Row: result) {
 
 
 			if (Row != null) {
@@ -1514,7 +1514,7 @@ public abstract class KmlGenericObject {
 				//***********************************************************************
 
 				@SuppressWarnings("unchecked")
-				List<Double> _Geometry = (List<Double>)Row.get("Geometry");
+				List<Double> _Geometry = (List<Double>)Row.getGeometry();
 
 				org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
 
@@ -1644,7 +1644,7 @@ public abstract class KmlGenericObject {
 		return placemarkList;
 	}
 
-	protected List<PlacemarkType> createPlacemarksForExtruded(List<Map<String, Object>> result,
+	protected List<PlacemarkType> createPlacemarksForExtruded(List<BuildingSurface> result,
 			KmlSplittingResult work,
 			double measuredHeight,
 			boolean reversePointOrder) throws Exception {
@@ -1669,7 +1669,7 @@ public abstract class KmlGenericObject {
 		PolygonType polygon = null;
 		PolygonType[] multiPolygon = null;
 
-		for (Map<String, Object> Row: result) {
+		for (BuildingSurface Row: result) {
 
 
 			if (Row != null) {
@@ -1684,7 +1684,7 @@ public abstract class KmlGenericObject {
 				//***********************************************************************
 
 				@SuppressWarnings("unchecked")
-				List<Double> _Geometry = (List<Double>)Row.get("Geometry");
+				List<Double> _Geometry = (List<Double>)Row.getGeometry();
 
 				org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
 
@@ -1820,14 +1820,14 @@ public abstract class KmlGenericObject {
 		return placemarkList;
 	}
 
-	protected List<PlacemarkType> createPlacemarksForGeometry(List<Map<String, Object>> rs,
+	protected List<PlacemarkType> createPlacemarksForGeometry(List<BuildingSurface> rs,
 			KmlSplittingResult work) throws Exception{
 
 		return createPlacemarksForGeometry(rs, work, false, false);
 
 	}
 
-	protected List<PlacemarkType> createPlacemarksForGeometry(List<Map<String, Object>> result,
+	protected List<PlacemarkType> createPlacemarksForGeometry(List<BuildingSurface> result,
 			KmlSplittingResult work,
 			boolean includeGroundSurface,
 			boolean includeClosureSurface) throws Exception {
@@ -1843,14 +1843,14 @@ public abstract class KmlGenericObject {
 
 		zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
 
-		for (Map<String, Object> Row: result) {
+		for (BuildingSurface Row: result) {
 			
 			
-			String _SurfaceData = Row.get("id").toString();
+			String _SurfaceData = Row.getId();
 			if(_SurfaceData.equals("PolyID58906_886_364949_26381"))
 				Logger.getInstance().debug("Opening");
 
-			String surfaceType = (String)Row.get("type");
+			String surfaceType = (String)Row.getType();
 			if (surfaceType != null && !surfaceType.endsWith("Surface")) {
 				surfaceType = surfaceType + "Surface";
 			}
@@ -1862,7 +1862,7 @@ public abstract class KmlGenericObject {
 
 
 			@SuppressWarnings("unchecked")
-			List<Double> _Geometry = (List<Double>)Row.get("Geometry");
+			List<Double> _Geometry = (List<Double>)Row.getGeometry();
 
 			org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
 
@@ -2016,8 +2016,8 @@ public abstract class KmlGenericObject {
 		return placemarkList;
 	}
 
-	protected void fillGenericObjectForCollada(KmlSplittingResult work , List<Map<String, Object>> _SurfaceList ,
-			SurfaceAppearance _SurfaceAppearance, List<Map<String, Object>> _ParentSurfaceList) throws Exception {	
+	protected void fillGenericObjectForCollada(KmlSplittingResult work , List<BuildingSurface> _SurfaceList ,
+			SurfaceAppearance _SurfaceAppearance, List<BuildingSurface> _ParentSurfaceList) throws Exception {	
 		
 	//	String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
 		String filePath=GetImagePath();
@@ -2028,13 +2028,16 @@ public abstract class KmlGenericObject {
 			//if(work.getGmlId().equals("BLDG_0003000e0097f52c"))
 			//{
 
-				for(Map<String, Object> Row:_ParentSurfaceList){
+				for(BuildingSurface Row:_ParentSurfaceList){
 
-					String parentid= String.valueOf(Row.get("pid"));
-					String id = String.valueOf(Row.get("id"));
+					String parentid= String.valueOf(Row.getPId());
+					String id = Row.getId();
 
+					
+					
 					Map<String, Object> tmpHash = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+id , work.getAppearanceList());
 					String AppreanceType = (String)tmpHash.get("type");
+					
 					
 					if(AppreanceType != null){
 				
@@ -2048,13 +2051,13 @@ public abstract class KmlGenericObject {
 					}
 				}
 
-				for (Map<String, Object> Row: _SurfaceList)  {
+				for (BuildingSurface Row: _SurfaceList)  {
 
 					
 
-					Map<String, Object> _AppResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+String.valueOf(Row.get("id")), work.getAppearanceList());
-					String surfaceId = String.valueOf(Row.get("id"));
-					String parentId = String.valueOf(Row.get("pid"));
+					Map<String, Object> _AppResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+Row.getId(), work.getAppearanceList());
+					String surfaceId = Row.getId();
+					String parentId = String.valueOf(Row.getPId());
 					
 					
 
@@ -2158,7 +2161,7 @@ public abstract class KmlGenericObject {
 					}
 
 					@SuppressWarnings("unchecked")
-					List<Double> _Geometry = (List<Double>)Row.get("Geometry");
+					List<Double> _Geometry = (List<Double>)Row.getGeometry();
 
 					org.postgis.Point[] tmpPoint = new org.postgis.Point[_Geometry.size()/3];			
 
@@ -2340,7 +2343,7 @@ public abstract class KmlGenericObject {
 	}
 
 
-	protected List<PlacemarkType> createPlacemarksForHighlighting(List<Map<String, Object>> result, 
+	protected List<PlacemarkType> createPlacemarksForHighlighting(List<BuildingSurface> result, 
 			KmlSplittingResult work) throws SQLException {
 
 		List<PlacemarkType> placemarkList= new ArrayList<PlacemarkType>();
@@ -2707,7 +2710,7 @@ public abstract class KmlGenericObject {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected List<Point3d> getLowestPointsCoordinates(List<Map<String, Object>> result, KmlSplittingResult work) throws Exception {
+	protected List<Point3d> getLowestPointsCoordinates(List<BuildingSurface> result, KmlSplittingResult work) throws Exception {
 
 		double currentlyLowestZCoordinate = Double.MAX_VALUE;
 
@@ -2715,9 +2718,9 @@ public abstract class KmlGenericObject {
 		List<Double> ordinates = new ArrayList<Double>();
 
 
-		for(Map<String,Object> _row :result)
+		for(BuildingSurface _row :result)
 		{
-			List<Double> PointList = (List<Double>)_row.get("Geometry");
+			List<Double> PointList = (List<Double>)_row.getGeometry();
 			//ordinates.addAll(ProjConvertor.TransformProjection(PointList.get(0), PointList.get(1), PointList.get(2), work.getTargetSrs() , "4326"));
 			ordinates.addAll(PointList);
 		}

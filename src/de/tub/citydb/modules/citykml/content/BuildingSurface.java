@@ -41,10 +41,10 @@ import de.tub.citydb.database.TypeAttributeValueEnum;
 public class BuildingSurface implements Surface{
 
 
-	private String PId;
+	private Object PId;
 	private String Id;
-	private TypeAttributeValueEnum Type;
-	private List<Point> Geometry;
+	private String Type;
+	private List<Double> Geometry;
 	
 
 	public BuildingSurface() {
@@ -53,12 +53,12 @@ public class BuildingSurface implements Surface{
 
 	
 	//Parent Surface ID
-	public String getPId() {
+	public Object getPId() {
 		return PId;
 	}
 
 	
-	public void setPId(String PId) {
+	public void setPId(Object PId) {
 		this.PId = PId;
 	}
 
@@ -78,24 +78,24 @@ public class BuildingSurface implements Surface{
 	
 	//Surface Type
 	@Override
-	public TypeAttributeValueEnum getType() {
+	public String getType() {
 		return Type;
 	}
 
 	@Override
-	public void setType(TypeAttributeValueEnum Type) {
+	public void setType(String Type) {
 		this.Type = Type;
 	}
 	
 
 	//Surface Geometry
 	@Override
-	public List<Point> getGeometry() {
+	public List<Double> getGeometry() {
 		return Geometry;
 	}
 
 	@Override
-	public void setGeometry(List<Point> Geometry) {
+	public void setGeometry(List<Double> Geometry) {
 		this.Geometry = Geometry;
 	}
 

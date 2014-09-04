@@ -335,7 +335,7 @@ public class SurfaceGeometry {
 					String href = surfaceProperty.getHref();
 
 					if (href != null && href.length() != 0) {
-						 Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+						 
 					}
 
 					mapping = href.replaceAll("^#", "");
@@ -415,7 +415,7 @@ public class SurfaceGeometry {
 
 					if (href != null && href.length() != 0) {
 
-						Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+						
 						targetURI = href.replaceAll("^#", "");
 
 						// do mapping
@@ -518,7 +518,7 @@ public class SurfaceGeometry {
 						String href = surfaceProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+							
 						}
 					}
 				}
@@ -619,7 +619,7 @@ public class SurfaceGeometry {
 					String href = exteriorSurface.getHref();
 
 					if (href != null && href.length() != 0) {
-						Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+						
 					}
 				}
 			}
@@ -655,7 +655,7 @@ public class SurfaceGeometry {
 						String href = solidProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+							
 						}
 					}
 				}
@@ -682,7 +682,7 @@ public class SurfaceGeometry {
 						String href = polygonProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+							
 						}
 					}
 				}
@@ -725,7 +725,7 @@ public class SurfaceGeometry {
 
 						if (href != null && href.length() != 0) {
 							
-							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+							
 						}
 					}
 				}
@@ -777,7 +777,7 @@ public class SurfaceGeometry {
 						String href = solidProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+							
 						}
 					}
 				}
@@ -810,7 +810,7 @@ public class SurfaceGeometry {
 						String href = geometricPrimitiveProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							Logger.getInstance().warn(surfaceGeometryType.name()+"=>"+href);
+							
 						}
 					}
 				}

@@ -30,15 +30,16 @@
 package de.tub.citydb.modules.citykml.content;
 
 import java.util.List;
+
 import de.tub.citydb.database.TypeAttributeValueEnum;
 
 public interface Surface {
 		
 		public String getId();
 		public void setId(String Id);
-		public TypeAttributeValueEnum getType();
-		public void setType(TypeAttributeValueEnum Type);
-		public List<Point> getGeometry();
-		public void setGeometry(List<Point> Geometry);
+		public String getType();
+		public void setType(String Type);
+		public List<Double> getGeometry();
+		public void setGeometry(List<Double> Geometry);
 	
 }
