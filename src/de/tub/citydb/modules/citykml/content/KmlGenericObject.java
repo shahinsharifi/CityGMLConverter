@@ -2035,8 +2035,8 @@ public abstract class KmlGenericObject {
 
 					
 					
-					Map<String, Object> tmpHash = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+id , work.getAppearanceList());
-					String AppreanceType = (String)tmpHash.get("type");
+					Map<String, Object> tmpResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+id , work.getAppearanceList());
+					String AppreanceType = (String)tmpResult.get("type");
 					
 					
 					if(AppreanceType != null){
@@ -2044,7 +2044,7 @@ public abstract class KmlGenericObject {
 						if(AppreanceType.equals("X3D_MATERIAL"))
 						{
 							X3DMaterial x3dMaterial = cityGMLFactory.createX3DMaterial();
-							fillX3dMaterialValues(x3dMaterial, tmpHash);
+							fillX3dMaterialValues(x3dMaterial, tmpResult);
 							addX3dMaterial(parentid, x3dMaterial);
 
 						}
@@ -2544,6 +2544,7 @@ public abstract class KmlGenericObject {
 	}
 
 	protected void fillX3dMaterialValues (X3DMaterial x3dMaterial, Map<String, Object> rs) throws SQLException {
+		
 
 		Double ambientIntensity = (Double)rs.get("x3d_ambient_intensity");
 	
@@ -2583,6 +2584,8 @@ public abstract class KmlGenericObject {
 
 		
 		x3dMaterial.setIsSmooth((boolean)rs.get("x3d_is_smooth") == true);
+	
+		
 	}
 
 	private Color getX3dColorFromString(String colorString) {

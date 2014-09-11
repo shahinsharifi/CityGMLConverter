@@ -910,7 +910,7 @@ public class Building extends KmlGenericObject{
 		}
 
 		
-		int tmpcounter = 0;
+	
 		// Room
 		if (_building.isSetInteriorRoom()) {
 			for (InteriorRoomProperty roomProperty : _building.getInteriorRoom()) {
@@ -980,6 +980,8 @@ public class Building extends KmlGenericObject{
 
 					// Room - BoundarySurfaces
 					if (room.isSetBoundedBySurface()) {
+						
+						long ParentCounter = 1;
 						for (BoundarySurfaceProperty boundarySurfaceProperty : room.getBoundedBySurface()) {
 							AbstractBoundarySurface boundarySurface = boundarySurfaceProperty.getBoundarySurface();
 
@@ -1004,20 +1006,34 @@ public class Building extends KmlGenericObject{
 									if (multiSurfaceProperty != null) {
 										if (multiSurfaceProperty.isSetMultiSurface()) {
 
+											if(multiSurfaceProperty.getMultiSurface().isSetId()){
+												
+												BuildingSurface BPSurface = new BuildingSurface();   
+												BPSurface.setPId(ParentCounter);
+												BPSurface.setId(multiSurfaceProperty.getMultiSurface().getId());
+												BPSurface.setType(null);    				
+												BPSurface.setGeometry(null); 
+												_ParentSurfaceList.add(BPSurface);
+											}
+
 											surfaceGeom.ClearPointList();
-											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();			    				
+											surfaceGeom.ClearIdList();
+											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(boundarySurface.getCityGMLClass()).toString();			    												
 											List<List<Double>> _pointList  = surfaceGeom.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 
 											int counter = 0;
 											for(List<Double> _Geometry : _pointList){
 
-												BuildingSurface BSurface = new BuildingSurface();   					
-												_SurfaceType = surfaceGeom.DetectSurfaceType(_Geometry); 					
+																					
+												BuildingSurface BSurface = new BuildingSurface();   
+												BSurface.setPId(ParentCounter);
 												BSurface.setId(surfaceGeom.GetSurfaceID().get(counter));
 												BSurface.setType(_SurfaceType);    				
 												BSurface.setGeometry(_Geometry);    					   					
 												_SurfaceList.add(BSurface);
-												counter ++;
+												
+												counter++;
+
 											}
 
 										} 
@@ -1083,6 +1099,7 @@ public class Building extends KmlGenericObject{
 									boundarySurfaceProperty.unsetBoundarySurface();
 								}
 							}
+							ParentCounter++;
 						}
 
 

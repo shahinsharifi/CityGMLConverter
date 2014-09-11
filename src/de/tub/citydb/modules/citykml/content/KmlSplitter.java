@@ -55,6 +55,7 @@ import org.citygml4j.model.citygml.cityobjectgroup.CityObjectGroupMember;
 import org.citygml4j.model.citygml.core.AbstractCityObject;
 import org.citygml4j.model.citygml.core.CityModel;
 import org.citygml4j.model.citygml.core.CityObjectMember;
+import org.citygml4j.model.gml.feature.AbstractFeature;
 import org.citygml4j.model.gml.geometry.primitives.Envelope;
 import org.citygml4j.util.xlink.XLinkResolver;
 import org.citygml4j.xml.io.CityGMLInputFactory;
@@ -294,64 +295,59 @@ public class KmlSplitter {
 				CityGMLReader reader = in.createCityGMLReader(file);
 				CityModel cityModel = (CityModel)reader.nextFeature();
 				reader.close();
-
-				//JAXBChunkReader _ChunkReader = (JAXBChunkReader)in.createFilteredCityGMLReader(in.createCityGMLReader(file), inputFilter);	
-			
-				for (CityObjectMember member : cityModel.getCityObjectMember()) {
-					
-					if (member.isSetCityObject()) {
+				if(cityModel.isSetCityObjectMember()){
+					for (CityObjectMember member : cityModel.getCityObjectMember()) {
 						
-						AbstractCityObject cityObject = member.getCityObject();
-						CityGML _CityGML = cityObject;
-						CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
-						
-
-						// bounding box filter
-						// first of all compute bounding box for cityobject since we need it anyways
-
-						Envelope envelope = null;
-						if(cityObject.getBoundedBy() != null)
-							envelope = cityObject.getBoundedBy().getEnvelope().convert3d();
-						
-						List<AppearanceProperty> tmpAppearanceList = new ArrayList<AppearanceProperty>();
-						
-						if(cityObject.isSetAppearance())
-							tmpAppearanceList.addAll(cityObject.getAppearance());
-						else 
-							tmpAppearanceList.addAll(cityModel.getAppearanceMember());
-						
-						
-						
-						if(envelope!=null)
-						{	
+						if (member.isSetCityObject()) {
+							
+							AbstractCityObject cityObject = member.getCityObject();
+							CityGML _CityGML = cityObject;
+							CityGMLClass cityObjectType = _CityGML.getCityGMLClass();
+							
+							AbstractFeature feature = (AbstractFeature)cityObject;
+							
+							// bounding box filter
+							// first of all compute bounding box for cityobject since we need it anyways
+	
+							Envelope envelope = null;
+							if(cityObject.getBoundedBy() != null)
+								envelope = cityObject.getBoundedBy().getEnvelope().convert3d();
+							else 
+								envelope = feature.calcBoundedBy(false).getEnvelope();
+							
+													
+							
+							List<AppearanceProperty> tmpAppearanceList = new ArrayList<AppearanceProperty>();
+							
+							if(cityObject.isSetAppearance())
+								tmpAppearanceList.addAll(cityObject.getAppearance());
+							else 
+								tmpAppearanceList.addAll(cityModel.getAppearanceMember());
+							
+							
 							ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(
 									envelope.getLowerCorner().toList3d().get(0),
 									envelope.getUpperCorner().toList3d().get(0),	
 									envelope.getLowerCorner().toList3d().get(1),							
 									envelope.getUpperCorner().toList3d().get(1),
 									CRS.decode("EPSG:" + this.TargetSrs, true));
-						
+
 							if(_bounds.ContainCentroid(_refEnvelope,TargetSrs))						
 							{													
 								KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs,tmpAppearanceList);										
 								dbWorkerPool.addWork(splitter);					
 							}
-							
-						}
-						else {
-							KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs,tmpAppearanceList);										
-							dbWorkerPool.addWork(splitter);
+							else {
+								Logger.getInstance().error("BoundingBox can not be calculated for the object: " + cityObject.getId());
+							}
 						}
 					}
 				}
-
-
 				
-
 
 			} catch (Exception e) {
 
-				System.out.println(e.toString());
+				Logger.getInstance().error(e.toString());
 
 			}
 
