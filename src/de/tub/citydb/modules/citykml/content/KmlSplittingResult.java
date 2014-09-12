@@ -36,6 +36,7 @@ import org.citygml4j.model.citygml.CityGMLClass;
 import org.citygml4j.model.citygml.appearance.AppearanceProperty;
 
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
+import de.tub.citydb.modules.citykml.util.ElevationHelper;
 
 public class KmlSplittingResult {
 
@@ -46,8 +47,9 @@ public class KmlSplittingResult {
 	private DisplayForm displayForm;
 	private CityGMLClass cityObjectType;
 	private List<AppearanceProperty> appearanceList;
+	private ElevationHelper Elevation;
 
-	public KmlSplittingResult(String GmlID,CityGML _work , CityGMLClass cityObjectType, DisplayForm displayForm ,String _TargetSrs, List<AppearanceProperty> appearanceList) {
+	public KmlSplittingResult(String GmlID,CityGML _work , CityGMLClass cityObjectType, DisplayForm displayForm ,String _TargetSrs, List<AppearanceProperty> appearanceList,ElevationHelper Elevation) {
 		this.setId(id);
 		this.setGmlId(GmlID);
 		this.setCityGmlClass(_work);
@@ -55,6 +57,7 @@ public class KmlSplittingResult {
 		this.setCityObjectType(cityObjectType);
 		this.setDisplayForm(displayForm);
 		this.setAppearanceList(appearanceList);
+		this.SetElevation(Elevation);
 	}
 
 	public long getId() {
@@ -98,6 +101,14 @@ public class KmlSplittingResult {
 
 	public void setAppearanceList(List<AppearanceProperty> appearanceList) {
 		this.appearanceList = appearanceList;
+	}
+	
+	public ElevationHelper GetElevation() {
+		return Elevation;
+	}
+
+	public void SetElevation(ElevationHelper Elevation) {
+		this.Elevation = Elevation;
 	}
 	
 	public void setDisplayForm(DisplayForm displayForm) {

@@ -135,7 +135,8 @@ public class SurfaceAppearance {
 					X3DMaterial _X3D = (X3DMaterial)_AbstractSurfaceData;
 					
 					
-					if(IsContainSurface(_X3D.getTarget(),_SurfaceID))
+					//if(IsContainSurface(_X3D.getTarget(),_SurfaceID))
+					if(_SurfaceID.equals(_X3D.getTarget().get(0)))
 					{
 					
 						_SurfaceData.put("id", _X3D.getId());

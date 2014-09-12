@@ -30,6 +30,7 @@
 package de.tub.citydb.modules.citykml.util;
 
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -61,6 +62,7 @@ public class SQLiteFactory {
 	private String dbName;
 	private String dbPath; 
 	private String DriverName;
+	private static Connection conn;
 	
 	public SQLiteFactory(String dbName, String dbPath, String DriverName) throws Exception {
 		
@@ -71,7 +73,7 @@ public class SQLiteFactory {
 	
 	
 	
-	public Connection createWorker() {
+	public Connection createConnection() {
 		
 		Connection conn = null;
 		try {
@@ -81,7 +83,7 @@ public class SQLiteFactory {
 	 
 	        // now we set up a set of fairly basic string variables 
 	        String sJdbc = "jdbc:sqlite";
-	        String sDbUrl = sJdbc + ":" + dbPath + dbName;
+	        String sDbUrl = sJdbc + ":" + dbPath +"\\"+ dbName;
 	        // which will produce a legitimate Url for SqlLite JDBC
 	        
 	 
@@ -95,7 +97,35 @@ public class SQLiteFactory {
 	    return conn;
 
 	}
+	
+	
+	// this checks whether the db has already been created or not
+	public boolean IsDbCreated() {
 
+		try {
+			
+		  File f = new File(dbPath +"\\"+ dbName);			 
+		  if(f.exists()){			  
+			  return true;		  
+		  }else{			
+			  return false;
+		  }
+			
+		} catch (Exception e) {			
+			LOG.error("FileCheck:" + e.toString());
+			return false;
+		}
+	}
+	
+	
+	
+	public boolean KillConnection() throws SQLException{
+		
+		conn.close();
+		return conn.isClosed();
+		
+	}
+	
 
 }
 

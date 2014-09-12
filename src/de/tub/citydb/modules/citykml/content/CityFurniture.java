@@ -62,6 +62,7 @@ import net.opengis.kml._2.PolygonType;
 
 
 
+
 import org.citygml4j.factory.CityGMLFactory;
 import org.citygml4j.geometry.Matrix;
 import org.citygml4j.model.citygml.appearance.X3DMaterial;
@@ -70,6 +71,7 @@ import org.postgis.PGgeometry;
 import org.postgis.Polygon;
 //import org.postgresql.largeobject.LargeObject;
 //import org.postgresql.largeobject.LargeObjectManager;
+
 
 
 
@@ -541,13 +543,8 @@ public class CityFurniture extends KmlGenericObject{
 //			rs = (OracleResultSet)getGeometriesStmt.executeQuery();
 			rs = getGeometriesStmt.executeQuery();
 
-			double zOffset = getZOffsetFromConfigOrDB(work.getId());
-			if (zOffset == Double.MAX_VALUE) {
-				List<Point3d> anchorCandidates = new ArrayList<Point3d>();
-				anchorCandidates.clear();
-				anchorCandidates.add(new Point3d(0,0,0)); // will be turned into refPointX,Y,Z by convertToWGS84
-				zOffset = getZOffsetFromGEService(anchorCandidates,work.getTargetSrs());
-			}
+			double zOffset = getZOffsetFromDB(work.getGmlId(),work.GetElevation());
+			
 
 			while (rs.next()) {
 //				STRUCT unconverted = (STRUCT)rs.getObject(1);

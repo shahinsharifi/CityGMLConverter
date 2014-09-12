@@ -305,7 +305,10 @@ public class Building extends KmlGenericObject{
 					//	double zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
 
 					List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
-					double zOffset = getZOffsetFromGEService(anchorCandidates,work.getTargetSrs());
+					double zOffset = getZOffsetFromDB(work.getGmlId(),work.GetElevation());
+					if (zOffset == Double.MAX_VALUE) {
+						zOffset = getZOffsetFromGEService(work.getGmlId(),anchorCandidates,work.getTargetSrs(),work.GetElevation());
+					}
 
 					setZOffset(zOffset);
 					//System.out.println(zOffset);
@@ -386,11 +389,11 @@ public class Building extends KmlGenericObject{
 			}
 			rs = getGeometriesStmt.executeQuery();
 
-			double zOffset = getZOffsetFromConfigOrDB(work.getId());
+			double zOffset = getZOffsetFromDB(work.getGmlId(),work.GetElevation());
 			if (zOffset == Double.MAX_VALUE) {
-				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result, work);
+				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result,  work);
 				rs.beforeFirst(); // return cursor to beginning
-				zOffset = getZOffsetFromGEService(lowestPointCandidates , work.getTargetSrs());
+				zOffset = getZOffsetFromGEService(work.getGmlId(),lowestPointCandidates,work.getTargetSrs(),work.GetElevation());
 			}
 
 			while (rs.next()) {	

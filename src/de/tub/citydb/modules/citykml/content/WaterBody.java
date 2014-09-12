@@ -222,11 +222,7 @@ public class WaterBody extends KmlGenericObject{
 						Logger.getInstance().info("Object " + work.getGmlId() + " has more than " + GEOMETRY_AMOUNT_WARNING + " geometries. This may take a while to process...");
 					}
 				
-					List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
-					double zOffset = getZOffsetFromConfigOrDB(work.getId());
-					if (zOffset == Double.MAX_VALUE) {
-						zOffset = getZOffsetFromGEService(anchorCandidates,work.getTargetSrs());
-					}
+					double zOffset = getZOffsetFromDB(work.getGmlId(),work.GetElevation());
 					setZOffset(zOffset);
 
 					ColladaOptions colladaOptions = getColladaOptions();

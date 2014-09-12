@@ -154,6 +154,7 @@ import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.io.DirectoryScanner;
 import de.tub.citydb.io.DirectoryScanner.CityGMLFilenameFilter;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.util.ElevationHelper;
 import de.tub.citydb.modules.citykml.util.FileHandler;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.common.event.CounterEvent;
@@ -1837,18 +1838,16 @@ public abstract class KmlGenericObject {
 		MultiGeometryType multiGeometry = null;
 		PolygonType polygon = null;
 
-		double zOffset = 0;
-
-		List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result , work);
-
-		zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
+		double zOffset = getZOffsetFromDB(work.getGmlId(),work.GetElevation());
+		if (zOffset == Double.MAX_VALUE) {
+			List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result,  work);
+			zOffset = getZOffsetFromGEService(work.getGmlId(),lowestPointCandidates,work.getTargetSrs(),work.GetElevation());
+		}
 
 		for (BuildingSurface Row: result) {
 			
 			
 			String _SurfaceData = Row.getId();
-			if(_SurfaceData.equals("PolyID58906_886_364949_26381"))
-				Logger.getInstance().debug("Opening");
 
 			String surfaceType = (String)Row.getType();
 			if (surfaceType != null && !surfaceType.endsWith("Surface")) {
@@ -2376,11 +2375,11 @@ public abstract class KmlGenericObject {
 			}
 			rs = getGeometriesStmt.executeQuery();
 
-			double zOffset = getZOffsetFromConfigOrDB(work.getId());
+			double zOffset = getZOffsetFromDB(work.getGmlId(),work.GetElevation());
 			if (zOffset == Double.MAX_VALUE) {
 				List<Point3d> lowestPointCandidates = getLowestPointsCoordinates(result,  work);
 				rs.beforeFirst(); // return cursor to beginning
-				zOffset = getZOffsetFromGEService(lowestPointCandidates,work.getTargetSrs());
+				zOffset = getZOffsetFromGEService(work.getGmlId(),lowestPointCandidates,work.getTargetSrs(),work.GetElevation());
 			}
 
 			while (rs.next()) {				
@@ -2600,67 +2599,27 @@ public abstract class KmlGenericObject {
 		return color;
 	}
 
-	protected double getZOffsetFromConfigOrDB (long id) {
+	protected double getZOffsetFromDB (String id , ElevationHelper Elevation) throws SQLException {
 
-		double zOffset = Double.MAX_VALUE;;
+		double zOffset = Double.MAX_VALUE;
 
-		switch (config.getProject().getKmlExporter().getAltitudeOffsetMode()) {
-		case NO_OFFSET:
-			zOffset = 0;
-			break;
-		case CONSTANT:
-			zOffset = config.getProject().getKmlExporter().getAltitudeOffsetValue();
-			break;
-		case GENERIC_ATTRIBUTE:
-			PreparedStatement selectQuery = null;
-			ResultSet rs = null;
-			String genericAttribName = "GE_LoD" + currentLod + "_zOffset";
-			try {
-				// first look for the value in the DB
-				selectQuery = connection.prepareStatement(Queries.GET_STRVAL_GENERICATTRIB_FROM_ID);
-				selectQuery.setLong(1, id);
-				selectQuery.setString(2, genericAttribName);
-				rs = selectQuery.executeQuery();
-				if (rs.next()) {
-					String strVal = rs.getString(1);
-					if (strVal != null) { // use value in DB 
-						StringTokenizer attributeTokenized = new StringTokenizer(strVal, "|");
-						attributeTokenized.nextToken(); // skip mode
-						zOffset = Double.parseDouble(attributeTokenized.nextToken());
-					}
-				}
-			}
-			catch (Exception e) {}
-			finally {
-				try {
-					if (rs != null) rs.close();
-					if (selectQuery != null) selectQuery.close();
-				}
-				catch (Exception e2) {}
+		if(Elevation.IsTableCreated())
+		{
+			ResultSet rs = Elevation.SelectElevationOffSet(id, 0);
+			while ( rs.next() ) { 
+				zOffset = rs.getDouble("zoffset");
 			}
 		}
-
+		
 		return zOffset;
 	}
 
 
-	protected double getZOffsetFromGEService (List<Point3d> candidates, String _TargetSrs ) {
+	protected double getZOffsetFromGEService (String gmlId, List<Point3d> candidates, String _TargetSrs , ElevationHelper Elevation) {
 
-		double zOffset = 0;
-
+		double zOffset = Double.MAX_VALUE;
+		
 		try{
-
-
-
-			Internal intConfig = config.getInternal();		
-			directoryScanner = new DirectoryScanner(true);
-			directoryScanner.addFilenameFilter(new CityGMLFilenameFilter());		
-			List<File> importFiles = directoryScanner.getFiles(intConfig.getImportFiles());
-
-
-			if(!FileHandler.IsFileExists(importFiles.get(0)))
-			{
-
 				double[] coords = new double[candidates.size()*3];
 				int index = 0;
 				for (Point3d point3d: candidates) {
@@ -2671,23 +2630,12 @@ public abstract class KmlGenericObject {
 					coords[index++] = tmpPointList.get(2);
 				}
 
-
-
 				Logger.getInstance().info("Getting zOffset from Google's elevation API with " + candidates.size() + " points.");
 
 				zOffset = elevationServiceHandler.getZOffset(coords);
-
-				List<Map<String, Object>> FileInputValue = new ArrayList<Map<String, Object>>();
-				Map<String, Object> _Node = new HashMap<String,Object>();
-				_Node.put("zOffset", zOffset);
-				FileInputValue.add(_Node);
-				FileHandler.CreateXML(importFiles.get(0),FileInputValue);
-			}
-			else {
-
-				zOffset = (Double)FileHandler.ReadXML(importFiles.get(0), "zOffset").get("zOffset");
-
-			}
+				if(!Elevation.IsTableCreated())
+					Elevation.CreateElevationTable(0);
+				Elevation.InsertElevationOffSet(gmlId , zOffset , 0);
 		}
 
 		catch (Exception e) {
@@ -2695,8 +2643,6 @@ public abstract class KmlGenericObject {
 			Logger.getInstance().error(e.toString());
 
 		}
-
-
 
 		return zOffset;
 	}

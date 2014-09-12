@@ -84,7 +84,9 @@ import de.tub.citydb.modules.common.filter.ExportFilter;
 import de.tub.citydb.modules.citygml.importer.database.content.DBAppearance;
 import de.tub.citydb.modules.citygml.importer.database.content.DBImporterEnum;
 import de.tub.citydb.modules.citykml.controller.CityKmlExporter;
+import de.tub.citydb.modules.citykml.util.ElevationHelper;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
+import de.tub.citydb.modules.citykml.util.SQLiteFactory;
 import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
 import de.tub.citydb.modules.citykml.content.Queries;
 import de.tub.citydb.modules.kml.util.CityObject4JSON;
@@ -191,7 +193,6 @@ public class KmlSplitter {
 			for (String gmlId: filterConfig.getSimpleFilter().getGmlIdFilter().getGmlIds()) {
 				if (!shouldRun) break;
 
-
 			}
 		}
 		else if (filterConfig.isSetComplexFilter() &&
@@ -277,15 +278,9 @@ public class KmlSplitter {
 				}
 
 
-				// prepare feature filter
-
-				CityGMLInputFilter inputFilter = new CityGMLInputFilter() {
-					public boolean accept(CityGMLClass type) {
-						return true;
-					}
-				};
-
-				
+				// prepare zOffSet Object
+				SQLiteFactory factory = new SQLiteFactory("Elevation.db",  file.getParent() , "org.sqlite.JDBC");
+				Connection connection = factory.createConnection();
 				
 				
 				
@@ -295,7 +290,9 @@ public class KmlSplitter {
 				CityGMLReader reader = in.createCityGMLReader(file);
 				CityModel cityModel = (CityModel)reader.nextFeature();
 				reader.close();
+				
 				if(cityModel.isSetCityObjectMember()){
+					
 					for (CityObjectMember member : cityModel.getCityObjectMember()) {
 						
 						if (member.isSetCityObject()) {
@@ -333,8 +330,9 @@ public class KmlSplitter {
 									CRS.decode("EPSG:" + this.TargetSrs, true));
 
 							if(_bounds.ContainCentroid(_refEnvelope,TargetSrs))						
-							{													
-								KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs,tmpAppearanceList);										
+							{
+								ElevationHelper elevation = new ElevationHelper(connection);								
+								KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs , tmpAppearanceList , elevation);										
 								dbWorkerPool.addWork(splitter);					
 							}
 							else {

@@ -301,14 +301,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 					}
 				
 					List<Point3d> anchorCandidates = setOrigins(); // setOrigins() called mainly for the side-effect
-					double zOffset = getZOffsetFromConfigOrDB(work.getId());
-					if (zOffset == Double.MAX_VALUE) {
-						if (transformation != null) {
-							anchorCandidates.clear();
-							anchorCandidates.add(new Point3d(0,0,0)); // will be turned into refPointX,Y,Z by convertToWGS84
-						}
-						zOffset = getZOffsetFromGEService(anchorCandidates,work.getTargetSrs());
-					}
+					double zOffset = getZOffsetFromDB(work.getGmlId(),work.GetElevation());
 					setZOffset(zOffset);
 
 					ColladaOptions colladaOptions = getColladaOptions();
@@ -730,13 +723,7 @@ public class SolitaryVegetationObject extends KmlGenericObject{
 			}
 			rs = getGeometriesStmt.executeQuery();
 
-			double zOffset = getZOffsetFromConfigOrDB(work.getId());
-			if (zOffset == Double.MAX_VALUE) {
-				List<Point3d> anchorCandidates = new ArrayList<Point3d>();
-				anchorCandidates.clear();
-				anchorCandidates.add(new Point3d(0,0,0)); // will be turned into refPointX,Y,Z by convertToWGS84
-				zOffset = getZOffsetFromGEService(anchorCandidates,work.getTargetSrs());
-			}
+			double zOffset = getZOffsetFromDB(work.getGmlId(),work.GetElevation());
 
 			while (rs.next()) {
 				PGgeometry unconverted = (PGgeometry)rs.getObject(1);
