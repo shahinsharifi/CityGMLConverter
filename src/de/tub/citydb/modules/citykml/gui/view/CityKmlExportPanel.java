@@ -118,53 +118,31 @@ import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.api.event.EventHandler;
 import de.tub.citydb.api.event.global.DatabaseConnectionStateEvent;
 import de.tub.citydb.api.event.global.GlobalEvents;
-import de.tub.citydb.api.gui.BoundingBoxCorner;
+
 import de.tub.citydb.api.log.LogLevel;
 import de.tub.citydb.api.registry.ObjectRegistry;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.database.DBConnection;
-// import de.tub.citydb.config.project.database.Database;
-// import de.tub.citydb.config.project.database.Workspace;
 import de.tub.citydb.config.project.exporter.ExportFilterConfig;
 import de.tub.citydb.config.project.filter.FilterMode;
 import de.tub.citydb.config.project.filter.TilingMode;
-import de.tub.citydb.config.project.general.AffineTransformation;
 import de.tub.citydb.config.project.general.FeatureClassMode;
-import de.tub.citydb.config.project.importer.ImportFilterConfig;
-import de.tub.citydb.config.project.importer.XMLValidation;
-import de.tub.citydb.config.project.kmlExporter.KmlExporter;
 import de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
-import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.gui.ImpExpGui;
 import de.tub.citydb.gui.components.checkboxtree.DefaultCheckboxTreeCellRenderer;
 import de.tub.citydb.gui.components.checkboxtree.DefaultTreeCheckingModel;
 import de.tub.citydb.gui.components.ExportStatusDialog;
-import de.tub.citydb.gui.components.ImportStatusDialog;
 import de.tub.citydb.gui.components.checkboxtree.CheckboxTree;
 import de.tub.citydb.gui.factory.PopupMenuDecorator;
 import de.tub.citydb.io.DirectoryScanner;
 import de.tub.citydb.io.DirectoryScanner.CityGMLFilenameFilter;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citygml.importer.util.AffineTransformer;
-import de.tub.citydb.modules.citykml.concurrent.CityKmlFeatureReaderWorkerFactory;
-import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorker;
-import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorkerFactory;
-import de.tub.citydb.modules.citykml.controller.CityKmlImporter;
 import de.tub.citydb.modules.citykml.gui.components.bbox.BoundingBoxPanelImpl;
 import de.tub.citydb.modules.citykml.util.BoundingBox;
-import de.tub.citydb.modules.common.event.CounterEvent;
-import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.modules.common.event.InterruptEnum;
 import de.tub.citydb.modules.common.event.InterruptEvent;
-import de.tub.citydb.modules.common.event.StatusDialogMessage;
-import de.tub.citydb.modules.common.event.StatusDialogProgressBar;
-import de.tub.citydb.modules.common.event.StatusDialogTitle;
-import de.tub.citydb.modules.common.filter.ImportFilter;
-import de.tub.citydb.modules.common.filter.statistic.FeatureCounterFilter;
-// import de.tub.citydb.util.Util;
-import de.tub.citydb.util.database.DBUtil;
 import de.tub.citydb.util.gui.GuiUtil;
 
 
@@ -185,7 +163,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 	private final JAXBContext jaxbKmlContext, jaxbColladaContext;
 	private final Config config;
 	private final ImpExpGui mainView;
-	private final DatabaseConnectionPool dbPool;
+
 
 	private JList fileList;
 	private DefaultListModel fileListModel;
@@ -289,7 +267,6 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		this.jaxbColladaContext = jaxbColladaContext;
 		this.mainView = mainView;
 		this.config = config;
-		dbPool = DatabaseConnectionPool.getInstance();
 		ObjectRegistry.getInstance().getEventDispatcher().addEventHandler(GlobalEvents.DATABASE_CONNECTION_STATE, this);
 
 		initGui();
@@ -814,25 +791,6 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		themeComboBox.removeAllItems();
 		themeComboBox.addItem(citykmlExporter.THEME_NONE);
 		themeComboBox.setSelectedItem(citykmlExporter.THEME_NONE);
-		if (dbPool.isConnected()) {
-			try {
-				//				Workspace workspace = new Workspace();
-				//				workspace.setName(workspaceText.getText().trim());
-				//				workspace.setTimestamp(timestampText.getText().trim());
-				for (String theme: DBUtil.getAppearanceThemeList()) {
-					if (theme == null) continue; 
-					themeComboBox.addItem(theme);
-					if (theme.equals(citykmlExporter.getAppearanceTheme())) {
-						themeComboBox.setSelectedItem(theme);
-					}
-				}
-				themeComboBox.setEnabled(true);
-			}
-			catch (SQLException sqlEx) { }
-		}
-		else {
-			themeComboBox.setEnabled(false);
-		}
 
 		setFilterEnabledValues();
 
@@ -1124,14 +1082,6 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			}
 		});
 
-		fetchThemesButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				ThemeUpdater themeUpdater = new ThemeUpdater();
-				themeUpdater.setDaemon(true);
-				themeUpdater.start();
-			}
-		});
-
 
 	}
 
@@ -1323,7 +1273,6 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 					new de.tub.citydb.modules.citykml.controller.CityKmlExporter(
 							jaxbKmlContext,
 							jaxbColladaContext,
-							dbPool,
 							config,
 							(!srsField.getText().equals("")) ? srsField.getText() : "4326",
 									eventDispatcher);
@@ -1533,7 +1482,6 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		pixelsColladaLabel.setEnabled(boundingBoxRadioButton.isSelected() && colladaCheckbox.isEnabled() && colladaCheckbox.isSelected());
 
 		themeLabel.setEnabled(colladaCheckbox.isEnabled() && colladaCheckbox.isSelected());
-		themeComboBox.setEnabled(dbPool.isConnected() && colladaCheckbox.isEnabled() && colladaCheckbox.isSelected());
 		fetchThemesButton.setEnabled(colladaCheckbox.isEnabled() && colladaCheckbox.isSelected());
 
 		fcTree.getCheckingModel().setPathEnabled(new TreePath(building.getPath()), boundingBoxRadioButton.isSelected() && (lodComboBox.getSelectedIndex() > 0));
@@ -1591,52 +1539,6 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			themeComboBox.setEnabled(false);
 		}
 	}
-
-	private class ThemeUpdater extends Thread {
-		public void run() {
-			Thread.currentThread().setName(this.getClass().getSimpleName());
-			fetchThemesButton.setEnabled(false);
-			try {
-				String text = Internal.I18N.getString("pref.kmlexport.connectDialog.line2");
-				DBConnection conn = config.getProject().getDatabase().getActiveConnection();
-				Object[] args = new Object[]{conn.getDescription(), conn.toConnectString()};
-				String formattedMsg = MessageFormat.format(text, args);
-				String[] connectConfirm = {Internal.I18N.getString("pref.kmlexport.connectDialog.line1"),
-						formattedMsg,
-						Internal.I18N.getString("pref.kmlexport.connectDialog.line3")};
-
-				if (!dbPool.isConnected() &&
-						JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-								connectConfirm,
-								Internal.I18N.getString("pref.kmlexport.connectDialog.title"),
-								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-					mainView.connectToDatabase();
-				}
-
-				if (dbPool.isConnected()) {
-					themeComboBox.removeAllItems();
-					themeComboBox.addItem(CityKmlExporter.THEME_NONE);
-					themeComboBox.setSelectedItem(CityKmlExporter.THEME_NONE);
-					//					Workspace workspace = new Workspace();
-					//					workspace.setName(workspaceText.getText().trim());
-					//					workspace.setTimestamp(timestampText.getText().trim());
-					for (String theme: DBUtil.getAppearanceThemeList()) {
-						if (theme == null) continue; 
-						themeComboBox.addItem(theme);
-						if (theme.equals(config.getProject().getKmlExporter().getAppearanceTheme())) {
-							themeComboBox.setSelectedItem(theme);
-						}
-					}
-					themeComboBox.setEnabled(true);
-				}
-			}
-			catch (Exception e) { }
-			finally {
-				fetchThemesButton.setEnabled(true);
-			}
-		}
-	}
-
 
 
 	private void loadFile(String title) {

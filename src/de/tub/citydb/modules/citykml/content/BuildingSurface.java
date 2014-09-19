@@ -31,12 +31,6 @@ package de.tub.citydb.modules.citykml.content;
 
 import java.util.List;
 
-import org.citygml4j.model.citygml.CityGML;
-import org.citygml4j.model.citygml.CityGMLClass;
-import org.citygml4j.model.citygml.appearance.AppearanceProperty;
-
-import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
-import de.tub.citydb.database.TypeAttributeValueEnum;
 
 public class BuildingSurface implements Surface{
 

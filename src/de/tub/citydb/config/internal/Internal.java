@@ -33,7 +33,7 @@ import java.io.File;
 import java.util.ResourceBundle;
 
 import de.tub.citydb.api.database.DatabaseSrs;
-import de.tub.citydb.modules.citygml.importer.util.AffineTransformer;
+
 
 public class Internal {
 	public static final int POSTGRESQL_MAX_BATCH_SIZE = 10000;
@@ -68,7 +68,7 @@ public class Internal {
 
 	// internal variables
 	private String currentGmlIdCodespace = "";
-	private AffineTransformer affineTransformer;
+
 
 	// internal flags
 	private boolean useInternalBBoxFilter = false;
@@ -188,14 +188,6 @@ public class Internal {
 
 	public void setCurrentLogPath(String currentLogPath) {
 		this.currentLogPath = currentLogPath;
-	}
-
-	public AffineTransformer getAffineTransformer() {
-		return affineTransformer;
-	}
-
-	public void setAffineTransformer(AffineTransformer affineTransformer) {
-		this.affineTransformer = affineTransformer;
 	}
 
 	public boolean isExportGlobalAppearances() {

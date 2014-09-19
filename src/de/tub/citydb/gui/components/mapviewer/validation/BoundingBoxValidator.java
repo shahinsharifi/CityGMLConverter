@@ -59,7 +59,6 @@ import de.tub.citydb.gui.components.mapviewer.MapWindow;
 import de.tub.citydb.gui.factory.SrsComboBoxFactory;
 import de.tub.citydb.gui.factory.SrsComboBoxFactory.SrsComboBox;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.util.database.DBUtil;
 import de.tub.citydb.util.gui.GuiUtil;
 
 public class BoundingBoxValidator {
@@ -245,7 +244,6 @@ public class BoundingBoxValidator {
 					}
 				}
 				
-				bbox.copyFrom(DBUtil.transformBBox(bbox, bbox.getSrs(), wgs84));
 				
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {

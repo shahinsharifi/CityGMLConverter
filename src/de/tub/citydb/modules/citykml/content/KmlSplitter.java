@@ -30,7 +30,6 @@
 package de.tub.citydb.modules.citykml.content;
 
 import java.io.File;
-import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -44,22 +43,15 @@ import javax.xml.namespace.QName;
 import org.citygml4j.CityGMLContext;
 import org.citygml4j.builder.CityGMLBuilder;
 import org.citygml4j.builder.jaxb.JAXBBuilder;
-import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
-import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
 import org.citygml4j.model.citygml.CityGML;
 import org.citygml4j.model.citygml.CityGMLClass;
-import org.citygml4j.model.citygml.appearance.Appearance;
 import org.citygml4j.model.citygml.appearance.AppearanceProperty;
-import org.citygml4j.model.citygml.building.AbstractBuilding;
-import org.citygml4j.model.citygml.cityobjectgroup.CityObjectGroupMember;
 import org.citygml4j.model.citygml.core.AbstractCityObject;
 import org.citygml4j.model.citygml.core.CityModel;
 import org.citygml4j.model.citygml.core.CityObjectMember;
 import org.citygml4j.model.gml.feature.AbstractFeature;
 import org.citygml4j.model.gml.geometry.primitives.Envelope;
-import org.citygml4j.util.xlink.XLinkResolver;
 import org.citygml4j.xml.io.CityGMLInputFactory;
-import org.citygml4j.xml.io.reader.CityGMLInputFilter;
 import org.citygml4j.xml.io.reader.CityGMLReadException;
 import org.citygml4j.xml.io.reader.CityGMLReader;
 import org.citygml4j.xml.io.reader.FeatureReadMode;
@@ -68,29 +60,22 @@ import org.geotools.referencing.CRS;
 import org.postgis.Geometry;
 import org.postgis.PGgeometry;
 
-import sun.util.logging.resources.logging;
+
 import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.api.database.DatabaseSrs;
 import de.tub.citydb.api.gui.BoundingBox;
 import de.tub.citydb.config.Config;
-import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.exporter.ExportFilterConfig;
 import de.tub.citydb.config.project.filter.Tiling;
 import de.tub.citydb.config.project.filter.TilingMode;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
-import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.filter.ExportFilter;
-import de.tub.citydb.modules.citygml.importer.database.content.DBAppearance;
-import de.tub.citydb.modules.citygml.importer.database.content.DBImporterEnum;
-import de.tub.citydb.modules.citykml.controller.CityKmlExporter;
 import de.tub.citydb.modules.citykml.util.ElevationHelper;
-import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.citykml.util.SQLiteFactory;
 import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
 import de.tub.citydb.modules.citykml.content.Queries;
-import de.tub.citydb.modules.kml.util.CityObject4JSON;
-import de.tub.citydb.util.Util;
+
 
 public class KmlSplitter {
 

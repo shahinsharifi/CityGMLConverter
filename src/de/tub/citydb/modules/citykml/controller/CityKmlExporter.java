@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipOutputStream;
 
 import javax.xml.bind.JAXBContext;
@@ -77,17 +76,6 @@ import net.opengis.kml._2.StyleType;
 import net.opengis.kml._2.ViewRefreshModeEnumType;
 // import oracle.ord.im.OrdImage;
 
-
-
-
-
-
-
-
-
-
-
-
 import org.citygml4j.builder.jaxb.JAXBBuilder;
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
@@ -110,7 +98,6 @@ import de.tub.citydb.config.Config;
 import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.database.Database;
 import de.tub.citydb.config.project.database.Database.PredefinedSrsName;
-import de.tub.citydb.config.project.exporter.ExportFilterConfig;
 // import de.tub.citydb.config.project.database.Workspace;
 import de.tub.citydb.config.project.filter.FeatureClass;
 import de.tub.citydb.config.project.filter.TiledBoundingBox;
@@ -119,11 +106,8 @@ import de.tub.citydb.config.project.filter.TilingMode;
 import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.BalloonContentMode;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
-import de.tub.citydb.database.DatabaseConnectionPool;
-import de.tub.citydb.database.TypeAttributeValueEnum;
+import  de.tub.citydb.modules.citykml.content.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorker;
-import de.tub.citydb.modules.citykml.concurrent.CityKmlImportWorkerFactory;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.common.concurrent.IOWriterWorkerFactory;
 import de.tub.citydb.modules.common.event.CounterEvent;
@@ -147,15 +131,13 @@ import de.tub.citydb.modules.citykml.content.Relief;
 import de.tub.citydb.modules.citykml.content.SolitaryVegetationObject;
 import de.tub.citydb.modules.citykml.content.Transportation;
 import de.tub.citydb.modules.citykml.content.WaterBody;
-import de.tub.citydb.modules.kml.concurrent.KmlExportWorkerFactory;
-import de.tub.citydb.modules.kml.util.CityObject4JSON;
-import de.tub.citydb.modules.kml.util.KMLHeaderWriter;
-import de.tub.citydb.util.database.DBUtil;
+import de.tub.citydb.modules.citykml.util.CityObject4JSON;
+import de.tub.citydb.modules.citykml.util.KMLHeaderWriter;
+
 
 public class CityKmlExporter implements EventHandler {
 	private final JAXBContext jaxbKmlContext;
 	private final JAXBContext jaxbColladaContext;
-	private final DatabaseConnectionPool dbPool;
 	private final Config config;
 	private final EventDispatcher eventDispatcher;
 
@@ -205,13 +187,11 @@ public class CityKmlExporter implements EventHandler {
 
 	public CityKmlExporter (JAXBContext jaxbKmlContext,
 						JAXBContext jaxbColladaContext,
-						DatabaseConnectionPool dbPool,
 						Config config,
 						String _TargetSrs,
 						EventDispatcher eventDispatcher) throws SQLException {
 		this.jaxbKmlContext = jaxbKmlContext;
 		this.jaxbColladaContext = jaxbColladaContext;
-		this.dbPool = dbPool;
 		this.config = config;
 		this.eventDispatcher = eventDispatcher;
 		this.TargetSrs = _TargetSrs;

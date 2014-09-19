@@ -63,11 +63,7 @@ import de.tub.citydb.gui.ImpExpGui;
 import de.tub.citydb.gui.factory.PopupMenuDecorator;
 import de.tub.citydb.gui.preferences.NullComponent;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citygml.exporter.CityGMLExportPlugin;
-import de.tub.citydb.modules.citygml.importer.CityGMLImportPlugin;
 import de.tub.citydb.modules.citykml.CityKMLExportPlugin;
-import de.tub.citydb.modules.database.DatabasePlugin;
-import de.tub.citydb.modules.kml.KMLExportPlugin;
 import de.tub.citydb.modules.preferences.gui.preferences.GeneralPreferences;
 import de.tub.citydb.modules.preferences.gui.preferences.RootPreferencesEntry;
 import de.tub.citydb.plugin.PluginService;
@@ -140,15 +136,16 @@ public class PreferencesPanel extends JPanel implements TreeSelectionListener {
 		rootNode = new PreferencesTreeNode(new RootPreferencesEntry());
 		generalPreferences = new GeneralPreferences(mainView, config);
 
-		PreferencesTreeNode initialNode = rootNode.add(pluginService.getInternalPlugin(CityGMLImportPlugin.class).getPreferences().getPreferencesEntry());
-		rootNode.add(pluginService.getInternalPlugin(CityGMLExportPlugin.class).getPreferences().getPreferencesEntry());
-		rootNode.add(pluginService.getInternalPlugin(KMLExportPlugin.class).getPreferences().getPreferencesEntry());
-		rootNode.add(pluginService.getInternalPlugin(CityKMLExportPlugin.class).getPreferences().getPreferencesEntry());
+		PreferencesTreeNode initialNode = rootNode.add(pluginService.getInternalPlugin(CityKMLExportPlugin.class).getPreferences().getPreferencesEntry());
+		//rootNode.add(pluginService.getInternalPlugin(CityGMLImportPlugin.class).getPreferences().getPreferencesEntry());
+		//rootNode.add(pluginService.getInternalPlugin(CityGMLExportPlugin.class).getPreferences().getPreferencesEntry());
+		//rootNode.add(pluginService.getInternalPlugin(KMLExportPlugin.class).getPreferences().getPreferencesEntry());
+		
 
 		for (PreferencesExtension extension : pluginService.getExternalPreferencesExtensions())
 			rootNode.add(extension.getPreferences().getPreferencesEntry());	
 
-		rootNode.add(pluginService.getInternalPlugin(DatabasePlugin.class).getPreferences().getPreferencesEntry());
+		//rootNode.add(pluginService.getInternalPlugin(DatabasePlugin.class).getPreferences().getPreferencesEntry());
 		rootNode.add(generalPreferences.getPreferencesEntry());
 
 		menuTree = new JTree(rootNode);

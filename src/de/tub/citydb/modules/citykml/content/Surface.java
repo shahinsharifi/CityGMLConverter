@@ -31,7 +31,6 @@ package de.tub.citydb.modules.citykml.content;
 
 import java.util.List;
 
-import de.tub.citydb.database.TypeAttributeValueEnum;
 
 public interface Surface {
 		

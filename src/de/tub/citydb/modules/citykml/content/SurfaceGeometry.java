@@ -64,14 +64,7 @@ import org.citygml4j.model.gml.geometry.primitives.Triangle;
 import org.citygml4j.model.gml.geometry.primitives.TrianglePatchArrayProperty;
 import org.citygml4j.model.gml.geometry.primitives.TriangulatedSurface;
 import org.citygml4j.util.gmlid.DefaultGMLIdManager;
-import org.postgis.PGgeometry;
-
-import de.tub.citydb.config.internal.Internal;
-import de.tub.citydb.database.TableEnum;
-import de.tub.citydb.database.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkBasic;
-import de.tub.citydb.modules.citygml.importer.database.content.DBImporterEnum;
 import de.tub.citydb.util.Util;
 
 public class SurfaceGeometry {

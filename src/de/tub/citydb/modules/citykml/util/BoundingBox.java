@@ -38,7 +38,6 @@ import javax.xml.namespace.QName;
 import org.citygml4j.CityGMLContext;
 import org.citygml4j.builder.CityGMLBuilder;
 import org.citygml4j.builder.jaxb.JAXBBuilder;
-import org.citygml4j.builder.jaxb.xml.io.reader.AbstractJAXBReader;
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
 import org.citygml4j.model.citygml.CityGML;
@@ -54,26 +53,15 @@ import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.opengis.geometry.Envelope;
-import org.opengis.metadata.extent.Extent;
-import org.opengis.referencing.ReferenceIdentifier;
+
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.cs.CoordinateSystem;
 
-import sun.net.www.http.ChunkedInputStream;
-import sun.security.jca.GetInstance;
-import sun.util.logging.resources.logging;
-
-import com.vividsolutions.jts.awt.PointShapeFactory.Point;
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Polygon;
 
 import de.tub.citydb.api.gui.BoundingBoxCorner;
-import de.tub.citydb.config.project.global.Logging;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
+
 
 
 

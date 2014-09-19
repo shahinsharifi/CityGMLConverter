@@ -47,18 +47,16 @@ import de.tub.citydb.api.gui.DatabaseSrsComboBox;
 import de.tub.citydb.api.registry.ObjectRegistry;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.config.internal.Internal;
-import de.tub.citydb.database.DatabaseConnectionPool;
+
 
 public class SrsComboBoxFactory {
 	private static SrsComboBoxFactory instance = null;
 	private final DatabaseSrs dbRefSys;
 	private final List<WeakReference<SrsComboBox>> srsBoxes = new ArrayList<WeakReference<SrsComboBox>>();
-	private final DatabaseConnectionPool dbPool;
 	private final Config config;
 
 	private SrsComboBoxFactory(Config config) {
 		// just to thwart instantiation
-		this.dbPool = DatabaseConnectionPool.getInstance();
 		this.config = config;
 		dbRefSys = DatabaseSrs.createDefaultSrs();
 		dbRefSys.setSupported(true);
@@ -193,13 +191,7 @@ public class SrsComboBoxFactory {
 		}
 
 		private void reset() {
-			DatabaseSrs tmp = dbPool.isConnected() ? dbPool.getActiveConnectionMetaData().getReferenceSystem() : DatabaseSrs.createDefaultSrs();
-
-			dbRefSys.setSrid(tmp.getSrid());
-			dbRefSys.setGMLSrsName(tmp.getGMLSrsName());
-			dbRefSys.setDatabaseSrsName(tmp.getDatabaseSrsName());
-			dbRefSys.setType(tmp.getType());
-
+			
 			removeAllItems();
 			init();
 		}

@@ -68,18 +68,13 @@ import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.Project;
 import de.tub.citydb.config.project.global.LanguageType;
 import de.tub.citydb.config.project.global.Logging;
-import de.tub.citydb.database.DatabaseControllerImpl;
 import de.tub.citydb.gui.ImpExpGui;
 import de.tub.citydb.gui.components.SplashScreen;
 import de.tub.citydb.io.DirectoryScanner;
 import de.tub.citydb.io.IOControllerImpl;
 import de.tub.citydb.io.InternalProxySelector;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citygml.exporter.CityGMLExportPlugin;
-import de.tub.citydb.modules.citygml.importer.CityGMLImportPlugin;
 import de.tub.citydb.modules.citykml.CityKMLExportPlugin;
-import de.tub.citydb.modules.database.DatabasePlugin;
-import de.tub.citydb.modules.kml.KMLExportPlugin;
 import de.tub.citydb.modules.preferences.PreferencesPlugin;
 import de.tub.citydb.plugin.IllegalPluginEventChecker;
 import de.tub.citydb.plugin.PluginService;
@@ -289,10 +284,6 @@ public class ImpExp {
 		// create and register plugin config controller
 		PluginConfigControllerImpl pluginConfigController = new PluginConfigControllerImpl(config);
 		registry.setPluginConfigController(pluginConfigController);
-
-		// create and register database controller
-		DatabaseControllerImpl databaseController = new DatabaseControllerImpl(config);
-		registry.setDatabaseController(databaseController);
 		
 		// create and register i/o controller
 		IOControllerImpl ioController = new IOControllerImpl(config);
@@ -472,9 +463,6 @@ public class ImpExp {
 			final ImpExpGui mainView = new ImpExpGui(config);
 			registry.setViewController(mainView);
 
-			// create database plugin
-			final DatabasePlugin databasePlugin = new DatabasePlugin(config, mainView);
-			databaseController.setConnectionViewHandler(databasePlugin.getConnectionViewHandler());
 
 			// propogate config to plugins
 			for (ConfigExtension<? extends PluginConfig> plugin : pluginService.getExternalConfigExtensions())
@@ -490,11 +478,7 @@ public class ImpExp {
 			}
 
 			// register internal plugins
-			pluginService.registerInternalPlugin(new CityGMLImportPlugin(jaxbBuilder, config, mainView));		
-			pluginService.registerInternalPlugin(new CityGMLExportPlugin(jaxbBuilder, config, mainView));		
-			pluginService.registerInternalPlugin(new KMLExportPlugin(kmlContext, colladaContext, config, mainView));
 			pluginService.registerInternalPlugin(new CityKMLExportPlugin(jaxbBuilder,kmlContext, colladaContext, config, mainView));// added by shahin
-			pluginService.registerInternalPlugin(databasePlugin);
 			pluginService.registerInternalPlugin(new PreferencesPlugin(pluginService, config, mainView));
 			
 			
@@ -527,51 +511,7 @@ public class ImpExp {
 			return;
 		}	
 
-		if (validateFile != null) {
-			new Thread() {
-				public void run() {
-					new ImpExpCmd(jaxbBuilder, config).doValidate(validateFile);
-				}
-			}.start();
-
-			return;
-		}
-
-		if (importFile != null) {
-			new Thread() {
-				public void run() {
-					new ImpExpCmd(jaxbBuilder, config).doImport(importFile);
-				}
-			}.start();
-
-			return;
-		}
-
-		if (exportFile != null) {
-			config.getInternal().setExportFileName(exportFile);
-
-			new Thread() {
-				public void run() {
-					new ImpExpCmd(jaxbBuilder, config).doExport();
-				}
-			}.start();
-
-			return;
-		}
-
-		if (kmlExportFile != null) {
-			config.getInternal().setExportFileName(kmlExportFile);
-
-			new Thread() {
-				public void run() {
-					new ImpExpCmd(kmlContext,
-							colladaContext,
-							config).doKmlExport();
-				}
-			}.start();
-
-			return;
-		}
+		
 	}
 
 	private void printInfoMessage(String message) {

@@ -54,7 +54,6 @@ import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.BalloonContentMode;
 import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
-import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.content.BalloonTemplateHandlerImpl;
 import de.tub.citydb.modules.citykml.content.Building;

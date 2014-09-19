@@ -102,18 +102,13 @@ import de.tub.citydb.config.gui.window.MainWindow;
 import de.tub.citydb.config.gui.window.WindowSize;
 import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.global.LanguageType;
-import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.event.SwitchLocaleEventImpl;
 import de.tub.citydb.gui.console.ConsoleWindow;
 import de.tub.citydb.gui.factory.DefaultComponentFactory;
 import de.tub.citydb.gui.factory.PopupMenuDecorator;
 import de.tub.citydb.gui.menubar.MenuBar;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citygml.exporter.CityGMLExportPlugin;
-import de.tub.citydb.modules.citygml.importer.CityGMLImportPlugin;
 import de.tub.citydb.modules.citykml.CityKMLExportPlugin;
-import de.tub.citydb.modules.database.DatabasePlugin;
-import de.tub.citydb.modules.kml.KMLExportPlugin;
 import de.tub.citydb.modules.preferences.PreferencesPlugin;
 import de.tub.citydb.plugin.PluginService;
 import de.tub.citydb.util.gui.GuiUtil;
@@ -128,7 +123,6 @@ public final class ImpExpGui extends JFrame implements ViewController, EventHand
 	private JAXBContext jaxbProjectContext;
 	private JAXBContext jaxbGuiContext;
 	private PluginService pluginService;
-	private DatabaseConnectionPool dbPool;
 
 	private JPanel main;
 	private JLabel statusText;
@@ -148,7 +142,7 @@ public final class ImpExpGui extends JFrame implements ViewController, EventHand
 
 	private List<View> views;
 	private PreferencesPlugin preferencesPlugin;
-	private DatabasePlugin databasePlugin;
+
 
 	private PrintStream out;
 	private PrintStream err;
@@ -157,9 +151,8 @@ public final class ImpExpGui extends JFrame implements ViewController, EventHand
 	private LanguageType currentLang = null;
 
 	public ImpExpGui(Config config) {
-		dbPool = DatabaseConnectionPool.getInstance();
-		this.config = config;
 
+		this.config = config;
 		eventDispatcher = ObjectRegistry.getInstance().getEventDispatcher();
 		eventDispatcher.addEventHandler(GlobalEvents.DATABASE_CONNECTION_STATE, this);
 
@@ -233,16 +226,12 @@ public final class ImpExpGui extends JFrame implements ViewController, EventHand
 		// retrieve all views
 		views = new ArrayList<View>();
 		preferencesPlugin = pluginService.getInternalPlugin(PreferencesPlugin.class);
-		databasePlugin = pluginService.getInternalPlugin(DatabasePlugin.class);
-		views.add(pluginService.getInternalPlugin(CityGMLImportPlugin.class).getView());
-		views.add(pluginService.getInternalPlugin(CityGMLExportPlugin.class).getView());
-		views.add(pluginService.getInternalPlugin(KMLExportPlugin.class).getView());	
 		views.add(pluginService.getInternalPlugin(CityKMLExportPlugin.class).getView());//Added By Shahin Sharifi
 
 		for (ViewExtension viewExtension : pluginService.getExternalViewExtensions())
 			views.add(viewExtension.getView());
 
-		views.add(databasePlugin.getView());
+		//views.add(databasePlugin.getView());
 		views.add(preferencesPlugin.getView());
 
 		// attach views to gui
@@ -443,7 +432,6 @@ public final class ImpExpGui extends JFrame implements ViewController, EventHand
 			Internal.I18N = ResourceBundle.getBundle("de.tub.citydb.gui.Label", locale);
 			currentLang = lang;
 
-			setDatabaseStatus(dbPool.isConnected());
 			statusText.setText(Internal.I18N.getString("main.status.ready.label"));
 			consoleLabel.setText(Internal.I18N.getString("main.console.label"));
 
@@ -618,7 +606,7 @@ public final class ImpExpGui extends JFrame implements ViewController, EventHand
 			setTitle(Internal.I18N.getString("main.window.title"));
 			connectText.setText(Internal.I18N.getString("main.status.database.disconnected.label"));
 		} else {
-			setTitle(Internal.I18N.getString("main.window.title") + " : " + dbPool.getActiveConnection().getDescription());
+
 			connectText.setText(Internal.I18N.getString("main.status.database.connected.label"));
 		}
 	}
@@ -646,15 +634,6 @@ public final class ImpExpGui extends JFrame implements ViewController, EventHand
 		saveProjectSettings();
 		saveGUISettings();
 
-		if (dbPool.isConnected()) {
-			LOG.info("Terminating database connection");
-			try {
-				dbPool.disconnect();
-			} catch (SQLException e) {
-				LOG.error("Failed to terminate database connection: " + e.getMessage());
-				success = false;
-			}
-		}
 
 		if (success)
 			LOG.info("Application successfully terminated");

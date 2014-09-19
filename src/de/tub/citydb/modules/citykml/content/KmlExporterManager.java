@@ -64,17 +64,18 @@ import net.opengis.kml._2.ViewRefreshModeEnumType;
 
 
 
+
 import org.citygml4j.util.xml.SAXEventBuffer;
 
 import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.config.Config;
+import de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter;
 import de.tub.citydb.config.project.kmlExporter.DisplayForm;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.content.ColladaBundle;
 import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
-import de.tub.citydb.modules.kml.database.BalloonTemplateHandlerImpl;
-import de.tub.citydb.modules.kml.controller.KmlExporter;
-import de.tub.citydb.modules.kml.util.CityObject4JSON;
+import de.tub.citydb.modules.citykml.content.BalloonTemplateHandlerImpl;
+import de.tub.citydb.modules.citykml.util.CityObject4JSON;
 
 public class KmlExporterManager {
 	private final JAXBContext jaxbKmlContext;
@@ -272,7 +273,7 @@ public class KmlExporterManager {
 							}
 
 							LatLonAltBoxType latLonAltBoxType = kmlFactory.createLatLonAltBoxType();
-							CityObject4JSON cityObject4JSON = KmlExporter.getAlreadyExported().get(work.getId());
+							CityObject4JSON cityObject4JSON = de.tub.citydb.modules.citykml.controller.CityKmlExporter.getAlreadyExported().get(work.getId());
 							if (cityObject4JSON != null) { // avoid NPE when aborting large KML/COLLADA exports
 								latLonAltBoxType.setNorth(cityObject4JSON.getEnvelopeYmax());
 								latLonAltBoxType.setSouth(cityObject4JSON.getEnvelopeYmin());
@@ -430,7 +431,7 @@ public class KmlExporterManager {
 				RegionType regionType = kmlFactory.createRegionType();
 				
 				LatLonAltBoxType latLonAltBoxType = kmlFactory.createLatLonAltBoxType();
-				CityObject4JSON cityObject4JSON = KmlExporter.getAlreadyExported().get(id);
+				CityObject4JSON cityObject4JSON = de.tub.citydb.modules.citykml.controller.CityKmlExporter.getAlreadyExported().get(id);
 				if (cityObject4JSON != null) { // avoid NPE when aborting large KML/COLLADA exports
 					latLonAltBoxType.setNorth(cityObject4JSON.getEnvelopeYmax());
 					latLonAltBoxType.setSouth(cityObject4JSON.getEnvelopeYmin());

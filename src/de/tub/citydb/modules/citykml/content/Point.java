@@ -36,7 +36,7 @@ import org.citygml4j.model.citygml.CityGMLClass;
 import org.citygml4j.model.citygml.appearance.AppearanceProperty;
 
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
-import de.tub.citydb.database.TypeAttributeValueEnum;
+
 
 public class Point {
 

@@ -120,18 +120,11 @@ import org.postgis.Polygon;
 
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
-import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
-import de.tub.citydb.database.TableEnum;
-import de.tub.citydb.database.TypeAttributeValueEnum;
+import  de.tub.citydb.modules.citykml.content.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkBasic;
-import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkTextureParam;
-import de.tub.citydb.modules.citygml.common.database.xlink.DBXlinkTextureParamEnum;
-import de.tub.citydb.modules.citygml.importer.database.content.DBImporterEnum;
-import de.tub.citydb.modules.citygml.importer.database.content.DBSequencerEnum;
 import de.tub.citydb.modules.citykml.content.BalloonTemplateHandlerImpl;
 import de.tub.citydb.modules.citykml.content.ElevationServiceHandler;
 import de.tub.citydb.modules.citykml.content.KmlExporterManager;
@@ -141,7 +134,6 @@ import de.tub.citydb.modules.citykml.content.SurfaceGeometry;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
-import de.tub.citydb.modules.kml.database.Queries;
 import de.tub.citydb.util.Util;
 
 public class Building extends KmlGenericObject{

@@ -147,15 +147,11 @@ import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
-import de.tub.citydb.config.project.CitykmlExporter.CityKmlExporter;
-import de.tub.citydb.config.project.kmlExporter.KmlExporter;
-import de.tub.citydb.database.DatabaseConnectionPool;
-import de.tub.citydb.database.TypeAttributeValueEnum;
+import  de.tub.citydb.modules.citykml.content.TypeAttributeValueEnum;
 import de.tub.citydb.io.DirectoryScanner;
 import de.tub.citydb.io.DirectoryScanner.CityGMLFilenameFilter;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.util.ElevationHelper;
-import de.tub.citydb.modules.citykml.util.FileHandler;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
@@ -2102,11 +2098,10 @@ public abstract class KmlGenericObject {
 
 						texImageUri = (_AppResult.get("imageuri") != null) ? _AppResult.get("imageuri").toString() : null;						
 						String texCoords = (_AppResult.get("coord") != null) ? _AppResult.get("coord").toString() : null;
-
 						
 						if (texImageUri != null && texImageUri.trim().length() != 0 &&  texCoords != null && texCoords.trim().length() != 0) {
 							
-							
+							String finalImagePath = filePath + "\\" + texImageUri;
 							int fileSeparatorIndex = Math.max(texImageUri.lastIndexOf("\\"), texImageUri.lastIndexOf("/")); 
 							texImageUri = "_" + texImageUri.substring(fileSeparatorIndex + 1);
 
@@ -2114,7 +2109,7 @@ public abstract class KmlGenericObject {
 							
 							if (getTexImage(texImageUri) == null) {
 
-								texImage = new BufferedInputStream(new FileInputStream(filePath + "\\" + _AppResult.get("imageuri").toString()));
+								texImage = new BufferedInputStream(new FileInputStream(finalImagePath));
 								
 								BufferedImage bufferedImage = null;
 

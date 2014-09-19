@@ -33,26 +33,10 @@ package de.tub.citydb.modules.citykml.util;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 
-import javax.xml.bind.JAXBContext;
-
-import net.opengis.kml._2.ObjectFactory;
-
-import org.citygml4j.factory.CityGMLFactory;
-import org.citygml4j.util.xml.SAXEventBuffer;
-import org.h2.table.Table;
-
-import de.tub.citydb.api.concurrent.Worker;
-import de.tub.citydb.api.concurrent.WorkerPool;
-import de.tub.citydb.api.event.EventDispatcher;
-import de.tub.citydb.config.Config;
-import de.tub.citydb.database.DatabaseConnectionPool;
 import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.kml.concurrent.KmlExportWorker;
-import de.tub.citydb.modules.kml.database.KmlSplittingResult;
+
 
 
 public class SQLiteFactory {

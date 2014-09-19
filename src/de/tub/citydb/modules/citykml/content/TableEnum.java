@@ -27,31 +27,48 @@
  * virtualcitySYSTEMS GmbH, Berlin <http://www.virtualcitysystems.de/>
  * Berlin Senate of Business, Technology and Women <http://www.berlin.de/sen/wtf/>
  */
-package de.tub.citydb.plugin;
+package de.tub.citydb.modules.citykml.content;
 
-import de.tub.citydb.api.event.Event;
-import de.tub.citydb.api.event.EventHandler;
-import de.tub.citydb.api.event.global.GlobalEvents;
-import de.tub.citydb.gui.ImpExpGui;
+public enum TableEnum {
+	UNDEFINED,
+	ADDRESS,
+	ADDRESS_TO_BUILDING,
+	APPEARANCE,
+	SURFACE_DATA,
+	SURFACE_GEOMETRY,
+	IMPLICIT_GEOMETRY,
+	CITYOBJECT,
+	CITYOBJECT_GENERICATTRIB,
+	EXTERNAL_REFERENCE,
+	BUILDING,
+	ROOM,
+	BUILDING_FURNITURE,
+	BUILDING_INSTALLATION,
+	THEMATIC_SURFACE,
+	OPENING,
+	OPENING_TO_THEM_SURFACE,
+	WATERBODY,
+	WATERBOUNDARY_SURFACE,
+	WATERBOD_TO_WATERBND_SRF,
+	PLANT_COVER,
+	SOLITARY_VEGETAT_OBJECT,
+	TRANSPORTATION_COMPLEX,
+	TRAFFIC_AREA,
+	CITY_FURNITURE,
+	LAND_USE,
+	RELIEF_FEATURE,
+	RELIEF_COMPONENT,
+	TIN_RELIEF,
+	GENERIC_CITYOBJECT,
+	CITYOBJECTGROUP;
 
-public class IllegalPluginEventChecker implements EventHandler {
-	private static IllegalPluginEventChecker instance;
-	
-	private IllegalPluginEventChecker() {
-		// just to thwart instantiation
-	}
-	
-	public static synchronized IllegalPluginEventChecker getInstance() {
-		if (instance == null)
-			instance = new IllegalPluginEventChecker();
-		
-		return instance;
-	}
+	public static TableEnum fromInt(int i) {
+		for (TableEnum c : TableEnum.values()) {
+			if (c.ordinal() == i) {
+				return c;
+			}
+		}
 
-	@Override
-	public void handleEvent(Event event) throws Exception {
-		if (event.getEventType() == GlobalEvents.SWITCH_LOCALE && !(event.getSource() instanceof ImpExpGui))
-			throw new IllegalArgumentException("Events of type " + GlobalEvents.SWITCH_LOCALE + " may not be triggered by plugins.");
+		return UNDEFINED;
 	}
-	
 }
