@@ -107,15 +107,13 @@ public class SurfaceAppearance {
 
 	
 	private boolean IsContainSurface(List<String> TargetList,String SurfaceID)
-	{
-		
-		/*for(String target : TargetList)
+	{		
+		for(String target : TargetList)
 		{	
 			if(SurfaceID.equals(target))
 				return true;
-		}*/
-		return false;
-		
+		}		
+		return false;		
 	}
 
 
@@ -135,8 +133,8 @@ public class SurfaceAppearance {
 					X3DMaterial _X3D = (X3DMaterial)_AbstractSurfaceData;
 					
 					
-					//if(IsContainSurface(_X3D.getTarget(),_SurfaceID))
-					if(_SurfaceID.equals(_X3D.getTarget().get(0)))
+					if(IsContainSurface(_X3D.getTarget(),_SurfaceID))
+					//if(_SurfaceID.equals(_X3D.getTarget().get(0)))
 					{
 					
 						_SurfaceData.put("id", _X3D.getId());

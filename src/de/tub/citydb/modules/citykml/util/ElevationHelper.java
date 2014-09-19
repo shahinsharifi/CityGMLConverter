@@ -100,6 +100,7 @@ public class ElevationHelper {
 		return Result;		
 	}
 	
+	
 	// this checks whether the table has already been created or not
 	public boolean IsTableCreated() throws SQLException {
 

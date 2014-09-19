@@ -2097,33 +2097,29 @@ public abstract class KmlGenericObject {
 						
 					}
 
-					else {
+					else{
 
 
-						texImageUri = _AppResult.get("imageuri").toString();
+						texImageUri = (_AppResult.get("imageuri") != null) ? _AppResult.get("imageuri").toString() : null;						
+						String texCoords = (_AppResult.get("coord") != null) ? _AppResult.get("coord").toString() : null;
+
 						
-						String texCoords = _AppResult.get("coord").toString();
-
-						if (texImageUri != null && texImageUri.trim().length() != 0
-								&&  texCoords != null && texCoords.trim().length() != 0
-								/* && texImage != null */) {
+						if (texImageUri != null && texImageUri.trim().length() != 0 &&  texCoords != null && texCoords.trim().length() != 0) {
 							
-
+							
 							int fileSeparatorIndex = Math.max(texImageUri.lastIndexOf("\\"), texImageUri.lastIndexOf("/")); 
 							texImageUri = "_" + texImageUri.substring(fileSeparatorIndex + 1);
 
 							addTexImageUri(surfaceId, texImageUri);
-							//								if (getTexOrdImage(texImageUri) == null) { // not already marked as wrapping texture
-							if (getTexImage(texImageUri) == null) { // not already read in
+							
+							if (getTexImage(texImageUri) == null) {
 
-								texImage = new BufferedInputStream(new FileInputStream(filePath+"\\"+_AppResult.get("imageuri").toString()));
+								texImage = new BufferedInputStream(new FileInputStream(filePath + "\\" + _AppResult.get("imageuri").toString()));
 								
 								BufferedImage bufferedImage = null;
 
 								try {
-									//										texImage = new ByteArrayInputStream(buf); // for Large Objects
-
-									//										bufferedImage = ImageIO.read(texImage.getDataInStream());
+									
 									bufferedImage = ImageIO.read(texImage);
 								}
 								catch (IOException ioe) {}
@@ -2131,10 +2127,7 @@ public abstract class KmlGenericObject {
 								if (bufferedImage != null) { // image in JPEG, PNG or another usual format
 									addTexImage(texImageUri, bufferedImage);
 								}
-								//									else {
-								//										addTexOrdImage(texImageUri, texImage);
-								//									}
-
+								
 								texImageCounter++;
 								if (texImageCounter > 20) {
 									eventDispatcher.triggerEvent(new CounterEvent(CounterType.TEXTURE_IMAGE, texImageCounter, this));

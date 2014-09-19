@@ -85,8 +85,7 @@ public class SQLiteFactory {
 	        String sJdbc = "jdbc:sqlite";
 	        String sDbUrl = sJdbc + ":" + dbPath +"\\"+ dbName;
 	        // which will produce a legitimate Url for SqlLite JDBC
-	        
-	 
+	        	 
 	        conn = DriverManager.getConnection(sDbUrl);
 			        
 		} 
