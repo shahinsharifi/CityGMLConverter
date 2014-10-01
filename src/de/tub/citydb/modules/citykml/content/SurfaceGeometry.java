@@ -109,9 +109,8 @@ public class SurfaceGeometry {
 
 		
 			LinearRing linearRing = (LinearRing)surfaceGeometry;
-			SetSurfaceID(linearRing.getId());
 			List<Double> points = linearRing.toList3d(reverse);
-
+			List<List<Double>> pointList = new ArrayList<List<Double>>();
 			if (points != null && !points.isEmpty()) {
 				Double x = points.get(0);
 				Double y = points.get(1);
@@ -135,6 +134,9 @@ public class SurfaceGeometry {
 					++nrOfCoordinates;
 				}
 
+				SetSurfaceID(linearRing.getId());
+				pointList.add(points);
+				
 				if (nrOfCoordinates < 4) {
 					// invalid ring...
 					StringBuilder msg = new StringBuilder(Util.getGeometrySignature(
@@ -145,7 +147,8 @@ public class SurfaceGeometry {
 					return _pointList;
 				}
 
-			}	
+			}
+			_pointList.addAll(pointList);
 
 		}
 		// A simple polygon

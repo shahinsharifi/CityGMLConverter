@@ -119,6 +119,8 @@ public class SurfaceAppearance {
 
 	public Map<String, Object> GetAppearanceBySurfaceID(String _SurfaceID , List<AppearanceProperty> _AppearanceList)
 	{
+		if(_SurfaceID.equals("UUID_06995633-fe42-458f-9a43-cd02c65b1686"))
+			System.out.println("Appearance");
 		Map<String, Object> _SurfaceAppearranceData = new HashMap<String, Object>();
 
 		for(AppearanceProperty _Property: _AppearanceList)
@@ -133,7 +135,6 @@ public class SurfaceAppearance {
 					
 					
 					if(IsContainSurface(_X3D.getTarget(),_SurfaceID))
-					//if(_SurfaceID.equals(_X3D.getTarget().get(0)))
 					{						
 						_SurfaceAppearranceData.put("id", _X3D.getId());
 						_SurfaceAppearranceData.put("imageuri", null);
@@ -146,7 +147,7 @@ public class SurfaceAppearance {
 						_SurfaceAppearranceData.put("x3d_specular_color", _X3D.getSpecularColor());
 						_SurfaceAppearranceData.put("x3d_emissive_color", _X3D.getEmissiveColor());
 						_SurfaceAppearranceData.put("x3d_is_smooth", _X3D.getIsSmooth());
-						_SurfaceAppearranceData.put("coord", null);
+
 					}	
 
 				}else if(_AbstractSurfaceData.getCityGMLClass().name().equals("PARAMETERIZED_TEXTURE")){
@@ -157,6 +158,8 @@ public class SurfaceAppearance {
 						String targetURI = target.getUri();
 						if(targetURI.equals(_SurfaceID))
 						{
+
+							
 							_SurfaceAppearranceData.put("id", _Texture.getId());
 							_SurfaceAppearranceData.put("imageuri", _Texture.getImageURI());
 							_SurfaceAppearranceData.put("type", "PARAMETERIZED_TEXTURE");
@@ -167,6 +170,8 @@ public class SurfaceAppearance {
 							_SurfaceAppearranceData.put("x3d_specular_color", null);
 							_SurfaceAppearranceData.put("x3d_emissive_color", null);
 							_SurfaceAppearranceData.put("x3d_is_smooth", null);
+							
+							
 							
 							if (targetURI != null && targetURI.length() != 0) {
 								if (target.isSetTextureParameterization()) {
@@ -202,13 +207,14 @@ public class SurfaceAppearance {
 								{
 									String href = target.getHref();
 								}
-							}
-							break;
+							}return _SurfaceAppearranceData;
+							//break;
 						}
 					}
 				}
 			}
 		}
+
 
 		return _SurfaceAppearranceData;
 	}

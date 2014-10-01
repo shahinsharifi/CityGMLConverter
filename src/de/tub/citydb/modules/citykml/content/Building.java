@@ -75,6 +75,7 @@ import org.citygml4j.model.citygml.building.BuildingInstallation;
 import org.citygml4j.model.citygml.building.BuildingInstallationProperty;
 import org.citygml4j.model.citygml.building.BuildingPart;
 import org.citygml4j.model.citygml.building.BuildingPartProperty;
+import org.citygml4j.model.citygml.building.Door;
 import org.citygml4j.model.citygml.building.IntBuildingInstallation;
 import org.citygml4j.model.citygml.building.IntBuildingInstallationProperty;
 import org.citygml4j.model.citygml.building.InteriorFurnitureProperty;
@@ -748,7 +749,7 @@ public class Building extends KmlGenericObject{
 					}
 					
 					
-					// Room - BoundrySurface - Openings
+					// BoundrySurface - Openings
 					if (boundarySurface.isSetOpening()) {
 						
 						for (OpeningProperty openingProperty : boundarySurface.getOpening()) {
@@ -773,13 +774,13 @@ public class Building extends KmlGenericObject{
 									if (multiSurfaceProperty != null) {
 										if (multiSurfaceProperty.isSetMultiSurface()) {
 											
-											surfaceGeom.ClearPointList();				
+											surfaceGeom.ClearPointList();
+											surfaceGeom.ClearIdList();
 											List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 
 											int counter = 0;
 											for(List<Double> _Geometry : _pointList){
-
 
 												BuildingSurface BSurface = new BuildingSurface();   
 												BSurface.setPId(ParentCounter);
@@ -839,7 +840,8 @@ public class Building extends KmlGenericObject{
 						if (geometryProperty != null) {
 							if (geometryProperty.isSetGeometry()) {
 
-								surfaceGeom.ClearPointList();				
+								surfaceGeom.ClearPointList();
+								surfaceGeom.ClearIdList();
 								List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
 								_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 								
@@ -879,7 +881,8 @@ public class Building extends KmlGenericObject{
 
 						if (geometryProperty.isSetGeometry()) {
 
-							surfaceGeom.ClearPointList();				
+							surfaceGeom.ClearPointList();
+							surfaceGeom.ClearIdList();
 							List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
 							_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 							
@@ -930,7 +933,8 @@ public class Building extends KmlGenericObject{
 
 						if (solidProperty.isSetSolid()) {
 
-							surfaceGeom.ClearPointList();				
+							surfaceGeom.ClearPointList();
+							surfaceGeom.ClearIdList();
 							List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(solidProperty.getSolid(), false);
 							_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 							
@@ -954,7 +958,8 @@ public class Building extends KmlGenericObject{
 
 						if (multiSurfacePropery.isSetMultiSurface()) {
 
-							surfaceGeom.ClearPointList();				
+							surfaceGeom.ClearPointList();
+							surfaceGeom.ClearIdList();
 							List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(multiSurfacePropery.getMultiSurface(), false);
 							_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 							
@@ -1041,7 +1046,8 @@ public class Building extends KmlGenericObject{
 									
 									for (OpeningProperty openingProperty : boundarySurface.getOpening()) {
 										if (openingProperty.isSetOpening()) {
-											AbstractOpening opening = openingProperty.getOpening();						        			
+											AbstractOpening opening = openingProperty.getOpening();	
+									
 
 											// Opening - Geometry
 											for (int lod = 3; lod < 5; lod++) {
@@ -1061,7 +1067,8 @@ public class Building extends KmlGenericObject{
 												if (multiSurfaceProperty != null) {
 													if (multiSurfaceProperty.isSetMultiSurface()) {
 														
-														surfaceGeom.ClearPointList();				
+														surfaceGeom.ClearPointList();
+														surfaceGeom.ClearIdList();
 														List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(multiSurfaceProperty.getMultiSurface(), false);
 														_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 
@@ -1110,7 +1117,8 @@ public class Building extends KmlGenericObject{
 
 										if (geometryProperty.isSetGeometry()) {
 
-											surfaceGeom.ClearPointList();				
+											surfaceGeom.ClearPointList();
+											surfaceGeom.ClearIdList();
 											List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
 											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 
@@ -1150,7 +1158,8 @@ public class Building extends KmlGenericObject{
 
 										if (geometryProperty.isSetGeometry()) {
 
-											surfaceGeom.ClearPointList();				
+											surfaceGeom.ClearPointList();
+											surfaceGeom.ClearIdList();
 											List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(geometryProperty.getGeometry(), false);
 											_SurfaceType = TypeAttributeValueEnum.fromCityGMLClass(CityGMLClass.WALL_SURFACE).toString();
 

@@ -2030,7 +2030,7 @@ public abstract class KmlGenericObject {
 
 					
 					
-					Map<String, Object> tmpResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+id , work.getAppearanceList());
+					Map<String, Object> tmpResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#" + id , work.getAppearanceList());
 					String AppreanceType = (String)tmpResult.get("type");
 					
 					
@@ -2050,12 +2050,11 @@ public abstract class KmlGenericObject {
 
 					
 
-					Map<String, Object> _AppResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#"+Row.getId(), work.getAppearanceList());
+					Map<String, Object> _AppResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#" + Row.getId() , work.getAppearanceList());
+										
 					String surfaceId = Row.getId();
 					String parentId = String.valueOf(Row.getPId());
 					
-					
-
 					// from here on it is a surfaceMember
 					eventDispatcher.triggerEvent(new GeometryCounterEvent(null, this));
 
@@ -2064,18 +2063,15 @@ public abstract class KmlGenericObject {
 					InputStream texImage = null;
 					//						byte buf[] = null;
 					StringTokenizer texCoordsTokenized = null;
-
-					
+				
 					
 					if (_AppResult.get("type") == null) {
-						
-					
+										
 						if(getX3dMaterial(parentId) != null)  {
 							
-							addX3dMaterial(surfaceId, getX3dMaterial(parentId));		
+							addX3dMaterial(surfaceId, getX3dMaterial(parentId));								
 						}
-						else {
-							
+						else {	
 							
 							if (getX3dMaterial(surfaceId) == null) {
 								
@@ -2089,14 +2085,13 @@ public abstract class KmlGenericObject {
 								addX3dMaterial(surfaceId, defaultX3dMaterial);							
 								
 							}
-						}
-						
+						}				
 					}
 
 					else{
 
 
-						texImageUri = (_AppResult.get("imageuri") != null) ? _AppResult.get("imageuri").toString() : null;						
+						texImageUri = (_AppResult.get("imageuri") != null) ? _AppResult.get("imageuri").toString() : null;	
 						String texCoords = (_AppResult.get("coord") != null) ? _AppResult.get("coord").toString() : null;
 						
 						if (texImageUri != null && texImageUri.trim().length() != 0 &&  texCoords != null && texCoords.trim().length() != 0) {
