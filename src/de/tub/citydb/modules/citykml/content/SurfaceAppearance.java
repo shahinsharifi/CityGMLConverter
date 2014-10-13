@@ -60,13 +60,12 @@ import de.tub.citydb.util.Util;
 
 public class SurfaceAppearance {
 
-	private AbstractBuilding _building;
 	private boolean IsSetAppearance = false;
 	List<Map<String, Object>> _SurfaceDataList = new ArrayList<Map<String,Object>>();
 
-	public SurfaceAppearance(AbstractBuilding _Building)
+	public SurfaceAppearance()
 	{	
-		this._building = _Building;
+
 	}
 
 	public void SetAppearance(boolean _IsSet)
@@ -117,105 +116,102 @@ public class SurfaceAppearance {
 	}
 
 
-	public Map<String, Object> GetAppearanceBySurfaceID(String _SurfaceID , List<AppearanceProperty> _AppearanceList)
+	public Map<String, Object> GetAppearanceBySurfaceID(String _SurfaceID , List<AppearanceProperty> _AppearanceList,String _SelectedTheme)
 	{
-		if(_SurfaceID.equals("UUID_06995633-fe42-458f-9a43-cd02c65b1686"))
-			System.out.println("Appearance");
+
 		Map<String, Object> _SurfaceAppearranceData = new HashMap<String, Object>();
-
 		for(AppearanceProperty _Property: _AppearanceList)
-		{
+		{	
 			Appearance _Appearance=_Property.getAppearance();
-			for(SurfaceDataProperty _SurfaceAppearranceDataMember: _Appearance.getSurfaceDataMember())
+			String _AppearanceTheme = (_Appearance.getTheme() != null) ? _Appearance.getTheme() : "<unknown>";
+			if(!_SelectedTheme.equals("none"))
 			{
-				AbstractSurfaceData _AbstractSurfaceData = _SurfaceAppearranceDataMember.getSurfaceData();
-		
-				if(_AbstractSurfaceData.getCityGMLClass().name().equals("X3D_MATERIAL")){
-					X3DMaterial _X3D = (X3DMaterial)_AbstractSurfaceData;
-					
-					
-					if(IsContainSurface(_X3D.getTarget(),_SurfaceID))
-					{						
-						_SurfaceAppearranceData.put("id", _X3D.getId());
-						_SurfaceAppearranceData.put("imageuri", null);
-						_SurfaceAppearranceData.put("type", "X3D_MATERIAL");
-						_SurfaceAppearranceData.put("target", _X3D.getTarget());
-						_SurfaceAppearranceData.put("x3d_ambient_intensity", _X3D.getAmbientIntensity());
-						_SurfaceAppearranceData.put("x3d_shininess", _X3D.getShininess());
-						_SurfaceAppearranceData.put("x3d_transparency", _X3D.getTransparency());
-						_SurfaceAppearranceData.put("x3d_diffuse_color", _X3D.getDiffuseColor());
-						_SurfaceAppearranceData.put("x3d_specular_color", _X3D.getSpecularColor());
-						_SurfaceAppearranceData.put("x3d_emissive_color", _X3D.getEmissiveColor());
-						_SurfaceAppearranceData.put("x3d_is_smooth", _X3D.getIsSmooth());
-
-					}	
-
-				}else if(_AbstractSurfaceData.getCityGMLClass().name().equals("PARAMETERIZED_TEXTURE")){
-
-					ParameterizedTexture _Texture = (ParameterizedTexture)_AbstractSurfaceData;
-					
-					for (TextureAssociation target : _Texture.getTarget()) {
-						String targetURI = target.getUri();
-						if(targetURI.equals(_SurfaceID))
-						{
-
+				for(SurfaceDataProperty _SurfaceAppearranceDataMember: _Appearance.getSurfaceDataMember())
+				{
+					AbstractSurfaceData _AbstractSurfaceData = _SurfaceAppearranceDataMember.getSurfaceData();
+					if(_AbstractSurfaceData.getCityGMLClass().name().equals("X3D_MATERIAL") 
+							&& _AppearanceTheme.equals(_SelectedTheme)){
+						
+						X3DMaterial _X3D = (X3DMaterial)_AbstractSurfaceData;										
+						if(IsContainSurface(_X3D.getTarget(),_SurfaceID))
+						{						
+							_SurfaceAppearranceData.put("id", _X3D.getId());
+							_SurfaceAppearranceData.put("imageuri", null);
+							_SurfaceAppearranceData.put("type", "X3D_MATERIAL");
+							_SurfaceAppearranceData.put("target", _X3D.getTarget());
+							_SurfaceAppearranceData.put("x3d_ambient_intensity", _X3D.getAmbientIntensity());
+							_SurfaceAppearranceData.put("x3d_shininess", _X3D.getShininess());
+							_SurfaceAppearranceData.put("x3d_transparency", _X3D.getTransparency());
+							_SurfaceAppearranceData.put("x3d_diffuse_color", _X3D.getDiffuseColor());
+							_SurfaceAppearranceData.put("x3d_specular_color", _X3D.getSpecularColor());
+							_SurfaceAppearranceData.put("x3d_emissive_color", _X3D.getEmissiveColor());
+							_SurfaceAppearranceData.put("x3d_is_smooth", _X3D.getIsSmooth());
+						}	
+	
+					}else if(_AbstractSurfaceData.getCityGMLClass().name().equals("PARAMETERIZED_TEXTURE") 
+							&& _AppearanceTheme.equals(_SelectedTheme)){
+	
+						ParameterizedTexture _Texture = (ParameterizedTexture)_AbstractSurfaceData;					
+						for (TextureAssociation target : _Texture.getTarget()) {
+							String targetURI = target.getUri();
+							if(targetURI.equals(_SurfaceID))
+							{
 							
-							_SurfaceAppearranceData.put("id", _Texture.getId());
-							_SurfaceAppearranceData.put("imageuri", _Texture.getImageURI());
-							_SurfaceAppearranceData.put("type", "PARAMETERIZED_TEXTURE");
-							_SurfaceAppearranceData.put("x3d_ambient_intensity", null);
-							_SurfaceAppearranceData.put("x3d_shininess", null);
-							_SurfaceAppearranceData.put("x3d_transparency", null);
-							_SurfaceAppearranceData.put("x3d_diffuse_color", null);
-							_SurfaceAppearranceData.put("x3d_specular_color", null);
-							_SurfaceAppearranceData.put("x3d_emissive_color", null);
-							_SurfaceAppearranceData.put("x3d_is_smooth", null);
-							
-							
-							
-							if (targetURI != null && targetURI.length() != 0) {
-								if (target.isSetTextureParameterization()) {
-									AbstractTextureParameterization texPara = target.getTextureParameterization();
-									String texParamGmlId = texPara.getId();
-									switch (texPara.getCityGMLClass()) {
-									
-										case TEX_COORD_GEN:
-											TexCoordGen texCoordGen = (TexCoordGen)texPara;
-											if (texCoordGen.isSetWorldToTexture()) {
-												Matrix worldToTexture = texCoordGen.getWorldToTexture().getMatrix();	
-												String worldToTextureString = Util.collection2string(worldToTexture.toRowPackedList(), " ");	
-											}
-											break;
-											
-										case TEX_COORD_LIST:
-											TexCoordList texCoordList = (TexCoordList)texPara;	
-											if (texCoordList.isSetTextureCoordinates()) {
-												HashSet<String> rings = new HashSet<String>(texCoordList.getTextureCoordinates().size());	
-												for (TextureCoordinates texCoord : texCoordList.getTextureCoordinates()) {
-													String ring = texCoord.getRing();
-													if (ring != null && ring.length() != 0 && texCoord.isSetValue()) {
-														String coords = Util.collection2string(texCoord.getValue(), " ");
-														_SurfaceAppearranceData.put("target", targetURI);
-														_SurfaceAppearranceData.put("coord", coords);
+								_SurfaceAppearranceData.put("id", _Texture.getId());
+								_SurfaceAppearranceData.put("imageuri", _Texture.getImageURI());
+								_SurfaceAppearranceData.put("type", "PARAMETERIZED_TEXTURE");
+								_SurfaceAppearranceData.put("x3d_ambient_intensity", null);
+								_SurfaceAppearranceData.put("x3d_shininess", null);
+								_SurfaceAppearranceData.put("x3d_transparency", null);
+								_SurfaceAppearranceData.put("x3d_diffuse_color", null);
+								_SurfaceAppearranceData.put("x3d_specular_color", null);
+								_SurfaceAppearranceData.put("x3d_emissive_color", null);
+								_SurfaceAppearranceData.put("x3d_is_smooth", null);
+															
+								
+								if (targetURI != null && targetURI.length() != 0) {
+									if (target.isSetTextureParameterization()) {
+										AbstractTextureParameterization texPara = target.getTextureParameterization();
+										String texParamGmlId = texPara.getId();
+										switch (texPara.getCityGMLClass()) {
+										
+											case TEX_COORD_GEN:
+												TexCoordGen texCoordGen = (TexCoordGen)texPara;
+												if (texCoordGen.isSetWorldToTexture()) {
+													Matrix worldToTexture = texCoordGen.getWorldToTexture().getMatrix();	
+													String worldToTextureString = Util.collection2string(worldToTexture.toRowPackedList(), " ");	
+												}
+												break;
+												
+											case TEX_COORD_LIST:
+												TexCoordList texCoordList = (TexCoordList)texPara;	
+												if (texCoordList.isSetTextureCoordinates()) {
+													HashSet<String> rings = new HashSet<String>(texCoordList.getTextureCoordinates().size());	
+													for (TextureCoordinates texCoord : texCoordList.getTextureCoordinates()) {
+														String ring = texCoord.getRing();
+														if (ring != null && ring.length() != 0 && texCoord.isSetValue()) {
+															String coords = Util.collection2string(texCoord.getValue(), " ");
+															_SurfaceAppearranceData.put("target", targetURI);
+															_SurfaceAppearranceData.put("coord", coords);
+														}
 													}
 												}
+												break;
 											}
-											break;
-										}
-								} 
-								else
-								{
-									String href = target.getHref();
+									} 
+									else
+									{
+										String href = target.getHref();
+									}
 								}
-							}return _SurfaceAppearranceData;
-							//break;
+								return _SurfaceAppearranceData;
+								//break;
+							}
 						}
 					}
 				}
 			}
 		}
-
-
 		return _SurfaceAppearranceData;
 	}
 }

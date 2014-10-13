@@ -242,13 +242,12 @@ public class Building extends KmlGenericObject{
 	@SuppressWarnings("unchecked")
 	private List<PlacemarkType> readBuildingPart(KmlSplittingResult work) throws Exception {
 
-		List<Map<String, Object>> _SurfaceDataList = new ArrayList<Map<String,Object>>();
 		boolean reversePointOrder = false;
 
 		try {
 
 			AbstractBuilding _building = (AbstractBuilding)work.getCityGmlClass();
-			SurfaceAppearance _SurfaceAppear = new SurfaceAppearance(_building);
+			SurfaceAppearance _SurfaceAppear = new SurfaceAppearance();
 			List<BuildingSurface> _surfaceList = GetBuildingGeometries(_building);
 
 			if (_surfaceList.size()!=0) { // result not empty

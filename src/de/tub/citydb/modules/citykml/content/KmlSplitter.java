@@ -302,10 +302,9 @@ public class KmlSplitter {
 							List<AppearanceProperty> tmpAppearanceList = new ArrayList<AppearanceProperty>();
 							
 							if(cityObject.isSetAppearance())
-								tmpAppearanceList.addAll(cityObject.getAppearance());
-							else 
+								tmpAppearanceList.addAll(cityObject.getAppearance());								
+							else
 								tmpAppearanceList.addAll(cityModel.getAppearanceMember());
-							
 							
 							ReferencedEnvelope _refEnvelope = new ReferencedEnvelope(
 									envelope.getLowerCorner().toList3d().get(0),

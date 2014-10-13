@@ -2014,23 +2014,18 @@ public abstract class KmlGenericObject {
 	protected void fillGenericObjectForCollada(KmlSplittingResult work , List<BuildingSurface> _SurfaceList ,
 			SurfaceAppearance _SurfaceAppearance, List<BuildingSurface> _ParentSurfaceList) throws Exception {	
 		
-	//	String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
+		String selectedTheme = config.getProject().getCityKmlExporter().getAppearanceTheme();
 		String filePath=GetImagePath();
 		int texImageCounter = 0;
 
 		try {
 
-			//if(work.getGmlId().equals("BLDG_0003000e0097f52c"))
-			//{
-
 				for(BuildingSurface Row:_ParentSurfaceList){
 
 					String parentid= String.valueOf(Row.getPId());
 					String id = Row.getId();
-
-					
-					
-					Map<String, Object> tmpResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#" + id , work.getAppearanceList());
+				
+					Map<String, Object> tmpResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#" + id , work.getAppearanceList() , selectedTheme);
 					String AppreanceType = (String)tmpResult.get("type");
 					
 					
@@ -2048,10 +2043,8 @@ public abstract class KmlGenericObject {
 
 				for (BuildingSurface Row: _SurfaceList)  {
 
-					
-
-					Map<String, Object> _AppResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#" + Row.getId() , work.getAppearanceList());
-										
+					Map<String, Object> _AppResult = _SurfaceAppearance.GetAppearanceBySurfaceID("#" + Row.getId() , work.getAppearanceList() , selectedTheme);
+									
 					String surfaceId = Row.getId();
 					String parentId = String.valueOf(Row.getPId());
 					
@@ -2063,8 +2056,7 @@ public abstract class KmlGenericObject {
 					InputStream texImage = null;
 					//						byte buf[] = null;
 					StringTokenizer texCoordsTokenized = null;
-				
-					
+									
 					if (_AppResult.get("type") == null) {
 										
 						if(getX3dMaterial(parentId) != null)  {
@@ -2087,7 +2079,6 @@ public abstract class KmlGenericObject {
 							}
 						}				
 					}
-
 					else{
 
 
@@ -2159,12 +2150,9 @@ public abstract class KmlGenericObject {
 					}
 
 					Polygon surface = new Polygon(
-							new org.postgis.LinearRing[] {
-									new org.postgis.LinearRing(
-											tmpPoint
-											)
-							}
-							);
+							new org.postgis.LinearRing[] {									
+									new org.postgis.LinearRing(tmpPoint)
+							});
 
 					double[] ordinatesArray = new double[surface.numPoints()*3];
 					for (int i = 0, j = 0; i < surface.numPoints(); i++, j+=3){

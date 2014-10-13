@@ -118,7 +118,6 @@ import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.api.event.EventHandler;
 import de.tub.citydb.api.event.global.DatabaseConnectionStateEvent;
 import de.tub.citydb.api.event.global.GlobalEvents;
-
 import de.tub.citydb.api.log.LogLevel;
 import de.tub.citydb.api.registry.ObjectRegistry;
 import de.tub.citydb.config.Config;
@@ -141,6 +140,7 @@ import de.tub.citydb.io.DirectoryScanner.CityGMLFilenameFilter;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.gui.components.bbox.BoundingBoxPanelImpl;
 import de.tub.citydb.modules.citykml.util.BoundingBox;
+import de.tub.citydb.modules.citykml.util.DSUtil;
 import de.tub.citydb.modules.common.event.InterruptEnum;
 import de.tub.citydb.modules.common.event.InterruptEvent;
 import de.tub.citydb.util.gui.GuiUtil;
@@ -163,6 +163,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 	private final JAXBContext jaxbKmlContext, jaxbColladaContext;
 	private final Config config;
 	private final ImpExpGui mainView;
+	
 
 
 	private JList fileList;
@@ -173,8 +174,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 	private JLabel InputLabel = new JLabel("Input file:");
 	private JLabel OutputLabel = new JLabel("Output file:");
-	
-	
+
+
 	private JPanel browsePanel;
 	private JTextField browseText = new JTextField("");
 	private JButton browseButton = new JButton("");
@@ -393,11 +394,11 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		bboxComponent = new BoundingBoxPanelImpl(config);
 
 		boundingBoxPanel.add(bboxComponent, GuiUtil.setConstraints(0,0,1.0,0.0,GridBagConstraints.HORIZONTAL,2,lmargin,0,BORDER_THICKNESS));
-		
+
 		JPanel BboxCalcButtonPanel = new JPanel();
 		BboxCalcButtonPanel.add(BboxCalcButton);
 		boundingBoxPanel.add(BboxCalcButtonPanel, GuiUtil.setConstraints(0,1,1.0,0.0,GridBagConstraints.HORIZONTAL,2,lmargin,0,BORDER_THICKNESS));
-		
+
 		tilingButtonGroup.add(noTilingRadioButton);
 		noTilingRadioButton.setIconTextGap(10);
 		tilingButtonGroup.add(automaticTilingRadioButton);
@@ -432,7 +433,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		filterContentPanel.add(tilingParentPanel);
 		filterContentPanel.add(Box.createRigidArea(new Dimension(0, BORDER_THICKNESS)));
 
-		
+
 		filterPanel = new JPanel();
 		filterPanel.setLayout(new BorderLayout());
 		filterPanel.setBorder(BorderFactory.createTitledBorder(""));
@@ -489,15 +490,15 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		displayAsPanel.add(colladaVisibleFromText, GuiUtil.setConstraints(3,3,0.25,1.0,GridBagConstraints.BOTH,2,BORDER_THICKNESS,0,0));
 		displayAsPanel.add(pixelsColladaLabel, GuiUtil.setConstraints(4,3,0.0,1.0,GridBagConstraints.BOTH,2,BORDER_THICKNESS,0,BORDER_THICKNESS));
 
-		//displayAsPanel.add(themeLabel, GuiUtil.setConstraints(0,4,0.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,32,BORDER_THICKNESS,0));
-		//		themeComboBox.setMinimumSize(new Dimension(80, (int)themeComboBox.getPreferredSize().getHeight()));
-		//		themeComboBox.setPreferredSize(new Dimension(80, (int)fetchThemesButton.getPreferredSize().getHeight()));
+		displayAsPanel.add(themeLabel, GuiUtil.setConstraints(0,4,0.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,32,BORDER_THICKNESS,0));
+		// themeComboBox.setMinimumSize(new Dimension(80, (int)themeComboBox.getPreferredSize().getHeight()));
+		// themeComboBox.setPreferredSize(new Dimension(80, (int)fetchThemesButton.getPreferredSize().getHeight()));
 		GridBagConstraints tcb = GuiUtil.setConstraints(1,4,1.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,0);
 		tcb.gridwidth = 1;
-		//displayAsPanel.add(themeComboBox, tcb);
-		//GridBagConstraints fb = GuiUtil.setConstraints(2,4,0.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS);
-		//fb.gridwidth = 3;
-		//displayAsPanel.add(fetchThemesButton, fb);
+		displayAsPanel.add(themeComboBox, tcb);
+		GridBagConstraints fb = GuiUtil.setConstraints(2,4,0.0,1.0,GridBagConstraints.BOTH,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS,BORDER_THICKNESS);
+		fb.gridwidth = 3;
+		displayAsPanel.add(fetchThemesButton, fb);
 
 
 		JPanel exportAndDisplayPanel = new JPanel();
@@ -562,8 +563,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 		JPanel exportButtonPanel = new JPanel();
 		exportButtonPanel.add(exportButton);
-		
-		
+
+
 
 
 
@@ -1008,19 +1009,19 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				thread.start();
 			}
 		});
-		
-		
-		
-		
+
+
+
+
 		BboxCalcButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Thread thread = new Thread() {
 					public void run() {
-						
+
 						try {
-						
+
 							doCalculation();
-						
+
 						} catch (Exception e) {
 							Logger.getInstance().error(e.toString());
 						}
@@ -1030,8 +1031,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				thread.start();
 			}
 		});
-		
-		
+
+
 
 		browseButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -1082,6 +1083,16 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			}
 		});
 
+		fetchThemesButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				ThemeUpdater themeUpdater = new ThemeUpdater();
+				themeUpdater.setDaemon(true);
+				themeUpdater.start();
+
+			}
+		});
+
 
 	}
 
@@ -1095,7 +1106,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 		Internal intConfig = config.getInternal();		
 
-		
+
 		// build list of import files
 		LOG.info("Creating list of CityGML files to be imported...");	
 		DirectoryScanner directoryScanner = new DirectoryScanner(true);
@@ -1141,7 +1152,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 		while (fileCounter < importFiles.size()) {
 			// check whether we reached the counter limit
-			
+
 			try {
 
 				file = importFiles.get(fileCounter++);
@@ -1163,18 +1174,18 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			}
 			catch(Exception ex)
 			{
-				
+
 				LOG.error(ex.toString());
-				
+
 			}
 		}
-		
+
 		return file;
 
 	}
 
-	
-	
+
+
 	private void doCalculation() throws Exception{
 
 		if (srsField.getText().equals("")) {
@@ -1182,14 +1193,14 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 					Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.epsg"));
 			return;
 		}
-		
+
 		try {
 
 			setSettings();
 			ExportFilterConfig filter = config.getProject().getCityKmlExporter().getFilter();
 			Internal intConfig = config.getInternal();		
 
-				
+
 			DirectoryScanner directoryScanner = new DirectoryScanner(true);
 			directoryScanner.addFilenameFilter(new CityGMLFilenameFilter());		
 			List<File> importFiles = directoryScanner.getFiles(intConfig.getImportFiles());
@@ -1201,9 +1212,9 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				String TargetSrs = (boundingBoxSrs != 4326 && !srsField.getText().equals("")) ? srsField.getText() : "4326";
 				LOG.info("Calculating the bounding box (EPSG:"+TargetSrs+") ...");
 				bboxComponent.setBoundingBox(BoundingBox.BboxCalculator(jaxbBuilder, _mfile, srsField.getText(), TargetSrs));
-				
+
 			}
-		
+
 		}
 		catch(Exception ex)
 		{
@@ -1215,10 +1226,10 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		}
 	}
 
-	
+
 	private void doExport() throws Exception {
 
-		
+
 		final ReentrantLock lock = this.mainLock;
 		lock.lock();
 
@@ -1235,13 +1246,13 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 						Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.import"));
 				return;
 			}
-			
+
 			if (config.getInternal().getExportFileName().trim().equals("")) {
 				mainView.errorMessage(Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData"), 
 						Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.export"));
 				return;
 			}
-			
+
 			if (srsField.getText().equals("")) {
 				mainView.errorMessage(Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData"), 
 						Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.epsg"));
@@ -1281,7 +1292,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			if (filter.isSetComplexFilter() &&
 					filter.getComplexFilter().getTiledBoundingBox().isSet()) {
 
-				
+
 				Double xMin = filter.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getX();
 				Double yMin = filter.getComplexFilter().getTiledBoundingBox().getLowerLeftCorner().getY();
 				Double xMax = filter.getComplexFilter().getTiledBoundingBox().getUpperRightCorner().getX();
@@ -1293,8 +1304,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 					return;
 				}
 			}
-			
-			
+
+
 			// Feature classes check
 			if (filter.isSetComplexFilter() &&
 					!filter.getComplexFilter().getFeatureClass().isSetBuilding() &&
@@ -1313,7 +1324,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 			int tileAmount = 1;
 			if (filter.isSetComplexFilter() &&
-				filter.getComplexFilter().getTiledBoundingBox().isSet()) {
+					filter.getComplexFilter().getTiledBoundingBox().isSet()) {
 				try {
 					tileAmount = CityKmlExporter.calculateRowsColumnsAndDelta();
 				}
@@ -1326,7 +1337,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 			tileAmount = tileAmount * activeDisplayFormsAmount;
 
 			mainView.setStatusText(Internal.I18N.getString("main.status.kmlExport.label"));
-			
+
 			final ExportStatusDialog exportDialog = new ExportStatusDialog(mainView, 
 					Internal.I18N.getString("kmlExport.dialog.window"),
 					Internal.I18N.getString("export.dialog.msg"),
@@ -1353,8 +1364,8 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				}
 			});
 
-			
-			
+
+
 			//Start reading the input file
 			LOG.info("Start reading the input file...");
 			File _Reader = doImport();
@@ -1365,7 +1376,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 				mainView.setStatusText(Internal.I18N.getString("main.status.ready.label"));
 
 				boolean success = false;
-				
+
 				try {
 
 					success = CityKmlExporter.doProcess(jaxbBuilder,_Reader);
@@ -1428,7 +1439,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 
 		bboxComponent.setEnabled(boundingBoxRadioButton.isSelected());
 		BboxCalcButton.setEnabled(boundingBoxRadioButton.isSelected());
-		
+
 		DefaultTreeCheckingModel model = (DefaultTreeCheckingModel)fcTree.getCheckingModel();
 		model.setPathEnabled(new TreePath(cityObject), boundingBoxRadioButton.isSelected());
 		model.setPathEnabled(new TreePath(new Object[]{cityObject, building}), boundingBoxRadioButton.isSelected());
@@ -1482,6 +1493,7 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		pixelsColladaLabel.setEnabled(boundingBoxRadioButton.isSelected() && colladaCheckbox.isEnabled() && colladaCheckbox.isSelected());
 
 		themeLabel.setEnabled(colladaCheckbox.isEnabled() && colladaCheckbox.isSelected());
+		themeComboBox.setEnabled(colladaCheckbox.isEnabled() && colladaCheckbox.isSelected());
 		fetchThemesButton.setEnabled(colladaCheckbox.isEnabled() && colladaCheckbox.isSelected());
 
 		fcTree.getCheckingModel().setPathEnabled(new TreePath(building.getPath()), boundingBoxRadioButton.isSelected() && (lodComboBox.getSelectedIndex() > 0));
@@ -1572,6 +1584,44 @@ public class CityKmlExportPanel extends JPanel implements EventHandler {
 		config.getProject().getImporter().getPath().setLastUsedPath(chooser.getCurrentDirectory().getAbsolutePath());
 	}
 
+	//fetch theme from selected dataset by preprocessing
+	private class ThemeUpdater extends Thread {
+		
+		public void run() {
+			
+			setSettings();
+			if (config.getInternal().getImportFiles().length == 0) {
+				mainView.errorMessage(Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData"), 
+						Internal.I18N.getString("CityKmlExport.dialog.error.incompleteData.import"));
+				return;
+			}
+			
+			Thread.currentThread().setName(this.getClass().getSimpleName());
+			fetchThemesButton.setEnabled(false);
+						
+			try {
+				
+				if (true) {
+					themeComboBox.removeAllItems();
+					themeComboBox.addItem(CityKmlExporter.THEME_NONE);
+					themeComboBox.setSelectedItem(CityKmlExporter.THEME_NONE);
+					LOG.info("Start fetching themes ...");
+					for (String theme: DSUtil.getAppearanceThemeList(config.getInternal().getImportFiles()[0])) {
+						if (theme == null) continue;
+						themeComboBox.addItem(theme);
+						if (theme.equals(config.getProject().getKmlExporter().getAppearanceTheme())) {
+							themeComboBox.setSelectedItem(theme);
+						}
+					}
+				}
+			}
+			catch (Exception e) { }
+			finally {
+				fetchThemesButton.setEnabled(true);
+				LOG.info("Appearance theme has been fetched!");
+			}
+		}
+	}
 
 
 	private final class DropCutCopyPasteHandler extends TransferHandler implements DropTargetListener {
