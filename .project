@@ -18,7 +18,7 @@
 		<link>
 			<name>base</name>
 			<type>2</type>
-			<location>C:/Users/Shahin/workspace/CityGMLConverter/build/base</location>
+			<locationURI>PROJECT_LOC/build/base</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
