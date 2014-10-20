@@ -76,6 +76,9 @@ import net.opengis.kml._2.StyleType;
 import net.opengis.kml._2.ViewRefreshModeEnumType;
 // import oracle.ord.im.OrdImage;
 
+
+
+
 import org.citygml4j.builder.jaxb.JAXBBuilder;
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
@@ -106,6 +109,7 @@ import de.tub.citydb.config.project.filter.TilingMode;
 import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.BalloonContentMode;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
 import  de.tub.citydb.modules.citykml.content.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
@@ -119,6 +123,7 @@ import de.tub.citydb.modules.common.event.StatusDialogTitle;
 import de.tub.citydb.modules.common.filter.ExportFilter;
 import de.tub.citydb.modules.common.filter.FilterMode;
 import de.tub.citydb.modules.citykml.concurrent.CityKmlExportWorkerFactory;
+import de.tub.citydb.modules.citykml.concurrent.DBImportXlinkWorkerFactory;
 import de.tub.citydb.modules.citykml.content.Building;
 import de.tub.citydb.modules.citykml.content.CityFurniture;
 import de.tub.citydb.modules.citykml.content.CityObjectGroup;
@@ -140,7 +145,8 @@ public class CityKmlExporter implements EventHandler {
 	private final JAXBContext jaxbColladaContext;
 	private final Config config;
 	private final EventDispatcher eventDispatcher;
-
+	private WorkerPool<DBXlink> tmpXlinkPool;
+	private WorkerPool<DBXlink> xlinkResolverPool;
 	private CityGMLFactory cityGMLFactory; 
 	private ObjectFactory kmlFactory; 
 	private WorkerPool<KmlSplittingResult> kmlWorkerPool;
@@ -221,6 +227,7 @@ public class CityKmlExporter implements EventHandler {
 		// worker pool settings
 		int minThreads = system.getThreadPool().getDefaultPool().getMinThreads();
 		int maxThreads = system.getThreadPool().getDefaultPool().getMaxThreads();
+		int queueSize = maxThreads * 2;
 
 		// adding listener
 		eventDispatcher.addEventHandler(EventType.COUNTER, this);
@@ -375,12 +382,22 @@ public class CityKmlExporter implements EventHandler {
 							return false;
 						}
 
+						
+						// this pool is for registering xlinks
+						tmpXlinkPool = new WorkerPool<DBXlink>(
+								minThreads,
+								maxThreads,
+								new DBImportXlinkWorkerFactory(config, eventDispatcher),
+								queueSize,
+								false);
+						
 						// create worker pools
 						// here we have an open issue: queue sizes are fix...
 						ioWriterPool = new SingleWorkerPool<SAXEventBuffer>(
 								new IOWriterWorkerFactory(saxWriter),
 								100,
 								true);
+						
 
 						kmlWorkerPool = new WorkerPool<KmlSplittingResult>(
 								minThreads,
@@ -389,12 +406,16 @@ public class CityKmlExporter implements EventHandler {
 										jaxbKmlContext,
 										jaxbColladaContext,
 										ioWriterPool,
+										tmpXlinkPool,
 										kmlFactory,
 										cityGMLFactory,
 										config,
 										eventDispatcher),
 										300,
 										false);
+						
+						
+						
 
 						// prestart pool workers
 						ioWriterPool.prestartCoreWorkers();
@@ -473,8 +494,8 @@ public class CityKmlExporter implements EventHandler {
 										addStyle(displayForm, type);
 								}
 							}
-
 							ioWriterPool.shutdownAndWait();
+						
 						} catch (InterruptedException e) {
 							System.out.println(e.getMessage());
 						} catch (JAXBException jaxBE) {

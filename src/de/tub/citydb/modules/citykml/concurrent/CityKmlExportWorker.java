@@ -55,6 +55,8 @@ import de.tub.citydb.config.project.CitykmlExporter.BalloonContentMode;
 import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
+import de.tub.citydb.modules.citykml.common.xlink.importer.DBXlinkImporterManager;
 import de.tub.citydb.modules.citykml.content.BalloonTemplateHandlerImpl;
 import de.tub.citydb.modules.citykml.content.Building;
 import de.tub.citydb.modules.citykml.content.CityFurniture;
@@ -78,6 +80,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 	private volatile boolean shouldRun = true;
 	private ReentrantLock runLock = new ReentrantLock();
 	private WorkQueue<KmlSplittingResult> workQueue = null;
+	private WorkerPool<DBXlink> tmpXlinkPool;
 	private KmlSplittingResult firstWork;
 	private Thread workerThread = null;
 
@@ -90,6 +93,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 	private Connection connection;
 	private ExportFilterConfig filterConfig;
 	private KmlExporterManager kmlExporterManager;
+	private DBXlinkImporterManager dbXlinkImporterManager;
 
 	private KmlGenericObject singleObject = null;
 
@@ -103,6 +107,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 	public CityKmlExportWorker(JAXBContext jaxbKmlContext,
 			JAXBContext jaxbColladaContext,
 			WorkerPool<SAXEventBuffer> ioWriterPool,
+			WorkerPool<DBXlink> tmpXlinkPool,
 			ObjectFactory kmlFactory,
 			CityGMLFactory cityGMLFactory,
 			Config config,
@@ -124,6 +129,8 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 													ioWriterPool,
 													kmlFactory,
 													config);
+		
+		dbXlinkImporterManager = new DBXlinkImporterManager(tmpXlinkPool, eventDispatcher);
 
 		elevationServiceHandler = new ElevationServiceHandler();
 
@@ -301,6 +308,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					
 					singleObject = new Building(connection,
 												kmlExporterManager,
+												dbXlinkImporterManager,
 												cityGMLFactory,
 												kmlFactory,
 												elevationServiceHandler,

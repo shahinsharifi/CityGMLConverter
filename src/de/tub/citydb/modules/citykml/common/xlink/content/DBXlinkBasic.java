@@ -34,20 +34,20 @@ import de.tub.citydb.modules.citykml.content.TableEnum;
 
 
 public class DBXlinkBasic implements DBXlink {
-	private long id;
+	private String id;
 	private TableEnum fromTable;
 	private String gmlId;
 	private TableEnum toTable;
 	private String attrName;
 
-	public DBXlinkBasic(long id, TableEnum fromTable, String gmlId, TableEnum toTable) {
+	public DBXlinkBasic(String id,TableEnum fromTable, String gmlId, TableEnum toTable) {
 		this.id = id;
 		this.fromTable = fromTable;
 		this.gmlId = gmlId;
 		this.toTable = toTable;
 	}
 
-	public long getId() {
+	public String getId() {
 		return id;
 	}
 
@@ -67,7 +67,7 @@ public class DBXlinkBasic implements DBXlink {
 		this.toTable = toTable;
 	}
 
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

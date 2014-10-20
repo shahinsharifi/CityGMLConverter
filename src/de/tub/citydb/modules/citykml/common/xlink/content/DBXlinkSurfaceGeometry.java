@@ -17,7 +17,7 @@
  * GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program. If not, see 
+ * License aString with this program. If not, see 
  * <http://www.gnu.org/licenses/>.
  * 
  * The development of the 3D City Database Importer/Exporter has 
@@ -30,13 +30,13 @@
 package de.tub.citydb.modules.citykml.common.xlink.content;
 
 public class DBXlinkSurfaceGeometry implements DBXlink {
-	private long id;
-	private long parentId;
-	private long rootId;
+	private String id;
+	private String parentId;
+	private String rootId;
 	private boolean reverse;
 	private String gmlId;
 
-	public DBXlinkSurfaceGeometry(long id, long parentId, long rootId, boolean reverse, String gmlId) {
+	public DBXlinkSurfaceGeometry(String id, String parentId, String rootId, boolean reverse, String gmlId) {
 		this.id = id;
 		this.parentId = parentId;
 		this.rootId = rootId;
@@ -44,27 +44,27 @@ public class DBXlinkSurfaceGeometry implements DBXlink {
 		this.gmlId = gmlId;
 	}
 
-	public long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
-	public long getParentId() {
+	public String getParentId() {
 		return parentId;
 	}
 
-	public void setParentId(long parentId) {
+	public void setParentId(String parentId) {
 		this.parentId = parentId;
 	}
 
-	public long getRootId() {
+	public String getRootId() {
 		return rootId;
 	}
 
-	public void setRootId(long rootId) {
+	public void setRootId(String rootId) {
 		this.rootId = rootId;
 	}
 

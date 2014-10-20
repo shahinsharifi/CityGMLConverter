@@ -29,73 +29,25 @@
  */
 package de.tub.citydb.modules.citykml.concurrent;
 
-import java.sql.SQLException;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import javax.xml.bind.JAXBContext;
-
-import net.opengis.kml._2.ObjectFactory;
-
-import org.citygml4j.factory.CityGMLFactory;
-import org.citygml4j.util.xml.SAXEventBuffer;
-
 import de.tub.citydb.api.concurrent.Worker;
 import de.tub.citydb.api.concurrent.WorkerFactory;
-import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
-import de.tub.citydb.modules.citykml.content.ColladaBundle;
-import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
 
-public class CityKmlExportWorkerFactory implements WorkerFactory<KmlSplittingResult> {
-	private final JAXBContext jaxbKmlContext;
-	private final JAXBContext jaxbColladaContext;
-	private final WorkerPool<SAXEventBuffer> ioWriterPool;
-	private WorkerPool<DBXlink> tmpXlinkPool;
-	private final ObjectFactory kmlFactory;
-	private final CityGMLFactory cityGMLFactory;
+
+public class DBImportXlinkWorkerFactory implements WorkerFactory<DBXlink> {
+
 	private final Config config;
 	private final EventDispatcher eventDispatcher;
 
-	public CityKmlExportWorkerFactory(
-			JAXBContext jaxbKmlContext,
-			JAXBContext jaxbColladaContext,			
-			WorkerPool<SAXEventBuffer> ioWriterPool,
-			WorkerPool<DBXlink> tmpXlinkPool,
-			ObjectFactory kmlFactory,
-			CityGMLFactory cityGMLFactory,
-			Config config,
-			EventDispatcher eventDispatcher) {
-		this.jaxbKmlContext = jaxbKmlContext;
-		this.jaxbColladaContext = jaxbColladaContext;
-		this.tmpXlinkPool = tmpXlinkPool;
-		this.ioWriterPool = ioWriterPool;
-		this.kmlFactory = kmlFactory;
-		this.cityGMLFactory = cityGMLFactory;
+	public DBImportXlinkWorkerFactory(Config config, EventDispatcher eventDispatcher) {
 		this.config = config;
 		this.eventDispatcher = eventDispatcher;
 	}
 
 	@Override
-	public Worker<KmlSplittingResult> createWorker() {
-		CityKmlExportWorker kmlWorker = null;
-
-		try {
-			kmlWorker = new CityKmlExportWorker(
-					jaxbKmlContext,
-					jaxbColladaContext,
-					ioWriterPool,
-					tmpXlinkPool,
-					kmlFactory,
-					cityGMLFactory,
-					config,
-					eventDispatcher);
-		} catch (SQLException sqlEx) {
-			// could not instantiate DBWorker
-		}
-
-		return kmlWorker;
+	public Worker<DBXlink> createWorker() {
+		return new DBImportXlinkWorker(config, eventDispatcher);
 	}
-
 }

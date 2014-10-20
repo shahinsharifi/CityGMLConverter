@@ -124,6 +124,8 @@ import de.tub.citydb.config.Config;
 import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkBasic;
+import de.tub.citydb.modules.citykml.common.xlink.importer.DBXlinkImporterManager;
 import  de.tub.citydb.modules.citykml.content.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.content.BalloonTemplateHandlerImpl;
@@ -140,11 +142,14 @@ import de.tub.citydb.util.Util;
 public class Building extends KmlGenericObject{
 
 	public static final String STYLE_BASIS_NAME = ""; // "Building"
-	//private List<List<Double>> _pointList = new ArrayList<List<Double>>();
+	private DBXlinkImporterManager dbXlinkImporterManager;
 	private List<BuildingSurface> _ParentSurfaceList = new ArrayList<BuildingSurface>();
+	
+	
 
 	public Building(Connection connection,
 			KmlExporterManager kmlExporterManager,
+			DBXlinkImporterManager dbXlinkImporterManager,
 			CityGMLFactory cityGMLFactory,
 			net.opengis.kml._2.ObjectFactory kmlFactory,
 			ElevationServiceHandler elevationServiceHandler,
@@ -160,6 +165,8 @@ public class Building extends KmlGenericObject{
 				balloonTemplateHandler,
 				eventDispatcher,
 				config);
+		
+		this.dbXlinkImporterManager = dbXlinkImporterManager;
 	}
 
 	protected List<DisplayForm> getDisplayForms() {
@@ -497,7 +504,7 @@ public class Building extends KmlGenericObject{
 	public List<BuildingSurface> GetBuildingGeometries(AbstractBuilding _building) throws Exception
 	{
 		List<BuildingSurface> _SurfaceList = new ArrayList<BuildingSurface>();
-		SurfaceGeometry surfaceGeom = new SurfaceGeometry();		
+		SurfaceGeometry surfaceGeom = new SurfaceGeometry(dbXlinkImporterManager);		
 		String _SurfaceType = "undefined";
 
 
@@ -540,7 +547,26 @@ public class Building extends KmlGenericObject{
 						counter++;
 					}
 
-				} 
+				}else{
+					
+					// xlink
+					String href = solidProperty.getHref();
+
+					if (href != null && href.length() != 0) {
+						DBXlinkBasic xlink = new DBXlinkBasic(
+								_building.getId(),
+								TableEnum.BUILDING,
+								href,
+								TableEnum.SURFACE_GEOMETRY
+						);
+
+						xlink.setAttrName("LOD" + lod + "_GEOMETRY_ID");
+						dbXlinkImporterManager.propagateXlink(xlink);
+					}
+					
+				}
+				
+				
 			}
 
 		}

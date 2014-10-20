@@ -64,7 +64,11 @@ import org.citygml4j.model.gml.geometry.primitives.Triangle;
 import org.citygml4j.model.gml.geometry.primitives.TrianglePatchArrayProperty;
 import org.citygml4j.model.gml.geometry.primitives.TriangulatedSurface;
 import org.citygml4j.util.gmlid.DefaultGMLIdManager;
+
+import de.tub.citydb.config.Config;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkSurfaceGeometry;
+import de.tub.citydb.modules.citykml.common.xlink.importer.DBXlinkImporterManager;
 import de.tub.citydb.util.Util;
 
 public class SurfaceGeometry {
@@ -73,10 +77,11 @@ public class SurfaceGeometry {
 	private final Logger LOG = Logger.getInstance();
 	private List<Map<String, Object>> _SurfaceList = new ArrayList<Map<String,Object>>();
 	private List<String> _SurfaceGmlId = new ArrayList<String>();
+	private DBXlinkImporterManager dbXlinkImporterManager;
 	
-	public SurfaceGeometry() {
+	public SurfaceGeometry(DBXlinkImporterManager dbXlinkImporterManager) {
 			
-	
+		this.dbXlinkImporterManager = dbXlinkImporterManager;
 	}
 	
 	public void SetSurfaceID(String _SurfaceId)
@@ -331,8 +336,18 @@ public class SurfaceGeometry {
 					String href = surfaceProperty.getHref();
 
 					if (href != null && href.length() != 0) {
-						 
-					}
+						DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+								surfaceGeometry.getId(),
+								surfaceGeometry.getId(),
+								surfaceGeometry.getId(),
+								reverse,
+								href
+								);
+
+							
+								dbXlinkImporterManager.propagateXlink(xlink);
+							
+					};
 
 					mapping = href.replaceAll("^#", "");
 				}

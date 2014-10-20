@@ -81,7 +81,7 @@ public class KmlSplitter {
 
 	private static HashSet<CityGMLClass> CURRENTLY_ALLOWED_CITY_OBJECT_TYPES = new HashSet<CityGMLClass>();
 
-	private final WorkerPool<KmlSplittingResult> dbWorkerPool;
+	private final WorkerPool<KmlSplittingResult> kmlWorkerPool;
 	private final DisplayForm displayForm;
 	private final ExportFilter exportFilter;
 	private final Config config;
@@ -103,7 +103,7 @@ public class KmlSplitter {
 			DisplayForm displayForm,
 			Config config) throws SQLException {
 
-		this.dbWorkerPool = dbWorkerPool;
+		this.kmlWorkerPool = dbWorkerPool;
 		this.exportFilter = exportFilter;
 		this.TargetSrs = _TargetSrs;
 		this.jaxbBuilder = jaxbBuilder;
@@ -317,7 +317,7 @@ public class KmlSplitter {
 							{
 								ElevationHelper elevation = new ElevationHelper(connection);								
 								KmlSplittingResult splitter = new KmlSplittingResult(cityObject.getId() ,_CityGML , cityObjectType, displayForm, TargetSrs , tmpAppearanceList , elevation);										
-								dbWorkerPool.addWork(splitter);					
+								kmlWorkerPool.addWork(splitter);					
 							}
 							else {
 								Logger.getInstance().error("BoundingBox can not be calculated for the object: " + cityObject.getId());
@@ -346,7 +346,7 @@ public class KmlSplitter {
 
 				try {
 
-					dbWorkerPool.join();
+					kmlWorkerPool.join();
 				}
 				catch (InterruptedException e) {}
 			}
