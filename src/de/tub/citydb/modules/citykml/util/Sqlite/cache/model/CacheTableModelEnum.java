@@ -27,31 +27,31 @@
  * virtualcitySYSTEMS GmbH, Berlin <http://www.virtualcitysystems.de/>
  * Berlin Senate of Business, Technology and Women <http://www.berlin.de/sen/wtf/>
  */
-package de.tub.citydb.modules.citykml.concurrent;
+package de.tub.citydb.modules.citykml.util.Sqlite.cache.model;
 
-import de.tub.citydb.api.concurrent.Worker;
-import de.tub.citydb.api.concurrent.WorkerFactory;
-import de.tub.citydb.api.event.EventDispatcher;
-import de.tub.citydb.config.Config;
-import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
-import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
-import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
+public enum CacheTableModelEnum {
+	// provide a unique id for the tmp table
+	// that does not extend 6 chars!
+	GMLID_FEATURE("IDF"),
+	GMLID_GEOMETRY("IDG"),
+	SURFACE_GEOMETRY("SG"),
+	LINEAR_RING("LR"),
+	BASIC("BA"),
+	TEXTUREPARAM("TP"),
+	TEXTUREASSOCIATION("TA"),
+	TEXTURE_FILE("TF"),
+	LIBRARY_OBJECT("LO"),
+	DEPRECATED_MATERIAL("DP"),
+	GROUP_TO_CITYOBJECT("GTC"),
+	GLOBAL_APPEARANCE("GA");
 
+	private final String value;
 
-public class DBImportXlinkWorkerFactory implements WorkerFactory<DBXlink> {
+	CacheTableModelEnum(String v) {
+        value = v;
+    }
 
-	private final Config config;
-	private final EventDispatcher eventDispatcher;
-	private final CacheManager dbTempTableManager;
-
-	public DBImportXlinkWorkerFactory(CacheManager dbTempTableManager,Config config, EventDispatcher eventDispatcher) {
-		this.config = config;
-		this.eventDispatcher = eventDispatcher;
-		this.dbTempTableManager = dbTempTableManager;
-	}
-
-	@Override
-	public Worker<DBXlink> createWorker() {
-		return new DBImportXlinkWorker(dbTempTableManager,config, eventDispatcher);
-	}
+    public String value() {
+        return value;
+    }
 }

@@ -61,6 +61,7 @@ import org.postgis.Geometry;
 import org.postgis.PGgeometry;
 
 
+
 import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.api.database.DatabaseSrs;
 import de.tub.citydb.api.gui.BoundingBox;
@@ -72,7 +73,7 @@ import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.common.filter.ExportFilter;
 import de.tub.citydb.modules.citykml.util.ElevationHelper;
-import de.tub.citydb.modules.citykml.util.SQLiteFactory;
+import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
 import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
 import de.tub.citydb.modules.citykml.content.Queries;
 
@@ -265,7 +266,7 @@ public class KmlSplitter {
 
 				// prepare zOffSet Object
 				SQLiteFactory factory = new SQLiteFactory("Elevation.db",  file.getParent() , "org.sqlite.JDBC");
-				Connection connection = factory.createConnection();
+				connection = factory.createConnection();
 				
 				
 				

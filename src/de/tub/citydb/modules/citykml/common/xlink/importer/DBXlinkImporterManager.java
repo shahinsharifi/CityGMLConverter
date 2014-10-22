@@ -37,29 +37,30 @@ import de.tub.citydb.api.event.Event;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
-//import de.tub.citydb.modules.citygml.common.database.cache.CacheManager;
-//import de.tub.citydb.modules.citygml.common.database.cache.TemporaryCacheTable;
-//import de.tub.citydb.modules.citygml.common.database.cache.model.CacheTableModelEnum;
+import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.TemporaryCacheTable;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.model.CacheTableModelEnum;
 
 
 public class DBXlinkImporterManager {
-	//private final CacheManager dbTempTableManager;
+	private final CacheManager dbTempTableManager;
 	private final EventDispatcher eventDispatcher;
-	//private HashMap<DBXlinkImporterEnum, DBXlinkImporter> dbImporterMap;
-	private final WorkerPool<DBXlink> tmpXlinkPool;
+	private HashMap<DBXlinkImporterEnum, DBXlinkImporter> dbImporterMap;
+
 	
 
-	public DBXlinkImporterManager(WorkerPool<DBXlink> tmpXlinkPool,EventDispatcher eventDispatcher) {
-	//	this.dbTempTableManager = dbTempTableManager;
+	public DBXlinkImporterManager(CacheManager dbTempTableManager,EventDispatcher eventDispatcher) {
+		this.dbTempTableManager = dbTempTableManager;
 		this.eventDispatcher = eventDispatcher;
-		this.tmpXlinkPool = tmpXlinkPool;
-		//dbImporterMap = new HashMap<DBXlinkImporterEnum, DBXlinkImporter>();
+		
+		dbImporterMap = new HashMap<DBXlinkImporterEnum, DBXlinkImporter>();
 	}
 
 	public DBXlinkImporter getDBImporterXlink(DBXlinkImporterEnum xlinkType) throws SQLException {
-	//	DBXlinkImporter dbImporter = dbImporterMap.get(xlinkType);
+		DBXlinkImporter dbImporter = dbImporterMap.get(xlinkType);
 
-		/*if (dbImporter == null) {
+		if (dbImporter == null) {
 			// firstly create tmp table
 			TemporaryCacheTable tempTable = null;
 
@@ -67,7 +68,7 @@ public class DBXlinkImporterManager {
 			case SURFACE_GEOMETRY:
 				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.SURFACE_GEOMETRY);
 				break;
-			case LINEAR_RING:
+			/*case LINEAR_RING:
 				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.LINEAR_RING);
 				break;
 			case XLINK_BASIC:
@@ -90,7 +91,7 @@ public class DBXlinkImporterManager {
 				break;
 			case GROUP_TO_CITYOBJECT:
 				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.GROUP_TO_CITYOBJECT);
-				break;
+				break;*/
 			}
 
 			if (tempTable != null) {
@@ -99,7 +100,7 @@ public class DBXlinkImporterManager {
 				case SURFACE_GEOMETRY:
 					dbImporter = new DBXlinkImporterSurfaceGeometry(tempTable);
 					break;
-				case LINEAR_RING:
+				/*case LINEAR_RING:
 					dbImporter = new DBXlinkImporterLinearRing(tempTable);
 					break;
 				case XLINK_BASIC:
@@ -122,22 +123,17 @@ public class DBXlinkImporterManager {
 					break;
 				case GROUP_TO_CITYOBJECT:
 					dbImporter = new DBXlinkImporterGroupToCityObject(tempTable);
-					break;
+					break;*/
 				}
 
 				if (dbImporter != null)
 					dbImporterMap.put(xlinkType, dbImporter);
 			}
-		}*/
+		}
 
-		return null;
+		return dbImporter;
 	}
 	
-	public void propagateXlink(DBXlink xlink) {
-
-			tmpXlinkPool.addWork(xlink);						
-	}
-
 	public void propagateEvent(Event event) {
 	//	eventDispatcher.triggerEvent(event);
 	}

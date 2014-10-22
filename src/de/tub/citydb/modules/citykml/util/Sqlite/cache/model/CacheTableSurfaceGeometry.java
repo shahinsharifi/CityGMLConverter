@@ -27,31 +27,54 @@
  * virtualcitySYSTEMS GmbH, Berlin <http://www.virtualcitysystems.de/>
  * Berlin Senate of Business, Technology and Women <http://www.berlin.de/sen/wtf/>
  */
-package de.tub.citydb.modules.citykml.concurrent;
+package de.tub.citydb.modules.citykml.util.Sqlite.cache.model;
 
-import de.tub.citydb.api.concurrent.Worker;
-import de.tub.citydb.api.concurrent.WorkerFactory;
-import de.tub.citydb.api.event.EventDispatcher;
-import de.tub.citydb.config.Config;
-import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
-import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
-import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 
-public class DBImportXlinkWorkerFactory implements WorkerFactory<DBXlink> {
-
-	private final Config config;
-	private final EventDispatcher eventDispatcher;
-	private final CacheManager dbTempTableManager;
-
-	public DBImportXlinkWorkerFactory(CacheManager dbTempTableManager,Config config, EventDispatcher eventDispatcher) {
-		this.config = config;
-		this.eventDispatcher = eventDispatcher;
-		this.dbTempTableManager = dbTempTableManager;
+public class CacheTableSurfaceGeometry extends CacheTableModel {
+	public static CacheTableSurfaceGeometry instance = null;
+	
+	private CacheTableSurfaceGeometry() {		
+	}
+	
+	public synchronized static CacheTableSurfaceGeometry getInstance() {
+		if (instance == null)
+			instance = new CacheTableSurfaceGeometry();
+		
+		return instance;
 	}
 
 	@Override
-	public Worker<DBXlink> createWorker() {
-		return new DBImportXlinkWorker(dbTempTableManager,config, eventDispatcher);
+	public void createIndexes(Connection conn, String tableName, String properties) throws SQLException {
+		Statement stmt = null;
+
+		try {
+			stmt = conn.createStatement();
+			
+			stmt.executeUpdate("create index idx_" + tableName + " on " + tableName + " (PARENT_ID) " + properties);
+		} finally {
+			if (stmt != null) {
+				stmt.close();
+				stmt = null;
+			}
+		}
 	}
+	
+	@Override
+	public CacheTableModelEnum getType() {
+		return CacheTableModelEnum.SURFACE_GEOMETRY;
+	}
+	
+	@Override
+	protected String getColumns() {
+		return "(ID VARCHAR(256)," +
+		"PARENT_ID VARCHAR(256), " +
+		"ROOT_ID VARCHAR(256), " +
+		"REVERSE NUMERIC(1,0), " +
+		"GMLID VARCHAR(256))";
+	}
+
 }

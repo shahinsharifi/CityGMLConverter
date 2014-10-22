@@ -36,7 +36,7 @@ import de.tub.citydb.api.database.DatabaseSrs;
 
 
 public class Internal {
-	public static final int POSTGRESQL_MAX_BATCH_SIZE = 10000;
+	public static final int Sqlite_MAX_BATCH_SIZE = 10000;
 //	public static final int ORACLE_MAX_BATCH_SIZE = 65535;
 // no such workspace for PostgreSQL
 //	public static final String ORACLE_DEFAULT_WORKSPACE = "LIVE";

@@ -61,7 +61,11 @@ import de.tub.citydb.modules.citygml.importer.database.xlink.importer.DBXlinkImp
 import de.tub.citydb.modules.citygml.importer.database.xlink.importer.DBXlinkImporterTextureFile;
 import de.tub.citydb.modules.citygml.importer.database.xlink.importer.DBXlinkImporterTextureParam;
 */
+import de.tub.citydb.modules.citykml.common.xlink.importer.DBXlinkImporterEnum;
 import de.tub.citydb.modules.citykml.common.xlink.importer.DBXlinkImporterManager;
+import de.tub.citydb.modules.citykml.common.xlink.importer.DBXlinkImporterSurfaceGeometry;
+import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
 public class DBImportXlinkWorker implements Worker<DBXlink> {
 	private final Logger LOG = Logger.getInstance();
 	
@@ -78,9 +82,9 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 	private int updateCounter = 0;
 	private int commitAfter = 1000;
 
-	public DBImportXlinkWorker(Config config, EventDispatcher eventDispatcher) {
+	public DBImportXlinkWorker(CacheManager dbTempTableManager,Config config, EventDispatcher eventDispatcher) {	
 		this.config = config;
-		//dbXlinkManager = new DBXlinkImporterManager(this, eventDispatcher);
+		dbXlinkManager = new DBXlinkImporterManager(dbTempTableManager , eventDispatcher);
 		
 		init();		
 	}
@@ -166,9 +170,9 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 		try {
 			try {
 				boolean success = false;
-				LOG.info("Shahin Message:" + work.getGmlId());
 
-				/*switch (work.getXlinkType()) {
+				switch (work.getXlinkType()) {
+				
 				case SURFACE_GEOMETRY:
 					DBXlinkSurfaceGeometry xlinkSurfaceGeometry = (DBXlinkSurfaceGeometry)work;
 
@@ -177,7 +181,8 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 						success = dbSurfaceGeometry.insert(xlinkSurfaceGeometry);
 
 					break;
-				case LINEAR_RING:
+					
+				/*case LINEAR_RING:
 					DBXlinkLinearRing xlinkLinearRing = (DBXlinkLinearRing)work;
 
 					DBXlinkImporterLinearRing dbLinearRing = (DBXlinkImporterLinearRing)dbXlinkManager.getDBImporterXlink(DBXlinkImporterEnum.LINEAR_RING);
@@ -240,8 +245,8 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 					if (dbGroup != null)
 						success = dbGroup.insert(xlinkGroupToCityObject);
 					
-					break;
-				}*/
+					break;*/
+				}
 
 				if (success)
 					updateCounter++;

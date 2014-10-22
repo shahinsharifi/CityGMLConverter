@@ -79,6 +79,10 @@ import net.opengis.kml._2.ViewRefreshModeEnumType;
 
 
 
+
+
+
+
 import org.citygml4j.builder.jaxb.JAXBBuilder;
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
 import org.citygml4j.builder.jaxb.xml.io.reader.JAXBChunkReader;
@@ -138,6 +142,9 @@ import de.tub.citydb.modules.citykml.content.Transportation;
 import de.tub.citydb.modules.citykml.content.WaterBody;
 import de.tub.citydb.modules.citykml.util.CityObject4JSON;
 import de.tub.citydb.modules.citykml.util.KMLHeaderWriter;
+import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.model.CacheTableModelEnum;
 
 
 public class CityKmlExporter implements EventHandler {
@@ -147,6 +154,7 @@ public class CityKmlExporter implements EventHandler {
 	private final EventDispatcher eventDispatcher;
 	private WorkerPool<DBXlink> tmpXlinkPool;
 	private WorkerPool<DBXlink> xlinkResolverPool;
+	private CacheManager cacheManager;
 	private CityGMLFactory cityGMLFactory; 
 	private ObjectFactory kmlFactory; 
 	private WorkerPool<KmlSplittingResult> kmlWorkerPool;
@@ -382,12 +390,14 @@ public class CityKmlExporter implements EventHandler {
 							return false;
 						}
 
+						SQLiteFactory sqliteFactory = new SQLiteFactory("TemporaryDbXlink.db",  file.getParent() , "org.sqlite.JDBC");
+						cacheManager = new CacheManager(sqliteFactory.getConnection(), maxThreads);
 						
 						// this pool is for registering xlinks
 						tmpXlinkPool = new WorkerPool<DBXlink>(
 								minThreads,
 								maxThreads,
-								new DBImportXlinkWorkerFactory(config, eventDispatcher),
+								new DBImportXlinkWorkerFactory(cacheManager, config, eventDispatcher),
 								queueSize,
 								false);
 						
@@ -574,6 +584,7 @@ public class CityKmlExporter implements EventHandler {
 						ioWriterPool = null;
 						kmlWorkerPool = null;
 						kmlSplitter = null;
+						sqliteFactory.KillConnection();
 
 					}
 /*

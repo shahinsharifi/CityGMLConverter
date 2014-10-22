@@ -27,7 +27,7 @@
  * virtualcitySYSTEMS GmbH, Berlin <http://www.virtualcitysystems.de/>
  * Berlin Senate of Business, Technology and Women <http://www.berlin.de/sen/wtf/>
  */
-package de.tub.citydb.modules.citykml.util;
+package de.tub.citydb.modules.citykml.util.Sqlite;
 
 
 import java.io.File;
@@ -46,20 +46,21 @@ public class SQLiteFactory {
 	private String dbName;
 	private String dbPath; 
 	private String DriverName;
-	private static Connection conn;
+	private final Connection conn;
 	
 	public SQLiteFactory(String dbName, String dbPath, String DriverName) throws Exception {
 		
 		this.dbName = dbName;
 		this.dbPath = dbPath;
 		this.DriverName = DriverName;
+		this.conn = createConnection();
 	}
 	
 	
 	
 	public Connection createConnection() {
 		
-		Connection conn = null;
+		Connection connection = null;
 		try {
 	        
 			// register the driver 
@@ -70,15 +71,20 @@ public class SQLiteFactory {
 	        String sDbUrl = sJdbc + ":" + dbPath +"\\"+ dbName;
 	        // which will produce a legitimate Url for SqlLite JDBC
 	        	 
-	        conn = DriverManager.getConnection(sDbUrl);
+	        connection = DriverManager.getConnection(sDbUrl);
 			        
 		} 
 	    catch (Exception e) {
 	    	    
 			LOG.error(e.toString());
 		}
-	    return conn;
+	    return connection;
 
+	}
+	
+	public Connection getConnection()
+	{	
+		return conn;
 	}
 	
 	

@@ -73,6 +73,7 @@ import de.tub.citydb.modules.citykml.content.Relief;
 import de.tub.citydb.modules.citykml.content.SolitaryVegetationObject;
 import de.tub.citydb.modules.citykml.content.Transportation;
 import de.tub.citydb.modules.citykml.content.WaterBody;
+import de.tub.citydb.modules.citykml.util.Sqlite.SqliteImporterManager;
 
 public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 
@@ -93,7 +94,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 	private Connection connection;
 	private ExportFilterConfig filterConfig;
 	private KmlExporterManager kmlExporterManager;
-	private DBXlinkImporterManager dbXlinkImporterManager;
+	private SqliteImporterManager sqliteImporterManager;
 
 	private KmlGenericObject singleObject = null;
 
@@ -118,19 +119,14 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 		this.eventDispatcher = eventDispatcher;
 
 
-		// try and change workspace if needed
-/*
-		Database database = config.getProject().getDatabase();
-		dbConnectionPool.gotoWorkspace(connection, 
-				database.getWorkspaces().getKmlExportWorkspace());
-*/
+
 		kmlExporterManager = new KmlExporterManager(jaxbKmlContext,
 													jaxbColladaContext,
 													ioWriterPool,
 													kmlFactory,
 													config);
 		
-		dbXlinkImporterManager = new DBXlinkImporterManager(tmpXlinkPool, eventDispatcher);
+		sqliteImporterManager = new SqliteImporterManager(tmpXlinkPool);
 
 		elevationServiceHandler = new ElevationServiceHandler();
 
@@ -304,11 +300,10 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 
 		try {
 			switch (featureClass) {
-				case BUILDING:
-					
+				case BUILDING:					
 					singleObject = new Building(connection,
 												kmlExporterManager,
-												dbXlinkImporterManager,
+												sqliteImporterManager,
 												cityGMLFactory,
 												kmlFactory,
 												elevationServiceHandler,
@@ -316,7 +311,7 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 												eventDispatcher,
 												config);
 					break;
-
+					
 				case WATER_BODY:
 				case WATER_CLOSURE_SURFACE:
 				case WATER_GROUND_SURFACE:
@@ -365,7 +360,6 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					break;
 
 				case GENERIC_CITY_OBJECT:
-					Logger.getInstance().info("CityObj");
 					singleObject = new GenericCityObject(connection,
 												   	   	 kmlExporterManager,
 												   	   	 cityGMLFactory,
@@ -383,7 +377,6 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 				case RAILWAY:
 				case ROAD:
 				case SQUARE:
-					Logger.getInstance().info("CityObj");
 					singleObject = new Transportation(connection,
 												   	  kmlExporterManager,
 												   	  cityGMLFactory,
@@ -394,12 +387,6 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 												   	  config);
 					break;
 
-/*
-				case RASTER_RELIEF:
-				case MASSPOINT_RELIEF:
-				case BREAKLINE_RELIEF:
-				case TIN_RELIEF:
-*/
 				case RELIEF_FEATURE:
 					singleObject = new Relief(connection,
 											  kmlExporterManager,
@@ -412,7 +399,6 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					break;
 
 				case CITY_FURNITURE:
-					Logger.getInstance().info("CityObj");
 					singleObject = new CityFurniture(connection,
 												   	 kmlExporterManager,
 												   	 cityGMLFactory,
@@ -424,8 +410,6 @@ public class CityKmlExportWorker implements Worker<KmlSplittingResult> {
 					break;
 
 				case CITY_OBJECT_GROUP:
-
-					Logger.getInstance().info("CityObj");
 					singleObject = new CityObjectGroup(connection,
 												   	   kmlExporterManager,
 												   	   cityGMLFactory,

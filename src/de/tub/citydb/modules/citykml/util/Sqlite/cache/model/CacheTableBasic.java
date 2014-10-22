@@ -27,31 +27,34 @@
  * virtualcitySYSTEMS GmbH, Berlin <http://www.virtualcitysystems.de/>
  * Berlin Senate of Business, Technology and Women <http://www.berlin.de/sen/wtf/>
  */
-package de.tub.citydb.modules.citykml.concurrent;
-
-import de.tub.citydb.api.concurrent.Worker;
-import de.tub.citydb.api.concurrent.WorkerFactory;
-import de.tub.citydb.api.event.EventDispatcher;
-import de.tub.citydb.config.Config;
-import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
-import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
-import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
+package de.tub.citydb.modules.citykml.util.Sqlite.cache.model;
 
 
-public class DBImportXlinkWorkerFactory implements WorkerFactory<DBXlink> {
 
-	private final Config config;
-	private final EventDispatcher eventDispatcher;
-	private final CacheManager dbTempTableManager;
+public class CacheTableBasic extends CacheTableModel {
+	public static CacheTableBasic instance = null;
 
-	public DBImportXlinkWorkerFactory(CacheManager dbTempTableManager,Config config, EventDispatcher eventDispatcher) {
-		this.config = config;
-		this.eventDispatcher = eventDispatcher;
-		this.dbTempTableManager = dbTempTableManager;
+	private CacheTableBasic() {		
+	}
+
+	public synchronized static CacheTableBasic getInstance() {
+		if (instance == null)
+			instance = new CacheTableBasic();
+
+		return instance;
 	}
 
 	@Override
-	public Worker<DBXlink> createWorker() {
-		return new DBImportXlinkWorker(dbTempTableManager,config, eventDispatcher);
+	public CacheTableModelEnum getType() {
+		return CacheTableModelEnum.BASIC;
 	}
+
+	@Override
+	protected String getColumns() {
+		return "(ID INTEGER, FROM_TABLE NUMERIC(3), " +
+				"GMLID VARCHAR(256), " +
+				"TO_TABLE NUMERIC(3), " +
+				"ATTRNAME VARCHAR(50))";
+	}
+
 }

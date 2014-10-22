@@ -27,31 +27,50 @@
  * virtualcitySYSTEMS GmbH, Berlin <http://www.virtualcitysystems.de/>
  * Berlin Senate of Business, Technology and Women <http://www.berlin.de/sen/wtf/>
  */
-package de.tub.citydb.modules.citykml.concurrent;
+package de.tub.citydb.modules.citykml.util.Sqlite.cache.model;
 
-import de.tub.citydb.api.concurrent.Worker;
-import de.tub.citydb.api.concurrent.WorkerFactory;
-import de.tub.citydb.api.event.EventDispatcher;
-import de.tub.citydb.config.Config;
-import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
-import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
-import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 
-public class DBImportXlinkWorkerFactory implements WorkerFactory<DBXlink> {
+public class CacheTableGlobalAppearance extends CacheTableModel {
+	private static CacheTableGlobalAppearance instance;
 
-	private final Config config;
-	private final EventDispatcher eventDispatcher;
-	private final CacheManager dbTempTableManager;
+	private CacheTableGlobalAppearance() {
+	}
 
-	public DBImportXlinkWorkerFactory(CacheManager dbTempTableManager,Config config, EventDispatcher eventDispatcher) {
-		this.config = config;
-		this.eventDispatcher = eventDispatcher;
-		this.dbTempTableManager = dbTempTableManager;
+	public synchronized static CacheTableGlobalAppearance getInstance() {
+		if (instance == null)
+			instance = new CacheTableGlobalAppearance();
+
+		return instance;
 	}
 
 	@Override
-	public Worker<DBXlink> createWorker() {
-		return new DBImportXlinkWorker(dbTempTableManager,config, eventDispatcher);
+	public void createIndexes(Connection conn, String tableName, String properties) throws SQLException {
+		Statement stmt = null;
+
+		try {
+			stmt = conn.createStatement();
+
+			stmt.executeUpdate("create unique index idx_" + tableName + " on " + tableName + " (ID) " + properties);
+		} finally {
+			if (stmt != null) {
+				stmt.close();
+				stmt = null;
+			}
+		}
+	}
+
+	@Override
+	public CacheTableModelEnum getType() {
+		return CacheTableModelEnum.GLOBAL_APPEARANCE;
+	}
+
+	@Override
+	protected String getColumns() {
+		return "(GMLID VARCHAR(256), " +
+		"ID INTEGER)";
 	}
 }
