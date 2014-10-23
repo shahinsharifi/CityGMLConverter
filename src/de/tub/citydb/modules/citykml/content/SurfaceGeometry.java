@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.citygml4j.model.citygml.CityGMLClass;
 import org.citygml4j.model.citygml.building.AbstractBoundarySurface;
 import org.citygml4j.model.citygml.building.AbstractBuilding;
 import org.citygml4j.model.citygml.building.BoundarySurfaceProperty;
@@ -64,7 +65,9 @@ import org.citygml4j.model.gml.geometry.primitives.TriangulatedSurface;
 import org.citygml4j.util.gmlid.DefaultGMLIdManager;
 
 import de.tub.citydb.config.Config;
+import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkLinearRing;
 import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkSurfaceGeometry;
 import de.tub.citydb.modules.citykml.common.xlink.importer.DBXlinkImporterManager;
 import de.tub.citydb.modules.citykml.util.Sqlite.SqliteImporterManager;
@@ -77,10 +80,14 @@ public class SurfaceGeometry {
 	private List<Map<String, Object>> _SurfaceList = new ArrayList<Map<String,Object>>();
 	private List<String> _SurfaceGmlId = new ArrayList<String>();
 	private SqliteImporterManager sqlliteImporterManager;
+	private boolean isCopy;
+	private boolean isXlink;
+	private boolean importAppearance;
 	
-	public SurfaceGeometry(SqliteImporterManager sqlliteImporterManager) {
+	public SurfaceGeometry(Config config , SqliteImporterManager sqlliteImporterManager) {
 			
 		this.sqlliteImporterManager = sqlliteImporterManager;
+		importAppearance = config.getProject().getImporter().getAppearances().isSetImportAppearance();
 	}
 	
 	public void SetSurfaceID(String _SurfaceId)
@@ -99,7 +106,13 @@ public class SurfaceGeometry {
 		
 	
 		GMLClass surfaceGeometryType = surfaceGeometry.getGMLClass();
-		
+		sqlliteImporterManager.updateGeometryCounter(surfaceGeometryType);
+
+		if (!isCopy)
+			isCopy = surfaceGeometry.hasLocalProperty(Internal.GEOMETRY_ORIGINAL);
+
+		if (!isXlink)
+			isXlink = surfaceGeometry.hasLocalProperty(Internal.GEOMETRY_XLINK);
 
 		// gml:id handling
 		String origGmlId, gmlId;
@@ -149,6 +162,17 @@ public class SurfaceGeometry {
 					msg.append(": Ring contains less than 4 coordinates. Skipping invalid ring.");
 					LOG.error(msg.toString());
 					return _pointList;
+				}
+				
+				if (importAppearance && !isCopy) {
+					if (origGmlId == null)
+						origGmlId = gmlId;							
+
+					if (linearRing.isSetId())
+						sqlliteImporterManager.propagateXlink(new DBXlinkLinearRing(
+								origGmlId,
+								origGmlId,
+								0));
 				}
 
 			}
@@ -209,7 +233,16 @@ public class SurfaceGeometry {
 						// well, taking care about geometry is not enough... this ring could
 						// be referenced by a <textureCoordinates> element. since we cannot store
 						// the gml:id of linear rings in the database, we have to remember its id
+						if (importAppearance && !isCopy) {
+							if (origGmlId == null)
+								origGmlId = gmlId;							
 
+							if (exteriorLinearRing.isSetId())
+								sqlliteImporterManager.propagateXlink(new DBXlinkLinearRing(
+										exteriorLinearRing.getId(),
+										origGmlId,
+										ringNo));
+						}
 
 						if (polygon.isSetInterior()) {
 							for (AbstractRingProperty abstractRingProperty : polygon.getInterior()) {
@@ -258,6 +291,11 @@ public class SurfaceGeometry {
 
 										// also remember the gml:id of interior rings in case it is
 										// referenced by a <textureCoordinates> element
+										if (importAppearance && !isCopy && interiorLinearRing.isSetId())
+											sqlliteImporterManager.propagateXlink(new DBXlinkLinearRing(
+													interiorLinearRing.getId(),
+													origGmlId,
+													ringNo));
 
 									}
 								} else {
@@ -270,7 +308,12 @@ public class SurfaceGeometry {
 									return _pointList;
 								}
 							}
-
+							// we need this dummy entry to know the maximum number of found rings later on...
+							if (importAppearance && !isCopy && ringNo > 0)
+								sqlliteImporterManager.propagateXlink(new DBXlinkLinearRing(
+										null,
+										origGmlId,
+										ringNo));
 
 						}
 					
@@ -420,23 +463,20 @@ public class SurfaceGeometry {
 					String href = surfaceProperty.getHref();
 
 					if (href != null && href.length() != 0) {
+						DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+								buildingGmlId,
+								"0",
+								"0",
+								reverse,
+								href
+								);
 
-						
+						sqlliteImporterManager.propagateXlink(xlink);
+
 						targetURI = href.replaceAll("^#", "");
 
-						// do mapping
-						//if (origGmlId != null && !isCopy)
-						//dbImporterManager.putGmlId(origGmlId, -1, -1, negativeOrientation, targetURI, CityGMLClass.ABSTRACT_GML_GEOMETRY);
-
-						// well, regarding appearances we cannot work on remote geometries so far...
-						StringBuilder msg = new StringBuilder(Util.getGeometrySignature(
-								texturedSurface.getGMLClass(),
-								origGmlId));
-						msg.append(": Texture information for referenced geometry objects are not supported.");
-
-						LOG.error(msg.toString());
+						
 					}
-
 					return _pointList;
 				}
 			} else {
@@ -524,7 +564,13 @@ public class SurfaceGeometry {
 						String href = surfaceProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							
+							DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+									buildingGmlId,
+									"0",
+									"0",
+									reverse,
+									href
+									);
 						}
 					}
 				}
@@ -625,7 +671,13 @@ public class SurfaceGeometry {
 					String href = exteriorSurface.getHref();
 
 					if (href != null && href.length() != 0) {
-						
+						DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+								buildingGmlId,
+								"0",
+								"0",
+								reverse,
+								href
+								);
 					}
 				}
 			}
@@ -661,7 +713,13 @@ public class SurfaceGeometry {
 						String href = solidProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							
+							DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+									buildingGmlId,
+									"0",
+									"0",
+									reverse,
+									href
+									);
 						}
 					}
 				}
@@ -688,7 +746,13 @@ public class SurfaceGeometry {
 						String href = polygonProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							
+							DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+									buildingGmlId,
+									"0",
+									"0",
+									reverse,
+									href
+									);
 						}
 					}
 				}
@@ -730,8 +794,13 @@ public class SurfaceGeometry {
 						String href = surfaceProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							
-							
+							DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+									buildingGmlId,
+									"0",
+									"0",
+									reverse,
+									href
+									);
 						}
 					}
 				}
@@ -783,7 +852,13 @@ public class SurfaceGeometry {
 						String href = solidProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							
+							DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+									buildingGmlId,
+									"0",
+									"0",
+									reverse,
+									href
+									);
 						}
 					}
 				}
@@ -816,7 +891,13 @@ public class SurfaceGeometry {
 						String href = geometricPrimitiveProperty.getHref();
 
 						if (href != null && href.length() != 0) {
-							
+							DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
+									buildingGmlId,
+									"0",
+									"0",
+									reverse,
+									href
+									);
 						}
 					}
 				}

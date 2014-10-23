@@ -57,7 +57,7 @@ public class DBXlinkImporterLinearRing implements DBXlinkImporter {
 	public boolean insert(DBXlinkLinearRing xlinkEntry) throws SQLException {
 		psLinearRing.setString(1, xlinkEntry.getGmlId());
 		psLinearRing.setString(2, xlinkEntry.getParentGmlId());
-		psLinearRing.setString(3, xlinkEntry.getRingId());
+		psLinearRing.setInt(3, xlinkEntry.getRingId());
 
 		psLinearRing.addBatch();
 		if (++batchCounter == Internal.Sqlite_MAX_BATCH_SIZE)

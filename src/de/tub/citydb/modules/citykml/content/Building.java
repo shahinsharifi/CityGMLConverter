@@ -505,7 +505,7 @@ public class Building extends KmlGenericObject{
 	public List<BuildingSurface> GetBuildingGeometries(AbstractBuilding _building) throws Exception
 	{
 		List<BuildingSurface> _SurfaceList = new ArrayList<BuildingSurface>();
-		SurfaceGeometry surfaceGeom = new SurfaceGeometry(sqlliteImporterManager);		
+		SurfaceGeometry surfaceGeom = new SurfaceGeometry(config,sqlliteImporterManager);		
 		String _SurfaceType = "undefined";
 		String buildingGmlId = _building.getId();
 

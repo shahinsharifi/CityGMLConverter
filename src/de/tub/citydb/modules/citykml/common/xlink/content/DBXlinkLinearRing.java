@@ -32,9 +32,9 @@ package de.tub.citydb.modules.citykml.common.xlink.content;
 public class DBXlinkLinearRing implements DBXlink {
 	private String gmlId;
 	private String parentGmlId;
-	private String ringId;
+	private int ringId;
 
-	public DBXlinkLinearRing(String gmlId, String parentGmlId, String ringId) {
+	public DBXlinkLinearRing(String gmlId, String parentGmlId, int ringId) {
 		this.gmlId = gmlId;
 		this.parentGmlId = parentGmlId;
 		this.ringId = ringId;
@@ -56,11 +56,11 @@ public class DBXlinkLinearRing implements DBXlink {
 		this.parentGmlId = parentGmlId;
 	}
 
-	public String getRingId() {
+	public int getRingId() {
 		return ringId;
 	}
 
-	public void setRingId(String ringId) {
+	public void setRingId(int ringId) {
 		this.ringId = ringId;
 	}
 
