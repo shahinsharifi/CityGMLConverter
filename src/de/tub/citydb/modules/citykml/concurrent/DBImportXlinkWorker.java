@@ -91,7 +91,6 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 
 	private void init() {
 
-
 	}
 	
 	@Override
@@ -101,12 +100,14 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 
 	@Override
 	public void interrupt() {
+
 		shouldRun = false;
 		workerThread.interrupt();
 	}
 
 	@Override
 	public void interruptIfIdle() {
+		
 		final ReentrantLock runLock = this.runLock;
 		shouldRun = false;
 
@@ -140,7 +141,7 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 			doWork(firstWork);
 			firstWork = null;
 		}
-
+		
 		while (shouldRun) {
 			try {
 				DBXlink work = workQueue.take();
@@ -149,14 +150,17 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 				// re-check state
 			}
 		}
-
+		
 		try {
+
 			dbXlinkManager.executeBatch();
+			
 		} catch (SQLException sqlEx) {
 			LOG.error("SQL error: " + sqlEx.getMessage());
 		}
 		
 		try {
+
 			dbXlinkManager.close();
 		} catch (SQLException sqlEx) {
 			LOG.error("SQL error: " + sqlEx.getMessage());
@@ -169,6 +173,7 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 
 		try {
 			try {
+				
 				boolean success = false;
 
 				switch (work.getXlinkType()) {
@@ -181,7 +186,6 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 						success = dbSurfaceGeometry.insert(xlinkSurfaceGeometry);
 
 					break;
-					
 				/*case LINEAR_RING:
 					DBXlinkLinearRing xlinkLinearRing = (DBXlinkLinearRing)work;
 
@@ -251,25 +255,14 @@ public class DBImportXlinkWorker implements Worker<DBXlink> {
 				if (success)
 					updateCounter++;
 
-			} catch (Exception sqlEx) {
-				LOG.error("SQL error: " + sqlEx.getMessage());
-				return;
-			}
-
-			try {
-				if (updateCounter == commitAfter) {
-					dbXlinkManager.executeBatch();
-
-					updateCounter = 0;
-				}
 			} catch (SQLException sqlEx) {
 				LOG.error("SQL error: " + sqlEx.getMessage());
 				return;
 			}
 
+
 		} finally {
 			runLock.unlock();
 		}
 	}
-
 }

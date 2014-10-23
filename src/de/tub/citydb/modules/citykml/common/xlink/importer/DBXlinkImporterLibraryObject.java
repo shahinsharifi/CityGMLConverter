@@ -29,14 +29,56 @@
  */
 package de.tub.citydb.modules.citykml.common.xlink.importer;
 
-public enum DBXlinkImporterEnum {
-	LINEAR_RING,
-	SURFACE_GEOMETRY,
-	XLINK_BASIC,
-	XLINK_TEXTUREPARAM,
-	XLINK_TEXTUREASSOCIATION,
-	TEXTURE_FILE,
-	LIBRARY_OBJECT,
-	XLINK_DEPRECATED_MATERIAL,
-	GROUP_TO_CITYOBJECT
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import de.tub.citydb.config.internal.Internal;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkLibraryObject;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.TemporaryCacheTable;
+
+
+public class DBXlinkImporterLibraryObject implements DBXlinkImporter {
+	private final TemporaryCacheTable tempTable;
+	private PreparedStatement psXlink;
+	private int batchCounter;
+
+	public DBXlinkImporterLibraryObject(TemporaryCacheTable tempTable) throws SQLException {
+		this.tempTable = tempTable;
+
+		init();
+	}
+
+	private void init() throws SQLException {
+		psXlink = tempTable.getConnection().prepareStatement("insert into " + tempTable.getTableName() + 
+			" (ID, FILE_URI) values " +
+			"(?, ?)");
+	}
+
+	public boolean insert(DBXlinkLibraryObject xlinkEntry) throws SQLException {
+		psXlink.setString(1, xlinkEntry.getId());
+		psXlink.setString(2, xlinkEntry.getFileURI());
+
+		psXlink.addBatch();
+		if (++batchCounter == Internal.Sqlite_MAX_BATCH_SIZE)
+			executeBatch();
+
+		return true;
+	}
+
+	@Override
+	public void executeBatch() throws SQLException {
+		psXlink.executeBatch();
+		batchCounter = 0;
+	}
+
+	@Override
+	public void close() throws SQLException {
+		psXlink.close();
+	}
+
+	@Override
+	public DBXlinkImporterEnum getDBXlinkImporterType() {
+		return DBXlinkImporterEnum.TEXTURE_FILE;
+	}
+
 }

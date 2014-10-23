@@ -29,22 +29,21 @@
  */
 package de.tub.citydb.modules.citykml.common.xlink.importer;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.Types;
 
 import de.tub.citydb.config.internal.Internal;
-import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkSurfaceGeometry;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkTextureParam;
 import de.tub.citydb.modules.citykml.util.Sqlite.cache.TemporaryCacheTable;
 
-public class DBXlinkImporterSurfaceGeometry implements DBXlinkImporter {
+
+public class DBXlinkImporterTextureParam implements DBXlinkImporter {
 	private final TemporaryCacheTable tempTable;
 	private PreparedStatement psXlink;
 	private int batchCounter;
 
-	public DBXlinkImporterSurfaceGeometry(TemporaryCacheTable tempTable) throws SQLException {
+	public DBXlinkImporterTextureParam(TemporaryCacheTable tempTable) throws SQLException {
 		this.tempTable = tempTable;
 
 		init();
@@ -52,29 +51,51 @@ public class DBXlinkImporterSurfaceGeometry implements DBXlinkImporter {
 
 	private void init() throws SQLException {
 		psXlink = tempTable.getConnection().prepareStatement("insert into " + tempTable.getTableName() + 
-			" (ID, PARENT_ID, ROOT_ID, REVERSE, GMLID) values " +
-			"(?, ?, ?, ?, ?)");
+			" (ID, GMLID, TYPE, IS_TEXTURE_PARAMETERIZATION, TEXPARAM_GMLID, WORLD_TO_TEXTURE, TEXTURE_COORDINATES, TARGET_URI, TEXCOORDLIST_ID) values " +
+			"(?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	}
 
-	public boolean insert(DBXlinkSurfaceGeometry xlinkEntry) throws SQLException {
+	public boolean insert(DBXlinkTextureParam xlinkEntry) throws SQLException {
 		psXlink.setString(1, xlinkEntry.getId());
-		psXlink.setString(2, xlinkEntry.getParentId());
-		psXlink.setString(3, xlinkEntry.getRootId());
-		psXlink.setInt(4, xlinkEntry.isReverse() ? 1 : 0);
-		psXlink.setString(5, xlinkEntry.getGmlId());
+		psXlink.setString(2, xlinkEntry.getGmlId());
+		psXlink.setInt(3, xlinkEntry.getType().ordinal());
+		psXlink.setInt(4, xlinkEntry.isTextureParameterization() ? 1 : 0);
+
+		if (xlinkEntry.getTexParamGmlId() != null && xlinkEntry.getTexParamGmlId().length() != 0)
+			psXlink.setString(5, xlinkEntry.getTexParamGmlId());
+		else
+			psXlink.setNull(5, Types.VARCHAR);
+
+		if (xlinkEntry.getWorldToTexture() != null && xlinkEntry.getWorldToTexture().length() != 0)
+			psXlink.setString(6, xlinkEntry.getWorldToTexture());
+		else
+			psXlink.setNull(6, Types.VARCHAR);
+
+		if (xlinkEntry.getTextureCoord() != null && xlinkEntry.getTextureCoord().length() != 0)
+			psXlink.setString(7, xlinkEntry.getTextureCoord());
+		else
+			psXlink.setNull(7, Types.VARCHAR);
+
+		if (xlinkEntry.getTargetURI() != null && xlinkEntry.getTargetURI().length() != 0)
+			psXlink.setString(8, xlinkEntry.getTargetURI());
+		else
+			psXlink.setNull(8, Types.VARCHAR);
+
+		if (xlinkEntry.getTexCoordListId() != null && xlinkEntry.getTexCoordListId().length() != 0)
+			psXlink.setString(9, xlinkEntry.getTexCoordListId());
+		else
+			psXlink.setNull(9, Types.VARCHAR);
 
 		psXlink.addBatch();
 		if (++batchCounter == Internal.Sqlite_MAX_BATCH_SIZE)
 			executeBatch();
-		
+
 		return true;
 	}
 
 	@Override
 	public void executeBatch() throws SQLException {
-
 		psXlink.executeBatch();
-		tempTable.getConnection().commit();
 		batchCounter = 0;
 	}
 
@@ -85,7 +106,7 @@ public class DBXlinkImporterSurfaceGeometry implements DBXlinkImporter {
 
 	@Override
 	public DBXlinkImporterEnum getDBXlinkImporterType() {
-		return DBXlinkImporterEnum.SURFACE_GEOMETRY;
+		return DBXlinkImporterEnum.XLINK_TEXTUREPARAM;
 	}
 
 }

@@ -36,7 +36,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -75,6 +77,8 @@ import net.opengis.kml._2.StyleStateEnumType;
 import net.opengis.kml._2.StyleType;
 import net.opengis.kml._2.ViewRefreshModeEnumType;
 // import oracle.ord.im.OrdImage;
+
+
 
 
 
@@ -393,6 +397,7 @@ public class CityKmlExporter implements EventHandler {
 						SQLiteFactory sqliteFactory = new SQLiteFactory("TemporaryDbXlink.db",  file.getParent() , "org.sqlite.JDBC");
 						cacheManager = new CacheManager(sqliteFactory.getConnection(), maxThreads);
 						
+						
 						// this pool is for registering xlinks
 						tmpXlinkPool = new WorkerPool<DBXlink>(
 								minThreads,
@@ -428,6 +433,7 @@ public class CityKmlExporter implements EventHandler {
 						
 
 						// prestart pool workers
+						tmpXlinkPool.prestartCoreWorkers();
 						ioWriterPool.prestartCoreWorkers();
 						kmlWorkerPool.prestartCoreWorkers();
 
@@ -494,8 +500,10 @@ public class CityKmlExporter implements EventHandler {
 						try {
 							
 							if (shouldRun)
+							{
 								kmlWorkerPool.shutdownAndWait();
-
+								tmpXlinkPool.join();
+							}
 							if (!featureCounterMap.isEmpty() &&
 									(!config.getProject().getCityKmlExporter().isOneFilePerObject() ||
 									  config.getProject().getCityKmlExporter().getFilter().isSetSimpleFilter())) {
@@ -507,7 +515,8 @@ public class CityKmlExporter implements EventHandler {
 							ioWriterPool.shutdownAndWait();
 						
 						} catch (InterruptedException e) {
-							System.out.println(e.getMessage());
+							Logger.getInstance().error(e.getMessage());
+							return false;
 						} catch (JAXBException jaxBE) {
 							Logger.getInstance().error("I/O error: " + jaxBE.getMessage());
 							return false;
@@ -583,16 +592,11 @@ public class CityKmlExporter implements EventHandler {
 						// set null
 						ioWriterPool = null;
 						kmlWorkerPool = null;
-						kmlSplitter = null;
+						kmlSplitter = null;					
+						
 						sqliteFactory.KillConnection();
 
 					}
-/*
-					catch (FileNotFoundException fnfe) {
-						Logger.getInstance().error("Path \"" + path + "\" not found.");
-						return false;
-					}
-*/
 					finally {}
 				}
 			}

@@ -17,7 +17,7 @@
  * GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program. If not, see 
+ * License aString with this program. If not, see 
  * <http://www.gnu.org/licenses/>.
  * 
  * The development of the 3D City Database Importer/Exporter has 
@@ -31,22 +31,22 @@ package de.tub.citydb.modules.citykml.common.xlink.content;
 
 
 public class DBXlinkGroupToCityObject implements DBXlink {
-	private long groupId;
+	private String groupId;
 	private String gmlId;
 	private boolean isParent;
 	private String role;
 
-	public DBXlinkGroupToCityObject(long groupId, String gmlId, boolean isParent) {
+	public DBXlinkGroupToCityObject(String groupId, String gmlId, boolean isParent) {
 		this.groupId = groupId;
 		this.gmlId = gmlId;
 		this.isParent = isParent;
 	}
 	
-	public long getGroupId() {
+	public String getGroupId() {
 		return groupId;
 	}
 
-	public void setGroupId(long groupId) {
+	public void setGroupId(String groupId) {
 		this.groupId = groupId;
 	}
 

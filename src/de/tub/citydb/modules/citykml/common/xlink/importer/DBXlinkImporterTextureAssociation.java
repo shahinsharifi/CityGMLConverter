@@ -29,22 +29,20 @@
  */
 package de.tub.citydb.modules.citykml.common.xlink.importer;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import de.tub.citydb.config.internal.Internal;
-import de.tub.citydb.log.Logger;
-import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkSurfaceGeometry;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkTextureAssociation;
 import de.tub.citydb.modules.citykml.util.Sqlite.cache.TemporaryCacheTable;
 
-public class DBXlinkImporterSurfaceGeometry implements DBXlinkImporter {
+
+public class DBXlinkImporterTextureAssociation implements DBXlinkImporter {
 	private final TemporaryCacheTable tempTable;
 	private PreparedStatement psXlink;
 	private int batchCounter;
 
-	public DBXlinkImporterSurfaceGeometry(TemporaryCacheTable tempTable) throws SQLException {
+	public DBXlinkImporterTextureAssociation(TemporaryCacheTable tempTable) throws SQLException {
 		this.tempTable = tempTable;
 
 		init();
@@ -52,29 +50,25 @@ public class DBXlinkImporterSurfaceGeometry implements DBXlinkImporter {
 
 	private void init() throws SQLException {
 		psXlink = tempTable.getConnection().prepareStatement("insert into " + tempTable.getTableName() + 
-			" (ID, PARENT_ID, ROOT_ID, REVERSE, GMLID) values " +
-			"(?, ?, ?, ?, ?)");
+			" (SURFACE_DATA_ID, SURFACE_GEOMETRY_ID, GMLID) values " +
+			"(?, ?, ?)");
 	}
 
-	public boolean insert(DBXlinkSurfaceGeometry xlinkEntry) throws SQLException {
-		psXlink.setString(1, xlinkEntry.getId());
-		psXlink.setString(2, xlinkEntry.getParentId());
-		psXlink.setString(3, xlinkEntry.getRootId());
-		psXlink.setInt(4, xlinkEntry.isReverse() ? 1 : 0);
-		psXlink.setString(5, xlinkEntry.getGmlId());
+	public boolean insert(DBXlinkTextureAssociation xlinkEntry) throws SQLException {
+		psXlink.setString(1, xlinkEntry.getSurfaceDataId());
+		psXlink.setString(2, xlinkEntry.getSurfaceGeometryId());
+		psXlink.setString(3, xlinkEntry.getGmlId());
 
 		psXlink.addBatch();
 		if (++batchCounter == Internal.Sqlite_MAX_BATCH_SIZE)
 			executeBatch();
-		
+
 		return true;
 	}
 
 	@Override
 	public void executeBatch() throws SQLException {
-
 		psXlink.executeBatch();
-		tempTable.getConnection().commit();
 		batchCounter = 0;
 	}
 
@@ -85,7 +79,7 @@ public class DBXlinkImporterSurfaceGeometry implements DBXlinkImporter {
 
 	@Override
 	public DBXlinkImporterEnum getDBXlinkImporterType() {
-		return DBXlinkImporterEnum.SURFACE_GEOMETRY;
+		return DBXlinkImporterEnum.XLINK_TEXTUREASSOCIATION;
 	}
 
 }

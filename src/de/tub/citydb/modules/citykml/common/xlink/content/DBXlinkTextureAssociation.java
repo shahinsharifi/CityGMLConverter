@@ -17,7 +17,7 @@
  * GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program. If not, see 
+ * License aString with this program. If not, see 
  * <http://www.gnu.org/licenses/>.
  * 
  * The development of the 3D City Database Importer/Exporter has 
@@ -30,29 +30,29 @@
 package de.tub.citydb.modules.citykml.common.xlink.content;
 
 public class DBXlinkTextureAssociation implements DBXlink {
-	private long surfaceDataId;
-	private long surfaceGeometryId;
+	private String surfaceDataId;
+	private String surfaceGeometryId;
 	private String gmlId;
 
-	public DBXlinkTextureAssociation(long surfaceDataId, long surfaceGeometryId, String gmlId) {
+	public DBXlinkTextureAssociation(String surfaceDataId, String surfaceGeometryId, String gmlId) {
 		this.surfaceDataId = surfaceDataId;
 		this.surfaceGeometryId = surfaceGeometryId;
 		this.gmlId = gmlId;
 	}
 
-	public long getSurfaceDataId() {
+	public String getSurfaceDataId() {
 		return surfaceDataId;
 	}
 
-	public void setSurfaceDataId(long surfaceDataId) {
+	public void setSurfaceDataId(String surfaceDataId) {
 		this.surfaceDataId = surfaceDataId;
 	}
 
-	public long getSurfaceGeometryId() {
+	public String getSurfaceGeometryId() {
 		return surfaceGeometryId;
 	}
 
-	public void setSurfaceGeometryId(long surfaceGeometryId) {
+	public void setSurfaceGeometryId(String surfaceGeometryId) {
 		this.surfaceGeometryId = surfaceGeometryId;
 	}
 

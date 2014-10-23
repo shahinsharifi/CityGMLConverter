@@ -55,10 +55,9 @@ public abstract class CacheTableModel {
 
 		try {
 			stmt = conn.createStatement();
-			stmt.executeUpdate("CREATE TABLE " + 
+			stmt.executeUpdate("create table " + 
 					tableName + 
-					getColumns() 
-			);
+					getColumns());
 			conn.commit();
 		} finally {
 			if (stmt != null) {

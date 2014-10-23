@@ -70,11 +70,11 @@ public class CacheTableSurfaceGeometry extends CacheTableModel {
 	
 	@Override
 	protected String getColumns() {
-		return "(ID VARCHAR(256)," +
-		"PARENT_ID VARCHAR(256), " +
-		"ROOT_ID VARCHAR(256), " +
-		"REVERSE NUMERIC(1,0), " +
-		"GMLID VARCHAR(256))";
+		return "(ID text," +
+		"PARENT_ID text, " +
+		"ROOT_ID text, " +
+		"REVERSE integer, " +
+		"GMLID text)";
 	}
 
 }

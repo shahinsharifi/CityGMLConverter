@@ -65,33 +65,34 @@ public class DBXlinkImporterManager {
 			TemporaryCacheTable tempTable = null;
 
 			switch (xlinkType) {
-			case SURFACE_GEOMETRY:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.SURFACE_GEOMETRY);
-				break;
-			/*case LINEAR_RING:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.LINEAR_RING);
-				break;
-			case XLINK_BASIC:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.BASIC);
-				break;
-			case XLINK_TEXTUREPARAM:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.TEXTUREPARAM);
-				break;
-			case XLINK_TEXTUREASSOCIATION:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.TEXTUREASSOCIATION);
-				break;
-			case TEXTURE_FILE:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.TEXTURE_FILE);
-				break;
-			case LIBRARY_OBJECT:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.LIBRARY_OBJECT);
-				break;
-			case XLINK_DEPRECATED_MATERIAL:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.DEPRECATED_MATERIAL);
-				break;
-			case GROUP_TO_CITYOBJECT:
-				tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.GROUP_TO_CITYOBJECT);
-				break;*/
+			
+				case SURFACE_GEOMETRY:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.SURFACE_GEOMETRY);
+					break;
+				/*case LINEAR_RING:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.LINEAR_RING);
+					break;
+				case XLINK_BASIC:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.BASIC);
+					break;
+				case XLINK_TEXTUREPARAM:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.TEXTUREPARAM);
+					break;
+				case XLINK_TEXTUREASSOCIATION:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.TEXTUREASSOCIATION);
+					break;
+				case TEXTURE_FILE:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.TEXTURE_FILE);
+					break;
+				case LIBRARY_OBJECT:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.LIBRARY_OBJECT);
+					break;
+				case XLINK_DEPRECATED_MATERIAL:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.DEPRECATED_MATERIAL);
+					break;
+				case GROUP_TO_CITYOBJECT:
+					tempTable = dbTempTableManager.createTemporaryCacheTable(CacheTableModelEnum.GROUP_TO_CITYOBJECT);
+					break;*/
 			}
 
 			if (tempTable != null) {
@@ -135,14 +136,17 @@ public class DBXlinkImporterManager {
 	}
 	
 	public void propagateEvent(Event event) {
-	//	eventDispatcher.triggerEvent(event);
+		eventDispatcher.triggerEvent(event);
 	}
 
 	public void executeBatch() throws SQLException {
-		
+
+		for (DBXlinkImporter dbImporter : dbImporterMap.values())
+			dbImporter.executeBatch();
 	}
 	
 	public void close() throws SQLException {
-		
+		for (DBXlinkImporter dbImporter : dbImporterMap.values())
+			dbImporter.close();
 	}
 }

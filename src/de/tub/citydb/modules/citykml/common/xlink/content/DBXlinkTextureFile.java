@@ -17,7 +17,7 @@
  * GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public
- * License along with this program. If not, see 
+ * License aString with this program. If not, see 
  * <http://www.gnu.org/licenses/>.
  * 
  * The development of the 3D City Database Importer/Exporter has 
@@ -30,21 +30,21 @@
 package de.tub.citydb.modules.citykml.common.xlink.content;
 
 public class DBXlinkTextureFile implements DBXlink {
-	long id;
+	String id;
 	String fileURI;
 	DBXlinkTextureFileEnum type;
 
-	public DBXlinkTextureFile(long id, String fileURI, DBXlinkTextureFileEnum type) {
+	public DBXlinkTextureFile(String id, String fileURI, DBXlinkTextureFileEnum type) {
 		this.id = id;
 		this.fileURI = fileURI;
 		this.type = type;
 	}
 
-	public long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

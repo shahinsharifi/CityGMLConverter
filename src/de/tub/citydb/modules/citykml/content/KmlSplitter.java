@@ -266,7 +266,7 @@ public class KmlSplitter {
 
 				// prepare zOffSet Object
 				SQLiteFactory factory = new SQLiteFactory("Elevation.db",  file.getParent() , "org.sqlite.JDBC");
-				connection = factory.createConnection();
+				connection = factory.getConnection();
 				
 				
 				
