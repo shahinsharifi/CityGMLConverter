@@ -119,13 +119,17 @@ import org.citygml4j.util.gmlid.DefaultGMLIdManager;
 import org.postgis.PGgeometry;
 import org.postgis.Polygon;
 
+import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.Config;
 import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.ColladaOptions;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
+import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
 import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkBasic;
 import de.tub.citydb.modules.citykml.common.xlink.importer.DBXlinkImporterManager;
+import de.tub.citydb.modules.citykml.common.xlink.resolver.DBXlinkSplitter;
+import de.tub.citydb.modules.citykml.concurrent.DBImportXlinkWorker;
 import  de.tub.citydb.modules.citykml.content.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.content.BalloonTemplateHandlerImpl;
@@ -136,6 +140,11 @@ import de.tub.citydb.modules.citykml.content.KmlSplittingResult;
 import de.tub.citydb.modules.citykml.content.SurfaceGeometry;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
 import de.tub.citydb.modules.citykml.util.Sqlite.SqliteImporterManager;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheTable;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.HeapCacheTable;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.TemporaryCacheTable;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.model.CacheTableModelEnum;
 import de.tub.citydb.modules.common.event.CounterEvent;
 import de.tub.citydb.modules.common.event.CounterType;
 import de.tub.citydb.util.Util;
@@ -145,7 +154,7 @@ public class Building extends KmlGenericObject{
 	public static final String STYLE_BASIS_NAME = ""; // "Building"
 	private SqliteImporterManager sqlliteImporterManager;
 	private List<BuildingSurface> _ParentSurfaceList = new ArrayList<BuildingSurface>();
-	
+	private final Logger LOG = Logger.getInstance();
 	
 
 	public Building(Connection connection,
@@ -256,7 +265,12 @@ public class Building extends KmlGenericObject{
 
 			AbstractBuilding _building = (AbstractBuilding)work.getCityGmlClass();
 			SurfaceAppearance _SurfaceAppear = new SurfaceAppearance();
+			
+			//this function reads all geometries and returns a list of surfaces.
 			List<BuildingSurface> _surfaceList = GetBuildingGeometries(_building);
+			sqlliteImporterManager.getTmpXlinkPool().join();
+			DBXlinkSplitter xlinkSplitter = config.getXlinkSplitter();
+			xlinkSplitter.startQuery();
 
 			if (_surfaceList.size()!=0) { // result not empty
 
@@ -501,11 +515,10 @@ public class Building extends KmlGenericObject{
 	}
 
 
-
 	public List<BuildingSurface> GetBuildingGeometries(AbstractBuilding _building) throws Exception
 	{
 		List<BuildingSurface> _SurfaceList = new ArrayList<BuildingSurface>();
-		SurfaceGeometry surfaceGeom = new SurfaceGeometry(config,sqlliteImporterManager);		
+		SurfaceGeometry surfaceGeom = new SurfaceGeometry(config , sqlliteImporterManager);		
 		String _SurfaceType = "undefined";
 		String buildingGmlId = _building.getId();
 
@@ -532,6 +545,8 @@ public class Building extends KmlGenericObject{
 			}
 
 			if (solidProperty != null) {
+				
+				
 				if (solidProperty.isSetSolid()) {
 
 					surfaceGeom.ClearPointList();				
@@ -548,7 +563,7 @@ public class Building extends KmlGenericObject{
 						_SurfaceList.add(BSurface);
 						counter++;
 					}
-
+					
 				}else{
 					
 					// xlink
@@ -619,6 +634,22 @@ public class Building extends KmlGenericObject{
 						counter++;
 					}
 
+				}
+				else{
+					// xlink
+					String href = multiSurfaceProperty.getHref();
+
+					if (href != null && href.length() != 0) {
+						DBXlinkBasic xlink = new DBXlinkBasic(
+								_building.getId(),
+								TableEnum.BUILDING,
+								href,
+								TableEnum.SURFACE_GEOMETRY
+						);
+
+						xlink.setAttrName("LOD" + lod + "_GEOMETRY_ID");
+						sqlliteImporterManager.propagateXlink(xlink);
+					}
 				}
 			}
 
@@ -771,6 +802,16 @@ public class Building extends KmlGenericObject{
 
 								}
 							} 
+							else {
+							
+								// xlink
+								String href = boundarySurfaceProperty.getHref();
+
+								if (href != null && href.length() != 0) {
+									LOG.error("XLink reference '" + href + "' to BoundarySurface feature is not supported.");
+								}
+							
+							}
 						}
 
 					}
@@ -890,7 +931,15 @@ public class Building extends KmlGenericObject{
 
 					// free memory of nested feature
 					buildingInstProperty.unsetBuildingInstallation();
-				} 
+				} else {
+					// xlink
+					String href = buildingInstProperty.getHref();
+
+					if (href != null && href.length() != 0) {
+						LOG.error("XLink reference '" + href + "' to BuildingInstallation feature is not supported.");
+					}
+				}
+				
 			}
 		}
 
@@ -930,6 +979,14 @@ public class Building extends KmlGenericObject{
 
 					// free memory of nested feature
 					intBuildingInstProperty.unsetIntBuildingInstallation();
+				}
+				else {
+					// xlink
+					String href = intBuildingInstProperty.getHref();
+
+					if (href != null && href.length() != 0) {
+						LOG.error("XLink reference '" + href + "' to IntBuildingInstallation feature is not supported.");
+					}
 				}
 			}
 		}
@@ -1216,6 +1273,14 @@ public class Building extends KmlGenericObject{
 						roomProperty.unsetRoom();
 					}
 				}
+				else {
+					// xlink
+					String href = roomProperty.getHref();
+
+					if (href != null && href.length() != 0) {
+						LOG.error("XLink reference '" + href + "' to Room feature is not supported.");
+					}
+				}
 			}
 
 		}
@@ -1234,6 +1299,14 @@ public class Building extends KmlGenericObject{
 
 					// free memory of nested feature
 					buildingPartProperty.unsetBuildingPart();
+				}
+				else {
+					// xlink
+					String href = buildingPartProperty.getHref();
+
+					if (href != null && href.length() != 0) {
+						LOG.error("XLink reference '" + href + "' to BuildingPart feature is not supported.");
+					}
 				}
 			}
 		}

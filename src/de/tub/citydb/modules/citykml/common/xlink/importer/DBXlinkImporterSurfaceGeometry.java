@@ -29,13 +29,12 @@
  */
 package de.tub.citydb.modules.citykml.common.xlink.importer;
 
-import java.sql.Connection;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+
 
 import de.tub.citydb.config.internal.Internal;
-import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkSurfaceGeometry;
 import de.tub.citydb.modules.citykml.util.Sqlite.cache.TemporaryCacheTable;
 

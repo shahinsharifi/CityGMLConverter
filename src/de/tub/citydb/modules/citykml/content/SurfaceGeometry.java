@@ -571,6 +571,7 @@ public class SurfaceGeometry {
 									reverse,
 									href
 									);
+							sqlliteImporterManager.propagateXlink(xlink);
 						}
 					}
 				}

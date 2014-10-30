@@ -75,6 +75,12 @@ public class SqliteImporterManager {
 	}
 
 
+	public WorkerPool<DBXlink> getTmpXlinkPool() {
+		return tmpXlinkPool;
+	}
+
+
+
 	public HashMap<CityGMLClass, Long> getFeatureCounter() {
 		return featureCounterMap;
 	}

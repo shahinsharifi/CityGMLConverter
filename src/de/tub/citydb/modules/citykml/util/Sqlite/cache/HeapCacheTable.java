@@ -52,21 +52,18 @@ import de.tub.citydb.modules.citykml.util.Sqlite.cache.model.CacheTableTexturePa
 import de.tub.citydb.modules.citykml.util.Sqlite.cache.model.CacheTableType;
 
 
-public class TemporaryCacheTable implements CacheTable {
-	
-
+public class HeapCacheTable implements CacheTable {
 	private final CacheTableModel model;
 	private final ReentrantLock mainLock = new ReentrantLock();
 	private final String tableName;
 	private final boolean isStandAlone;
 
-	private Connection conn;	
-	private HeapCacheTable heapView;
+	private Connection conn;
+
 	private volatile boolean isCreated = false;
 	private volatile boolean isIndexed = false;
 
-	protected TemporaryCacheTable(CacheTableModelEnum model, Connection conn, boolean isStandAlone) {
-		
+	protected HeapCacheTable(CacheTableModelEnum model, Connection conn, boolean isStandAlone) {
 		switch (model) {
 		case BASIC:
 			this.model = CacheTableBasic.getInstance();
@@ -105,17 +102,17 @@ public class TemporaryCacheTable implements CacheTable {
 		default:
 			throw new IllegalArgumentException("Unsupported cache table type " + model);
 		}
-
+		
 		this.conn = conn;
 		this.isStandAlone = isStandAlone;
 		tableName = createTableName();
 	}
 
-	protected TemporaryCacheTable(CacheTableModelEnum model, Connection dbPool) {
-		this(model, dbPool, true);
+	protected HeapCacheTable(CacheTableModelEnum model, Connection conn) {
+		this(model, conn, true);
 	}
 
-	protected void create() throws SQLException {		
+	protected void create() throws SQLException {
 		if (isCreated)
 			return;
 
@@ -123,10 +120,10 @@ public class TemporaryCacheTable implements CacheTable {
 		lock.lock();
 
 		try {
-			if (!isCreated) {
+			if (!isCreated) {				
 				conn.setAutoCommit(false);
 
-				model.create(conn, tableName, CacheTableType.GLOBAL_TEMPORARY_TABLE);
+				model.create(conn, tableName, CacheTableType.HEAP_TABLE);
 				isCreated = true;
 			}
 		} finally {
@@ -134,22 +131,8 @@ public class TemporaryCacheTable implements CacheTable {
 		}
 	}
 
-	protected void createWithIndexes() throws SQLException {
-		final ReentrantLock lock = this.mainLock;
-		lock.lock();
-
-		try {
-			create();			
-			if (!isIndexed) {
-				model.createIndexes(conn, tableName);
-				isIndexed = true;
-			}
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	protected void create(Connection conn) throws SQLException {
+	protected void createTableAsSelect(Connection conn, String sourceTableName) throws SQLException {
+		
 		if (isCreated)
 			return;
 
@@ -157,29 +140,46 @@ public class TemporaryCacheTable implements CacheTable {
 		lock.lock();
 
 		try {
-			this.conn = conn;
-			model.create(conn, tableName, CacheTableType.GLOBAL_TEMPORARY_TABLE);
-			isCreated = true;
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	protected void createWithIndexes(Connection conn) throws SQLException {
-		final ReentrantLock lock = this.mainLock;
-		lock.lock();
-
-		try {
-			create(conn);
-			if (!isIndexed) {
-				model.createIndexes(conn, tableName);
-				isIndexed = true;
+			
+			if (!isCreated) {
+				model.createAsSelectFrom(conn, tableName, sourceTableName);
+				this.conn = conn;
+				isCreated = true;
 			}
 		} finally {
 			lock.unlock();
 		}
 	}
 
+	protected void createIndexes() throws SQLException {
+		if (!isCreated || isIndexed)
+			return;
+
+		final ReentrantLock lock = this.mainLock;
+		lock.lock();
+
+		try {
+			if (!isIndexed) {
+				model.createIndexes(conn, tableName/*, "nologging"*/);
+				isIndexed = true;
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	protected void createWithIndexes() throws SQLException {
+		final ReentrantLock lock = this.mainLock;
+		lock.lock();
+		
+		try {
+			create();			
+			createIndexes();
+		} finally {
+			lock.unlock();
+		}
+	}
+		
 	public void truncate() throws SQLException {
 		if (!isCreated)
 			return;
@@ -193,95 +193,34 @@ public class TemporaryCacheTable implements CacheTable {
 
 		return model.size(conn, tableName);
 	}
-
+	
 	public String getTableName() {
 		return tableName;
-	}
-
-	public Connection getConnection() {
-		return conn;
 	}
 
 	public boolean isCreated() {
 		return isCreated;
 	}
 
+	public boolean isIndexed() {
+		return isIndexed;
+	}
+
 	public boolean isStandAlone() {
 		return isStandAlone;
 	}
 
-	public HeapCacheTable deriveHeapCacheTable() throws SQLException {
-		if (!isCreated)
-			return null;
-
-		if (heapView != null)
-			return heapView;
-
-		final ReentrantLock lock = this.mainLock;
-		lock.lock();
-
-		try {
-			if (isCreated && heapView == null) {
-				heapView = new HeapCacheTable(model.getType(), conn, false);
-				heapView.createTableAsSelect(conn, tableName);
-			}
-
-			return heapView;
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	public HeapCacheTable deriveHeapCacheTableWithIndexes() throws SQLException {
-		if (!isCreated)
-			return null;
-
-		if (heapView != null)
-			return heapView;
-
-		final ReentrantLock lock = this.mainLock;
-		lock.lock();
-
-		try {
-			if (isCreated && heapView == null) {
-				deriveHeapCacheTable();			
-				heapView.createIndexes();
-			}
-
-			return heapView;
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	public HeapCacheTable getHeapCacheTable() {
-		return heapView;
-	}
-
-	public void dropHeapCacheTable() throws SQLException {
-		if (heapView == null)
-			return;
-
-		final ReentrantLock lock = this.mainLock;
-		lock.lock();
-
-		try {
-			if (heapView != null) {
-				model.drop(heapView.getConnection(), heapView.getTableName());
-				heapView = null;
-			}
-		} finally {
-			lock.unlock();
-		}
+	public Connection getConnection() {
+		return conn;
 	}
 
 	protected void drop() throws SQLException {
 		if (!isStandAlone)
 			throw new IllegalStateException("Drop may not be called on a child of a compound table.");
-
+		
 		dropInternal();
 	}
-
+	
 	protected void dropInternal() throws SQLException {
 		if (!isCreated)
 			return;
@@ -292,13 +231,7 @@ public class TemporaryCacheTable implements CacheTable {
 		try {
 			if (isCreated) {			
 				try {
-					truncate();
-
 					model.drop(conn, tableName);
-
-					if (heapView != null)
-						dropHeapCacheTable();
-
 					isCreated = false;
 				} finally {
 					if (isStandAlone && conn != null) {
@@ -315,15 +248,14 @@ public class TemporaryCacheTable implements CacheTable {
 
 	@Override
 	public CacheTableEnum getType() {
-		return CacheTableEnum.TEMPORARY;
+		return CacheTableEnum.HEAP;
 	}
 
-	private String createTableName() {		
-		String tableName = "TMP_" + model.getType().value() + Math.abs(DefaultGMLIdManager.getInstance().generateUUID().hashCode());
+	private String createTableName() {
+		String tableName = "TMP_H_" + model.getType().value() + Math.abs(DefaultGMLIdManager.getInstance().generateUUID().hashCode());
 		if (tableName.length() > 28)
 			tableName = tableName.substring(tableName.length() - 28, tableName.length());
 
 		return tableName;
 	}
-
 }

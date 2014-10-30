@@ -34,6 +34,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import de.tub.citydb.log.Logger;
+
+
 
 public abstract class CacheTableModel {
 
@@ -55,9 +58,10 @@ public abstract class CacheTableModel {
 
 		try {
 			stmt = conn.createStatement();
-			stmt.executeUpdate("create table " + 
+			stmt.executeUpdate("create temporary table " + 
 					tableName + 
-					getColumns());
+					getColumns() + 
+			"");
 			conn.commit();
 		} finally {
 			if (stmt != null) {
@@ -72,7 +76,7 @@ public abstract class CacheTableModel {
 
 		try {
 			stmt = conn.createStatement();
-			stmt.executeUpdate("create unlogged table " + 
+			stmt.executeUpdate("create table " + 
 					tableName + 
 					getColumns());
 			conn.commit();
@@ -86,15 +90,18 @@ public abstract class CacheTableModel {
 
 	public void createAsSelectFrom(Connection conn, String tableName, String sourceTableName) throws SQLException {
 		Statement stmt = null;
-		
+
 		try {
 			stmt = conn.createStatement();
-			stmt.executeUpdate("create unlogged table " + 
+			String sqlString = "create table " + 
 					tableName +
-//					" nologging" +
 					" as select * from " + 
-					sourceTableName);
+					sourceTableName;
+			stmt.executeUpdate(sqlString);
+
 			conn.commit();
+		}catch (Exception e) {
+			Logger.getInstance().error(e.toString());
 		} finally {
 			if (stmt != null) {
 				stmt.close();
@@ -135,7 +142,7 @@ public abstract class CacheTableModel {
 
 		try {
 			stmt = conn.createStatement();
-			stmt.executeUpdate("truncate table " + tableName);
+			stmt.executeUpdate("DELETE FROM " + tableName);
 			conn.commit();
 		} finally {
 			if (stmt != null) {

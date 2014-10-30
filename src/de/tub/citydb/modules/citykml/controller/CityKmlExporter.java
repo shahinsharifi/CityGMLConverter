@@ -76,16 +76,6 @@ import net.opengis.kml._2.StyleMapType;
 import net.opengis.kml._2.StyleStateEnumType;
 import net.opengis.kml._2.StyleType;
 import net.opengis.kml._2.ViewRefreshModeEnumType;
-// import oracle.ord.im.OrdImage;
-
-
-
-
-
-
-
-
-
 
 import org.citygml4j.builder.jaxb.JAXBBuilder;
 import org.citygml4j.builder.jaxb.xml.io.reader.CityGMLChunk;
@@ -118,6 +108,7 @@ import de.tub.citydb.config.project.CitykmlExporter.Balloon;
 import de.tub.citydb.config.project.CitykmlExporter.BalloonContentMode;
 import de.tub.citydb.config.project.CitykmlExporter.DisplayForm;
 import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
+import de.tub.citydb.modules.citykml.common.xlink.resolver.DBXlinkSplitter;
 import  de.tub.citydb.modules.citykml.content.TypeAttributeValueEnum;
 import de.tub.citydb.log.Logger;
 import de.tub.citydb.modules.citykml.util.ProjConvertor;
@@ -148,6 +139,9 @@ import de.tub.citydb.modules.citykml.util.CityObject4JSON;
 import de.tub.citydb.modules.citykml.util.KMLHeaderWriter;
 import de.tub.citydb.modules.citykml.util.Sqlite.SQLiteFactory;
 import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheTable;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.HeapCacheTable;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.TemporaryCacheTable;
 import de.tub.citydb.modules.citykml.util.Sqlite.cache.model.CacheTableModelEnum;
 
 
@@ -164,6 +158,7 @@ public class CityKmlExporter implements EventHandler {
 	private WorkerPool<KmlSplittingResult> kmlWorkerPool;
 	private SingleWorkerPool<SAXEventBuffer> ioWriterPool;
 	private KmlSplitter kmlSplitter;
+	private DBXlinkSplitter tmpSplitter;
 
 	private volatile boolean shouldRun = true;
 	private AtomicBoolean isInterrupted = new AtomicBoolean(false);
@@ -395,8 +390,13 @@ public class CityKmlExporter implements EventHandler {
 						}
 
 						SQLiteFactory sqliteFactory = new SQLiteFactory("TemporaryDbXlink.db",  file.getParent() , "org.sqlite.JDBC");
-						cacheManager = new CacheManager(sqliteFactory.getConnection(), maxThreads);
 						
+						cacheManager = new CacheManager(sqliteFactory.getConnection(), maxThreads);
+						tmpSplitter = new DBXlinkSplitter(cacheManager, 
+								xlinkResolverPool, 
+								tmpXlinkPool,
+								eventDispatcher);
+						config.setXlinkSplitter(tmpSplitter);
 						
 						// this pool is for registering xlinks
 						tmpXlinkPool = new WorkerPool<DBXlink>(
@@ -492,6 +492,7 @@ public class CityKmlExporter implements EventHandler {
 							if (shouldRun)
 								kmlSplitter.startQuery(reader);
 							
+							
 						} catch (SQLException sqlE) {
 							Logger.getInstance().error("SQL error: " + sqlE.getMessage());
 							return false;
@@ -501,8 +502,8 @@ public class CityKmlExporter implements EventHandler {
 							
 							if (shouldRun)
 							{
-								kmlWorkerPool.shutdownAndWait();
-								tmpXlinkPool.join();
+								kmlWorkerPool.shutdownAndWait();								
+								//tmpXlinkPool.join();						
 							}
 							if (!featureCounterMap.isEmpty() &&
 									(!config.getProject().getCityKmlExporter().isOneFilePerObject() ||
@@ -588,12 +589,13 @@ public class CityKmlExporter implements EventHandler {
 							Logger.getInstance().error("Internal error: " + iE.getMessage());
 							return false;
 						}
+						
+						
 
 						// set null
 						ioWriterPool = null;
 						kmlWorkerPool = null;
 						kmlSplitter = null;					
-						
 						sqliteFactory.KillConnection();
 
 					}
@@ -660,8 +662,6 @@ public class CityKmlExporter implements EventHandler {
 
 		return shouldRun;
 	}
-
-	
 	
 
 	public int calculateRowsColumnsAndDelta() throws SQLException {

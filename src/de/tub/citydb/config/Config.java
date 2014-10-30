@@ -32,16 +32,37 @@ package de.tub.citydb.config;
 import de.tub.citydb.config.gui.Gui;
 import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.config.project.Project;
+import de.tub.citydb.modules.citykml.common.xlink.resolver.DBXlinkSplitter;
+import de.tub.citydb.modules.citykml.util.Sqlite.cache.CacheManager;
 
 public class Config {
 	private Project project;
 	private Gui gui;
 	private Internal internal;
+	private CacheManager tempCacheManager;
+	private DBXlinkSplitter xlinkSplitter;
 	
+	public DBXlinkSplitter getXlinkSplitter() {
+		return xlinkSplitter;
+	}
+
+	public void setXlinkSplitter(DBXlinkSplitter xlinkSplitter) {
+		this.xlinkSplitter = xlinkSplitter;
+	}
+
+	public CacheManager getTempCacheManager() {
+		return tempCacheManager;
+	}
+
+	public void setTempCacheManager(CacheManager tempCacheManager) {
+		this.tempCacheManager = tempCacheManager;
+	}
+
 	public Config() {
 		project = new Project();
 		gui = new Gui();
 		internal = new Internal();
+		
 	}
 
 	public Project getProject() {
@@ -70,5 +91,7 @@ public class Config {
 	public Internal getInternal() {
 		return internal;
 	}
+	
+	
 
 }
