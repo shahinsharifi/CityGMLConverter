@@ -268,12 +268,16 @@ public class Building extends KmlGenericObject{
 			
 			//this function reads all geometries and returns a list of surfaces.
 			List<BuildingSurface> _surfaceList = GetBuildingGeometries(_building);
+			
+			//Restarting Xlink worker.
 			sqlliteImporterManager.getTmpXlinkPool().join();
 			DBXlinkSplitter xlinkSplitter = config.getXlinkSplitter();
-			xlinkSplitter.startQuery();
-
+			List<BuildingSurface> tmpList = xlinkSplitter.startQuery(_surfaceList); 
+			if(tmpList != null && tmpList.size() > 0) //We should join xlinks with Main geometries 
+				_surfaceList.addAll(tmpList);
+			
 			if (_surfaceList.size()!=0) { // result not empty
-
+			
 				switch (work.getDisplayForm().getForm()) {
 
 				case DisplayForm.FOOTPRINT:
@@ -550,7 +554,7 @@ public class Building extends KmlGenericObject{
 				if (solidProperty.isSetSolid()) {
 
 					surfaceGeom.ClearPointList();				
-					List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(buildingGmlId,solidProperty.getSolid(), false);
+					List<List<Double>> _pointList = surfaceGeom.GetSurfaceGeometry(buildingGmlId , solidProperty.getSolid() , false);
 
 					int counter = 0;
 					for(List<Double> _Geometry : _pointList){
@@ -771,7 +775,7 @@ public class Building extends KmlGenericObject{
 
 							if (multiSurfaceProperty.isSetMultiSurface()) {
 
-
+								//We should take care about the parent surfaces, because we need them for exporting collada.
 								if(multiSurfaceProperty.getMultiSurface().isSetId()){
 								
 									BuildingSurface BPSurface = new BuildingSurface();   

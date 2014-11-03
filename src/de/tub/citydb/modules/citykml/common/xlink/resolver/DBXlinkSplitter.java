@@ -33,11 +33,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+
+
+
+
+
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+
+import com.sun.istack.FinalArrayList;
 
 import de.tub.citydb.api.concurrent.WorkerPool;
 import de.tub.citydb.api.event.EventDispatcher;
 import de.tub.citydb.config.internal.Internal;
 import de.tub.citydb.log.Logger;
+import de.tub.citydb.modules.citykml.content.BuildingSurface;
 import de.tub.citydb.modules.citykml.content.TableEnum;
 import de.tub.citydb.modules.citykml.common.xlink.content.DBXlink;
 import de.tub.citydb.modules.citykml.common.xlink.content.DBXlinkBasic;
@@ -57,6 +71,8 @@ import de.tub.citydb.modules.citykml.util.Sqlite.cache.model.CacheTableModelEnum
 import de.tub.citydb.modules.common.event.StatusDialogMessage;
 import de.tub.citydb.modules.common.event.StatusDialogProgressBar;
 
+
+
 public class DBXlinkSplitter {
 	private final Logger LOG = Logger.getInstance();
 
@@ -65,6 +81,7 @@ public class DBXlinkSplitter {
 	private final WorkerPool<DBXlink> tmpXlinkPool;
 	private final EventDispatcher eventDispatcher;
 	private volatile boolean shouldRun = true;
+	private static java.util.List<BuildingSurface> list = new ArrayList<BuildingSurface>();
 
 	public DBXlinkSplitter(CacheManager cacheManager, 
 			WorkerPool<DBXlink> xlinkResolverPool, 
@@ -80,7 +97,7 @@ public class DBXlinkSplitter {
 		shouldRun = false;
 	}
 
-	public void startQuery() throws SQLException {	
+	public java.util.List<BuildingSurface> startQuery(java.util.List<BuildingSurface> _list) throws SQLException {	
 		/*basicXlinks();
 		groupMemberXLinks(true);
 		appearanceXlinks();
@@ -110,7 +127,11 @@ public class DBXlinkSplitter {
 		// itself points to another geometry. in order to really copy any information
 		// we have to resolve the inner xlink firstly. afterwards we can deal with the
 		// outer xlink. thus, we need a recursive handling here...*/
-		surfaceGeometryXlinks(true);
+		list.addAll(_list);
+
+		return surfaceGeometryXlinks(true);
+		
+		 
 	}
 
 	private void basicXlinks() throws SQLException {
@@ -121,6 +142,7 @@ public class DBXlinkSplitter {
 		ResultSet rs = null;
 
 		try {
+			
 			CacheTable cacheTable = cacheManager.getCacheTable(CacheTableModelEnum.BASIC);	
 			if (!(cacheTable instanceof TemporaryCacheTable))
 				return;
@@ -536,25 +558,26 @@ public class DBXlinkSplitter {
 		}
 	}
 
-	public void surfaceGeometryXlinks(boolean checkRecursive) throws SQLException {
+	public java.util.List<BuildingSurface> surfaceGeometryXlinks(boolean checkRecursive) throws SQLException {
 		if (!shouldRun)
-			return;
+			return null;
 
 		CacheTable cacheTable = cacheManager.getCacheTable(CacheTableModelEnum.SURFACE_GEOMETRY);
 		if (cacheTable == null)
-			return;
+			return null;
 
 		LOG.info("Resolving geometry XLinks...");
 
-		querySurfaceGeometryXlinks((TemporaryCacheTable)cacheTable, checkRecursive, -1, 1);
+		return querySurfaceGeometryXlinks((TemporaryCacheTable)cacheTable, checkRecursive, -1, 1);
 	}
 
-	private void querySurfaceGeometryXlinks(TemporaryCacheTable cacheTable, 
+	private java.util.List<BuildingSurface> querySurfaceGeometryXlinks(TemporaryCacheTable cacheTable, 
 			boolean checkRecursive, 
 			long remaining, 
 			int pass) throws SQLException {
 		Statement stmt = null;
 		ResultSet rs = null;
+		 java.util.List<BuildingSurface> tmpList = new ArrayList<BuildingSurface>();
 
 		try {
 			eventDispatcher.triggerEvent(new StatusDialogProgressBar(0, 0, this));
@@ -569,7 +592,7 @@ public class DBXlinkSplitter {
 			cacheTable.truncate();
 			stmt = heapTable.getConnection().createStatement();
 			rs = stmt.executeQuery("select * from " + heapTable.getTableName());
-
+			long st=System.currentTimeMillis();
 			while (rs.next()) {
 				eventDispatcher.triggerEvent(new StatusDialogProgressBar(++current, max, this));
 				
@@ -577,8 +600,13 @@ public class DBXlinkSplitter {
 				String parentId = rs.getString("PARENT_ID");
 				String rootId = rs.getString("ROOT_ID");
 				boolean reverse = rs.getInt("REVERSE") == 1;
-				String gmlId = rs.getString("GMLID");
+				final String gmlId = rs.getString("GMLID");
+				BuildingSurface bSurface = null;
+				if((bSurface = CompareGeom(gmlId.replace("#",""))) != null)
+						tmpList.add(bSurface);
+			//	System.out.println(CompareGeom(gmlId.replace("#","")).getId());
 
+				
 				// set initial context...
 			/*	DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
 						id,
@@ -589,6 +617,9 @@ public class DBXlinkSplitter {
 
 				xlinkResolverPool.addWork(xlink);*/
 			}
+			//long end=System.currentTimeMillis();
+			//long res = end - st;
+			//System.out.println(res);
 
 			/*if (checkRecursive && shouldRun) {
 				rs.close();
@@ -624,5 +655,29 @@ public class DBXlinkSplitter {
 				stmt = null;
 			}
 		}
+		return tmpList;
+	}
+
+	
+	private BuildingSurface CompareGeom(String GmlID)
+	{
+		final String id = GmlID;
+		
+
+        Predicate predicate = new Predicate() {
+
+            public boolean evaluate(Object object) {
+            	
+            	if(((BuildingSurface) object).getPId() != null  && ((BuildingSurface) object).getPId().equals(id))
+            		return true;
+            	else
+            		return ((BuildingSurface) object).getId().equals(id);
+            }
+        };
+        
+        Collection<BuildingSurface> filtered = CollectionUtils.select(list, predicate);
+        
+		return (filtered.size()>0) ? new ArrayList<BuildingSurface>(filtered).get(0) : null;
+
 	}
 }
