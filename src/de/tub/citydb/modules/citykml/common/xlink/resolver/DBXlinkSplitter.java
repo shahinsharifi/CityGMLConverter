@@ -210,6 +210,7 @@ public class DBXlinkSplitter {
 			boolean checkRecursive, 
 			long remaining, 
 			int pass) throws SQLException {
+		
 		Statement stmt = null;
 		ResultSet rs = null;
 
@@ -283,6 +284,7 @@ public class DBXlinkSplitter {
 	}
 
 	private void appearanceXlinks() throws SQLException {
+		
 		if (!shouldRun)
 			return;
 
@@ -457,6 +459,7 @@ public class DBXlinkSplitter {
 	}
 
 	private void libraryObjectXLinks() throws SQLException {
+		
 		if (!shouldRun)
 			return;
 		
@@ -507,6 +510,7 @@ public class DBXlinkSplitter {
 	}
 	
 	private void deprecatedMaterialXlinks() throws SQLException {
+		
 		if (!shouldRun)
 			return;
 
@@ -575,9 +579,10 @@ public class DBXlinkSplitter {
 			boolean checkRecursive, 
 			long remaining, 
 			int pass) throws SQLException {
+		
 		Statement stmt = null;
 		ResultSet rs = null;
-		 java.util.List<BuildingSurface> tmpList = new ArrayList<BuildingSurface>();
+		java.util.List<BuildingSurface> tmpList = new ArrayList<BuildingSurface>();
 
 		try {
 			eventDispatcher.triggerEvent(new StatusDialogProgressBar(0, 0, this));
@@ -592,7 +597,6 @@ public class DBXlinkSplitter {
 			cacheTable.truncate();
 			stmt = heapTable.getConnection().createStatement();
 			rs = stmt.executeQuery("select * from " + heapTable.getTableName());
-			long st=System.currentTimeMillis();
 			while (rs.next()) {
 				eventDispatcher.triggerEvent(new StatusDialogProgressBar(++current, max, this));
 				
@@ -601,11 +605,10 @@ public class DBXlinkSplitter {
 				String rootId = rs.getString("ROOT_ID");
 				boolean reverse = rs.getInt("REVERSE") == 1;
 				final String gmlId = rs.getString("GMLID");
+		
 				BuildingSurface bSurface = null;
 				if((bSurface = CompareGeom(gmlId.replace("#",""))) != null)
 						tmpList.add(bSurface);
-			//	System.out.println(CompareGeom(gmlId.replace("#","")).getId());
-
 				
 				// set initial context...
 			/*	DBXlinkSurfaceGeometry xlink = new DBXlinkSurfaceGeometry(
@@ -617,9 +620,7 @@ public class DBXlinkSplitter {
 
 				xlinkResolverPool.addWork(xlink);*/
 			}
-			//long end=System.currentTimeMillis();
-			//long res = end - st;
-			//System.out.println(res);
+
 
 			/*if (checkRecursive && shouldRun) {
 				rs.close();
